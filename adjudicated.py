@@ -1,5 +1,4 @@
 import requests
-import json
 import random
 import os
 import re
@@ -7,8 +6,8 @@ from dotenv import load_dotenv
 from collections import defaultdict
 from uuid import uuid4
 
-load_dotenv()
-GITHUB_API_TOKEN = os.environ.get("GITHUB_API_TOKEN")
+load_dotenv(override=True)
+GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN")
 
 headers = {
     "Authorization": f"token {GITHUB_API_TOKEN}",
@@ -36,30 +35,37 @@ def categorize_repositories(repositories):
     top_categories = sorted(category_count, key=category_count.get, reverse=True)[:10]
     return {cat: categorized_repos[cat] for cat in top_categories}
 
+
 def filter_python_files(repo, min_version="3.6.0"):
     url = f"https://api.github.com/repos/{repo['full_name']}/contents"
     response = requests.get(url, headers=headers)
     files = response.json()
-
     python_files = []
     for file in files:
         if file["name"].endswith(".py"):
             file_content = requests.get(file["download_url"]).text
-            version_match = re.search(r"(?<=python_requires\s*=\s*[\"']>=)\d+\.\d+\.\d+", file_content)
-            if version_match and version_match.group(0) >= min_version:
+            version_match = re.search(r"python_requires\s*=\s*[\"']>=\s*("
+                                      r"\d+\.\d+\.\d+)", file_content)
+            if version_match and version_match.group(1) >= min_version:
+                file["version"] = version_match.group(1)
                 python_files.append(file)
+    # only return the
     return python_files
 
 
-def collect_data(repositories):
+def collect_data(categorized_repositories):
     data = []
-    # TODO: collect the relevant data here
-    for theme in repositories:
-        repo = repositories[theme]
-        for cat, repos in repo.items():
-            for r in repos:
-                files = filter_python_files(r)
-                data.append({"username": r["owner"]["login"], "repo_name": r["name"], "files": files})
+    counter = 1
+    for category, repos in categorized_repositories.items():
+        for r in repos:
+            files = filter_python_files(r)
+            if files:
+                data.append({"username": r["owner"]["login"], "repo_name": r[
+                    "name"], "files": files})
+            counter += 1
+            # FIXME: remove the counter; it's just here for dev
+            if counter == 10: break
+        return data
     return data
 
 
@@ -106,6 +112,7 @@ def main():
     repositories = find_repositories()
     categorized_repositories = categorize_repositories(repositories)
     data = collect_data(categorized_repositories)
+    print(data)
     # snippets = select_and_store_snippets(data)
     # export_to_tsv(snippets)
     #
