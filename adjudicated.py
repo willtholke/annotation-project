@@ -1,13 +1,16 @@
-import requests
+import ast
 import os
 import re
-import pandas as pd
-import ast
-from dotenv import load_dotenv
 from collections import defaultdict
+import random
+
+import pandas as pd
+import requests
+from dotenv import load_dotenv
+
 from user_input import get_user_input, save_data_to_file, \
     load_data_from_file, fetch_repositories, get_max_snippets, \
-    get_max_files, get_max_repo_files
+    get_max_files, get_max_repo_files, get_max_file_snippets
 
 load_dotenv(override=True)
 GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN")
@@ -25,11 +28,15 @@ def find_repositories():
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     data_filename = os.path.join(data_dir,
-                                 f"repos_min_stars_{min_stars}_min_forks_{min_forks}.txt")
+                                 f"repos_min_stars_{min_stars}_min_forks_"
+                                 f"{min_forks}.txt")
 
     if os.path.exists(data_filename):
-        print(f"Data file for minimum stars {min_stars} and minimum forks {min_forks} already exists.")
-        use_existing_data = input("Do you want to use the stored data? (yes/no): ").lower()
+        print(
+            f"Data file for minimum stars {min_stars} and minimum forks "
+            f"{min_forks} already exists.")
+        use_existing_data = input(
+            "Do you want to use the stored data? (yes/no): ").lower()
 
         if use_existing_data == 'yes':
             all_items = load_data_from_file(data_filename)
@@ -60,9 +67,8 @@ def get_min_python_version(file_content):
         return None
 
     for node in tree.body:
-        if isinstance(node, ast.Expr) and isinstance(node.value,
-                                                     ast.Call) and getattr(
-                node.value.func, 'id', None) == 'setup':
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and \
+                getattr(node.value.func, 'id', None) == 'setup':
             for keyword in node.value.keywords:
                 if keyword.arg == 'python_requires':
                     if isinstance(keyword.value, ast.Str):
@@ -80,23 +86,18 @@ def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
     url = f"https://api.github.com/repos/{repo['full_name']}/contents/{path}"
     response = requests.get(url, headers=headers)
     files = response.json()
-
-    if not isinstance(files, list):  # In case of a rate limit error or another issue
-        return []
-
-    setup_py = None
     python_files = []
+
+    # In case of a rate limit error or another issue
+    if not isinstance(files, list):
+        return []
 
     # Look for setup.py in the root directory
     for file in files:
         if file["type"] == "file" and file["name"] == "setup.py":
-            setup_py = file
+            python_files.append(file)
             print(f"Found {repo['name']}/setup.py in the root directory")
             break
-
-    # If setup.py exists, add it to the list and return
-    if setup_py:
-        python_files.append(setup_py)
 
     # Otherwise, continue searching for .py files recursively
     for file in files:
@@ -106,8 +107,8 @@ def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
             python_files.append(file)
         elif file["type"] == "dir":
             python_files.extend(
-                get_repo_files(repo, max_files_per_repo, file["path"], current_count + len(python_files))
-            )
+                get_repo_files(repo, max_files_per_repo, file["path"],
+                               current_count + len(python_files)))
 
     return python_files
 
@@ -119,12 +120,13 @@ def get_repo_py_version(repo, files):
             file_content = requests.get(file["download_url"]).text
             setup_version = get_min_python_version(file_content)
             break
+
     return repo["name"], setup_version
 
 
 def filter_python_files(repo, max_files_per_repo, min_version="3.6.0"):
     python_files = []
-    files = get_repo_files(repo, max_files_per_repo) # works
+    files = get_repo_files(repo, max_files_per_repo)  # works
     repo_version = get_repo_py_version(repo, files)
     considered_repo = False
     if repo_version[1] and repo_version[1] > min_version:
@@ -139,29 +141,33 @@ def filter_python_files(repo, max_files_per_repo, min_version="3.6.0"):
                 python_files.append(file)
         if not python_files:
             considered_repo = False
-            print(f"No compatible files found in repository '{repo_version[0]}' other than setup.py\n")
+            print(
+                f"No compatible files found in repository "
+                f"'{repo_version[0]}' other than setup.py\n")
+
     return python_files, considered_repo
 
 
 def collect_data(repositories):
-    max_files = get_max_files()
-    data = []
-    processed_repos = set()
-    files_count = 0
-    considered_repos_count = 0
-    max_files_per_repo = get_max_repo_files()
+    max_files, max_files_per_repo = get_max_files(), get_max_repo_files()
+    data, processed_repos = [], set()
+    files_count, considered_repos_count = 0, 0
 
     for r in repositories:
         if r["full_name"] in processed_repos:
             continue
-        files, considered_repo = filter_python_files(r, max_files_per_repo=max_files_per_repo)
+        files, considered_repo = filter_python_files(r, max_files_per_repo)
         if files:
             processed_repos.add(r["full_name"])
-            data.append({"username": r["owner"]["login"], "repo_name": r["name"], "files": files})
+            data.append(
+                {"username": r["owner"]["login"], "repo_name": r["name"],
+                 "files": files})
             files_count += len(files)
 
             if 0 < max_files <= files_count:
-                print(f"Successfully collected {max_files} files to be scraped for snippets!")
+                print(
+                    f"Successfully collected {max_files} "
+                    f"files to be scraped for snippets!")
                 break
         if considered_repo:
             considered_repos_count += 1
@@ -171,7 +177,9 @@ def collect_data(repositories):
             print(f"Total repositories considered: {considered_repos_count}")
             print(f"Total files considered: {files_count}\n")
         else:
-            print(f"Repository '{r['name']}' was not considered due to no compatible files or version\n")
+            print(
+                f"Repository '{r['name']}' "
+                f"was not considered due to no compatible files or version\n")
 
     return [d for d in data if d is not None]
 
@@ -182,20 +190,17 @@ def separate_contents(file_content):
         "Function": [],
     }
 
-    # Regex patterns for each category
     class_pattern = r'\bclass\s+[A-Za-z_]\w*\b'
     function_pattern = r'\bdef\s+[A-Za-z_]\w*\b'
-
-    # Split the file content into lines
     lines = file_content.splitlines()
 
-    # Function to capture the body of a class or function
-    def capture_body(start_line_idx, lines):
-        body = lines[start_line_idx] + "\n"
-        indent = re.match(r'^(\s*)', lines[start_line_idx]).group(1)
-        for line in lines[start_line_idx + 1:]:
-            if line.startswith(indent) and not re.match(r'^\s*$', line):
-                body += line + "\n"
+    def capture_body(start_line_idx, capture_lines):
+        """ Capture the body of a class/function. """
+        body = capture_lines[start_line_idx] + "\n"
+        indent = re.match(r'^(\s*)', capture_lines[start_line_idx]).group(1)
+        for lin in capture_lines[start_line_idx + 1:]:
+            if line.startswith(indent) and not re.match(r'^\s*$', lin):
+                body += lin + "\n"
             else:
                 break
         return body
@@ -214,10 +219,13 @@ def separate_contents(file_content):
 
 
 def select_and_store_snippets(data):
-    snippets = []
+    snippets, snippet_count = [], 0
     counter = defaultdict(int)
     max_snippets = get_max_snippets()
-    snippet_count = 0
+    max_snippets_per_file = get_max_file_snippets()
+
+    random.shuffle(data)
+    # Get all the snippets, shuffle them, then select num max_snippets_per_file
     for repo_data in data:
         repo_name = repo_data['repo_name']
         for file_idx, file in enumerate(repo_data["files"]):
@@ -227,8 +235,10 @@ def select_and_store_snippets(data):
             for cat, code_snippets in categories.items():
                 if code_snippets:
                     for snippet in code_snippets:
-                        uid_counter = str(counter[f'{repo_name}|{file_name}']).zfill(3)
-                        uid = f"{repo_data['username']}|{repo_name}|{file_name}|{uid_counter}"
+                        uid_counter = str(
+                            counter[f'{repo_name}|{file_name}']).zfill(3)
+                        uid = f"{repo_data['username']}|{repo_name}|" \
+                              f"{file_name}|{uid_counter}"
                         counter[f'{repo_name}|{file_name}'] += 1
                         snippets.append({
                             "UID": uid,
@@ -239,7 +249,10 @@ def select_and_store_snippets(data):
                         print("Added a snippet! Total snippet count:",
                               snippet_count)
                         if max_snippets and snippet_count >= max_snippets:
-                            return snippets
+                            random.shuffle(snippets)
+                            # FIXME // TODO: After shuffling the snippets,
+                            # then assign the UIDs
+                            return snippets[:max_snippets_per_file-1]
     return snippets
 
 
@@ -253,10 +266,10 @@ def main():
     data = collect_data(repositories)
     snippets = select_and_store_snippets(data)
     export_to_tsv(snippets)
-    # Convert .tsv to .txt
+
+    # TODO: Finalize conversion of .tsv to .txt
     # os.rename("adjudicated.tsv", "adjudicated.txt")
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     main()
-

@@ -24,8 +24,8 @@ def load_data_from_file(filename):
 def fetch_repositories(min_stars, min_forks, headers):
     url = "https://api.github.com/search/repositories"
     query = f"language:python stars:>={min_stars} forks:>={min_forks}"
-    repos_per_page = 100
-    max_pages = 2
+    repos_per_page = 15
+    max_pages = 1
     all_items = []
 
     for page in range(1, max_pages + 1):
@@ -39,12 +39,21 @@ def fetch_repositories(min_stars, min_forks, headers):
 
 
 def get_max_snippets():
-    max_snippets = int(input("Enter the maximum number of snippets you want to grab: "))
+    max_snippets = int(input("Enter the maximum number of snippets you want "
+                             "to grab (in total): "))
+    return max_snippets
+
+
+def get_max_file_snippets():
+    max_snippets = int(input("Enter the maximum number of snippets you want "
+                             "to grab (from each file in a repo): "))
     return max_snippets
 
 
 def get_max_files():
-    max_files = int(input("Enter the maximum number of files you want to consider (or -1 for no limit): "))
+    max_files = int(input("Enter the maximum number of files you want to "
+                          "consider to be parsed for snippets (or -1 for no "
+                          "limit): "))
     return max_files
 
 
