@@ -24,8 +24,8 @@ def load_data_from_file(filename):
 def fetch_repositories(min_stars, min_forks, headers):
     url = "https://api.github.com/search/repositories"
     query = f"language:python stars:>={min_stars} forks:>={min_forks}"
-    repos_per_page = 15
-    max_pages = 1
+    repos_per_page = 100
+    max_pages = 2
     all_items = []
 
     for page in range(1, max_pages + 1):

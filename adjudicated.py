@@ -109,7 +109,6 @@ def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
             python_files.extend(
                 get_repo_files(repo, max_files_per_repo, file["path"],
                                current_count + len(python_files)))
-
     return python_files
 
 
@@ -126,24 +125,28 @@ def get_repo_py_version(repo, files):
 
 def filter_python_files(repo, max_files_per_repo, min_version="3.6.0"):
     python_files = []
-    files = get_repo_files(repo, max_files_per_repo)  # works
+    files = get_repo_files(repo, max_files_per_repo)
     repo_version = get_repo_py_version(repo, files)
     considered_repo = False
+    files_to_ignore = ["setup.py"]
     if repo_version[1] and repo_version[1] > min_version:
         considered_repo = True
 
-        for file in files:
-            if file["name"].endswith(".py"):
-                print(f"Adding "
-                      f"{repo_version[0]}/{file['name']} to be scraped for "
-                      f"snippets!")
-                file["version"] = repo_version
-                python_files.append(file)
+        eligible_files = [file for file in files if file["name"].endswith(".py")
+                          and file["name"] not in files_to_ignore]
+        selected_files = random.sample(eligible_files, min(len(eligible_files),
+                                                           max_files_per_repo))
+
+        for file in selected_files:
+            print(f"Adding {repo_version[0]}/{file['name']}"
+                  f" to be scraped for snippets!")
+            file["version"] = repo_version
+            python_files.append(file)
+
         if not python_files:
             considered_repo = False
-            print(
-                f"No compatible files found in repository "
-                f"'{repo_version[0]}' other than setup.py\n")
+            print(f"No compatible files found in repository "
+                  f"'{repo_version[0]}' other than setup.py\n")
 
     return python_files, considered_repo
 
@@ -172,8 +175,6 @@ def collect_data(repositories):
         if considered_repo:
             considered_repos_count += 1
         if files and considered_repo:
-            print([f"Adding {r['name']}/{file['name']} for consideration"
-                   for file in files])
             print(f"Total repositories considered: {considered_repos_count}")
             print(f"Total files considered: {files_count}\n")
         else:
@@ -240,6 +241,8 @@ def select_and_store_snippets(data):
                         uid = f"{repo_data['username']}|{repo_name}|" \
                               f"{file_name}|{uid_counter}"
                         counter[f'{repo_name}|{file_name}'] += 1
+                        if int(uid_counter) > max_snippets_per_file - 1:
+                            break
                         snippets.append({
                             "UID": uid,
                             "Category": cat,
@@ -249,11 +252,8 @@ def select_and_store_snippets(data):
                         print("Added a snippet! Total snippet count:",
                               snippet_count)
                         if max_snippets and snippet_count >= max_snippets:
-                            random.shuffle(snippets)
-                            # FIXME // TODO: After shuffling the snippets,
-                            # then assign the UIDs
-                            return snippets[:max_snippets_per_file-1]
-    return snippets
+                            return snippets[:max_snippets - 1]
+    return snippets[:max_snippets - 1]
 
 
 def export_to_tsv(snippets):
