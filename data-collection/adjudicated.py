@@ -4,10 +4,12 @@ import re
 from collections import defaultdict
 import random
 
+import uuid
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 
+from rate_checker import check_rate_limit
 from user_input import get_user_input, save_data_to_file, \
     load_data_from_file, fetch_repositories, get_max_snippets, \
     get_max_files, get_max_repo_files, get_max_file_snippets
@@ -257,18 +259,20 @@ def select_and_store_snippets(data):
 
 
 def export_to_tsv(snippets):
+    filename = "adjudicated-" + str(uuid.uuid4())[:4] + ".tsv"
     df = pd.DataFrame(snippets, columns=["UID", "Category", "Snippet"])
-    df.to_csv("adjudicated.tsv", sep="\t", index=False)
+    df.to_csv("data-collection/cleaned-data/" + filename, sep="\t", index=False)
 
 
 def main():
+    reset_time = check_rate_limit(GITHUB_API_TOKEN)
+    # if reset_time:
+    #     print(f"Rate limit hit. The rate limit will reset at {reset_time}.")
+    #     return []
     repositories = find_repositories()
     data = collect_data(repositories)
     snippets = select_and_store_snippets(data)
     export_to_tsv(snippets)
-
-    # TODO: Finalize conversion of .tsv to .txt
-    # os.rename("adjudicated.tsv", "adjudicated.txt")
 
 
 if __name__ == "__main__":

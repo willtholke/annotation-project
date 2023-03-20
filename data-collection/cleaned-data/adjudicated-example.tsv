@@ -1,0 +1,1519 @@
+UID	Category	Snippet
+httpie|httpie|generate.py|000	Function	"def generate_snippets(release: str) -> str:
+    people = load_awesome_people()
+    contributors = {
+        name: details
+        for name, details in people.items()
+        if details['github'] not in IGNORE_ACCOUNTS
+        and (release in details['committed'] or release in details['reported'])
+    }
+"
+httpie|httpie|fetch.py|000	Class	"class FinishedForNow(Exception):
+    """"""Raised when remaining GitHub rate limit is zero.""""""
+"
+httpie|httpie|fetch.py|001	Function	"def main(previous_release: str, current_release: str) -> int:
+    since = release_date(previous_release)
+    until = release_date(current_release)
+"
+httpie|httpie|fetch.py|002	Function	"def find_committers(since: str, until: str) -> FullNames:
+    url = f'{REPO_URL}/commits'
+    page = 1
+    per_page = 100
+    params = {
+        'since': since,
+        'until': until,
+        'per_page': per_page,
+    }
+    committers: FullNames = set()
+"
+httpie|httpie|fetch.py|003	Function	"def find_reporters(since: str, until: str) -> GitHubLogins:
+    url = f'{API_URL}/search/issues'
+    page = 1
+    per_page = 100
+    params = {
+        'q': f'repo:{REPO}/{OWNER} is:issue closed:{since}..{until}',
+        'per_page': per_page,
+    }
+    reporters: GitHubLogins = set()
+"
+httpie|httpie|fetch.py|004	Function	"def merge_all_the_people(release: str, contributors: People, committers: FullNames, reporters: GitHubLogins) -> None:
+    """"""
+    >>> contributors = {'Alice': new_person(github='alice', twitter='alice')}
+    >>> merge_all_the_people('2.6.0', contributors, {}, {})
+    >>> contributors
+    {'Alice': {'committed': [], 'reported': [], 'github': 'alice', 'twitter': 'alice'}}
+"
+httpie|httpie|build.py|000	Function	"def build_binaries() -> Iterator[Tuple[str, Path]]:
+    for target_script, extra_args in TARGET_SCRIPTS.items():
+        subprocess.check_call(
+            [
+                'pyinstaller',
+                '--onefile',
+                '--noupx',
+                '-p',
+                HTTPIE_DIR,
+                '--additional-hooks-dir',
+                HOOKS_DIR,
+                *extra_args,
+                target_script,
+            ]
+        )
+"
+httpie|httpie|build.py|001	Function	"def build_packages(http_binary: Path, httpie_binary: Path) -> None:
+    import httpie
+"
+httpie|httpie|build.py|002	Function	"def main():
+    binaries = dict(build_binaries())
+    build_packages(binaries['http_cli'], binaries['httpie_cli'])
+"
+httpie|httpie|generate.py|001	Function	"def generate_documentation() -> str:
+    database = load_database()
+    structure = build_docs_structure(database)
+    template = Template(source=TPL_FILE.read_text(encoding='utf-8'))
+    output = template.render(structure=structure)
+    output = clean_template_output(output)
+    return output
+"
+httpie|httpie|generate.py|002	Function	"def save_doc_file(content: str) -> None:
+    current_doc = load_doc_file()
+    marker_start = current_doc.find(MARKER_START) + len(MARKER_START)
+    assert marker_start > 0, 'cannot find the start marker'
+    marker_end = current_doc.find(MARKER_END, marker_start)
+    assert marker_start < marker_end, f'{marker_end=} < {marker_start=}'
+    updated_doc = (
+        current_doc[:marker_start]
+        + '\n\n'
+        + content
+        + '\n\n'
+        + current_doc[marker_end:]
+    )
+    if current_doc != updated_doc:
+        DOC_FILE.write_text(updated_doc, encoding='utf-8')
+"
+httpie|httpie|generate.py|003	Function	"def build_docs_structure(database: Database):
+    tools = database[KEY_TOOLS]
+    assert len(tools) == len({tool['title'] for tool in tools.values()}), 'tool titles need to be unique'
+    tree = database[KEY_DOC_STRUCTURE]
+    structure = []
+    for platform, tools_ids in tree.items():
+        assert platform.isalnum(), f'{platform=} must be alphanumeric for generated links to work'
+        platform_tools = [tools[tool_id] for tool_id in tools_ids]
+        structure.append((platform, platform_tools))
+    return structure
+"
+httpie|httpie|generate.py|004	Function	"def clean_template_output(output):
+    output = '\n'.join(line.strip() for line in output.strip().splitlines())
+    output = re.sub('\n{3,}', '\n\n', output)
+    return output
+"
+openai|whisper|conftest.py|000	Function	"def pytest_configure(config):
+    config.addinivalue_line(""markers"", ""requires_cuda"")
+"
+openai|whisper|conftest.py|001	Function	"def random():
+    rand.seed(42)
+    numpy.random.seed(42)
+"
+openai|whisper|test_normalizer.py|000	Function	"def test_number_normalizer(std):
+    assert std(""two"") == ""2""
+    assert std(""thirty one"") == ""31""
+    assert std(""five twenty four"") == ""524""
+    assert std(""nineteen ninety nine"") == ""1999""
+    assert std(""twenty nineteen"") == ""2019""
+"
+openai|whisper|test_normalizer.py|001	Function	"def test_spelling_normalizer():
+    std = EnglishSpellingNormalizer()
+"
+openai|whisper|test_normalizer.py|002	Function	"def test_text_normalizer():
+    std = EnglishTextNormalizer()
+    assert std(""Let's"") == ""let us""
+    assert std(""he's like"") == ""he is like""
+    assert std(""she's been like"") == ""she has been like""
+    assert std(""10km"") == ""10 km""
+    assert std(""10mm"") == ""10 mm""
+    assert std(""RC232"") == ""rc 232""
+"
+openai|whisper|test_audio.py|000	Function	"def test_audio():
+    audio_path = os.path.join(os.path.dirname(__file__), ""jfk.flac"")
+    audio = load_audio(audio_path)
+    assert audio.ndim == 1
+    assert SAMPLE_RATE * 10 < audio.shape[0] < SAMPLE_RATE * 12
+    assert 0 < audio.std() < 1
+"
+huggingface|diffusers|bit_diffusion.py|000	Class	"class BitDiffusion(DiffusionPipeline):
+    def __init__(
+        self,
+        unet: UNet2DConditionModel,
+        scheduler: Union[DDIMScheduler, DDPMScheduler],
+        bit_scale: Optional[float] = 1.0,
+    ):
+        super().__init__()
+        self.bit_scale = bit_scale
+        self.scheduler.step = (
+            ddim_bit_scheduler_step if isinstance(scheduler, DDIMScheduler) else ddpm_bit_scheduler_step
+        )
+"
+huggingface|diffusers|bit_diffusion.py|001	Function	"def decimal_to_bits(x, bits=BITS):
+    """"""expects image tensor ranging from 0 to 1, outputs bit tensor ranging from -1 to 1""""""
+    device = x.device
+"
+huggingface|diffusers|bit_diffusion.py|002	Function	"def bits_to_decimal(x, bits=BITS):
+    """"""expects bits from -1 to 1, outputs image tensor from 0 to 1""""""
+    device = x.device
+"
+huggingface|diffusers|bit_diffusion.py|003	Function	"def ddim_bit_scheduler_step(
+    self,
+    model_output: torch.FloatTensor,
+    timestep: int,
+    sample: torch.FloatTensor,
+    eta: float = 0.0,
+    use_clipped_model_output: bool = True,
+    generator=None,
+    return_dict: bool = True,
+) -> Union[DDIMSchedulerOutput, Tuple]:
+    """"""
+    Predict the sample at the previous timestep by reversing the SDE. Core function to propagate the diffusion
+    process from the learned model outputs (most often the predicted noise).
+    Args:
+        model_output (`torch.FloatTensor`): direct output from learned diffusion model.
+        timestep (`int`): current discrete timestep in the diffusion chain.
+        sample (`torch.FloatTensor`):
+            current instance of sample being created by diffusion process.
+        eta (`float`): weight of noise for added noise in diffusion step.
+        use_clipped_model_output (`bool`): TODO
+        generator: random number generator.
+        return_dict (`bool`): option for returning tuple rather than DDIMSchedulerOutput class
+    Returns:
+        [`~schedulers.scheduling_utils.DDIMSchedulerOutput`] or `tuple`:
+        [`~schedulers.scheduling_utils.DDIMSchedulerOutput`] if `return_dict` is True, otherwise a `tuple`. When
+        returning a tuple, the first element is the sample tensor.
+    """"""
+    if self.num_inference_steps is None:
+        raise ValueError(
+            ""Number of inference steps is 'None', you need to run 'set_timesteps' after creating the scheduler""
+        )
+"
+huggingface|diffusers|bit_diffusion.py|004	Function	"def ddpm_bit_scheduler_step(
+    self,
+    model_output: torch.FloatTensor,
+    timestep: int,
+    sample: torch.FloatTensor,
+    prediction_type=""epsilon"",
+    generator=None,
+    return_dict: bool = True,
+) -> Union[DDPMSchedulerOutput, Tuple]:
+    """"""
+    Predict the sample at the previous timestep by reversing the SDE. Core function to propagate the diffusion
+    process from the learned model outputs (most often the predicted noise).
+    Args:
+        model_output (`torch.FloatTensor`): direct output from learned diffusion model.
+        timestep (`int`): current discrete timestep in the diffusion chain.
+        sample (`torch.FloatTensor`):
+            current instance of sample being created by diffusion process.
+        prediction_type (`str`, default `epsilon`):
+            indicates whether the model predicts the noise (epsilon), or the samples (`sample`).
+        generator: random number generator.
+        return_dict (`bool`): option for returning tuple rather than DDPMSchedulerOutput class
+    Returns:
+        [`~schedulers.scheduling_utils.DDPMSchedulerOutput`] or `tuple`:
+        [`~schedulers.scheduling_utils.DDPMSchedulerOutput`] if `return_dict` is True, otherwise a `tuple`. When
+        returning a tuple, the first element is the sample tensor.
+    """"""
+    t = timestep
+"
+huggingface|diffusers|checkpoint_merger.py|000	Class	"class CheckpointMergerPipeline(DiffusionPipeline):
+    """"""
+    A class that that supports merging diffusion models based on the discussion here:
+    https://github.com/huggingface/diffusers/issues/877
+"
+huggingface|diffusers|checkpoint_merger.py|001	Class	"    A class that that supports merging diffusion models based on the discussion here:
+    https://github.com/huggingface/diffusers/issues/877
+"
+huggingface|diffusers|checkpoint_merger.py|002	Function	"    def __init__(self):
+        self.register_to_config()
+        super().__init__()
+"
+huggingface|diffusers|checkpoint_merger.py|003	Function	"    def _compare_model_configs(self, dict0, dict1):
+        if dict0 == dict1:
+            return True
+        else:
+            config0, meta_keys0 = self._remove_meta_keys(dict0)
+            config1, meta_keys1 = self._remove_meta_keys(dict1)
+            if config0 == config1:
+                print(f""Warning !: Mismatch in keys {meta_keys0} and {meta_keys1}."")
+                return True
+        return False
+"
+huggingface|diffusers|checkpoint_merger.py|004	Function	"    def _remove_meta_keys(self, config_dict: Dict):
+        meta_keys = []
+        temp_dict = config_dict.copy()
+        for key in config_dict.keys():
+            if key.startswith(""_""):
+                temp_dict.pop(key)
+                meta_keys.append(key)
+        return (temp_dict, meta_keys)
+"
+huggingface|diffusers|clip_guided_stable_diffusion.py|000	Class	"class MakeCutouts(nn.Module):
+    def __init__(self, cut_size, cut_power=1.0):
+        super().__init__()
+"
+huggingface|diffusers|clip_guided_stable_diffusion.py|001	Class	"class CLIPGuidedStableDiffusion(DiffusionPipeline):
+    """"""CLIP guided stable diffusion based on the amazing repo by @crowsonkb and @Jack000
+    - https://github.com/Jack000/glid-3-xl
+    - https://github.dev/crowsonkb/k-diffusion
+    """"""
+"
+huggingface|diffusers|clip_guided_stable_diffusion.py|002	Function	"    def __init__(self, cut_size, cut_power=1.0):
+        super().__init__()
+"
+huggingface|diffusers|clip_guided_stable_diffusion.py|003	Function	"    def forward(self, pixel_values, num_cutouts):
+        sideY, sideX = pixel_values.shape[2:4]
+        max_size = min(sideX, sideY)
+        min_size = min(sideX, sideY, self.cut_size)
+        cutouts = []
+        for _ in range(num_cutouts):
+            size = int(torch.rand([]) ** self.cut_power * (max_size - min_size) + min_size)
+            offsetx = torch.randint(0, sideX - size + 1, ())
+            offsety = torch.randint(0, sideY - size + 1, ())
+            cutout = pixel_values[:, :, offsety : offsety + size, offsetx : offsetx + size]
+            cutouts.append(F.adaptive_avg_pool2d(cutout, self.cut_size))
+        return torch.cat(cutouts)
+"
+huggingface|diffusers|clip_guided_stable_diffusion.py|004	Function	"def spherical_dist_loss(x, y):
+    x = F.normalize(x, dim=-1)
+    y = F.normalize(y, dim=-1)
+    return (x - y).norm(dim=-1).div(2).arcsin().pow(2).mul(2)
+"
+nltk|nltk|chartparser_app.py|000	Class	"class EdgeList(ColorizedList):
+    ARROW = SymbolWidget.SYMBOLS[""rightarrow""]
+"
+nltk|nltk|chartparser_app.py|001	Class	"class ChartMatrixView:
+    """"""
+    A view of a chart that displays the contents of the corresponding matrix.
+    """"""
+"
+nltk|nltk|chartparser_app.py|002	Class	"class ChartResultsView:
+    def __init__(self, parent, chart, grammar, toplevel=True):
+        self._chart = chart
+        self._grammar = grammar
+        self._trees = []
+        self._y = 10
+        self._treewidgets = []
+        self._selection = None
+        self._selectbox = None
+"
+nltk|nltk|chartparser_app.py|003	Class	"class ChartComparer:
+    """"""
+"
+nltk|nltk|chartparser_app.py|004	Class	"class ChartView:
+    """"""
+    A component for viewing charts.  This is used by ``ChartParserApp`` to
+    allow students to interactively experiment with various chart
+    parsing techniques.  It is also used by ``Chart.draw()``.
+"
+nltk|nltk|__init__.py|000	Function	"    def _fake_PIPE(*args, **kwargs):
+        raise NotImplementedError(""subprocess.PIPE is not supported."")
+"
+nltk|nltk|__init__.py|001	Function	"    def _fake_Popen(*args, **kwargs):
+        raise NotImplementedError(""subprocess.Popen is not supported."")
+"
+nltk|nltk|__init__.py|002	Function	"def demo():
+    print(""To run the demo code for a module, type nltk.module.demo()"")
+"
+nltk|nltk|chunkparser_app.py|000	Class	"class RegexpChunkApp:
+    """"""
+    A graphical tool for exploring the regular expression based chunk
+    parser ``nltk.chunk.RegexpChunkParser``.
+"
+nltk|nltk|chunkparser_app.py|001	Function	"    def normalize_grammar(self, grammar):
+        # Strip comments
+        grammar = re.sub(r""((\\.|[^#])*)(#.*)?"", r""\1"", grammar)
+        # Normalize whitespace
+        grammar = re.sub("" +"", "" "", grammar)
+        grammar = re.sub(r""\n\s+"", r""\n"", grammar)
+        grammar = grammar.strip()
+        # [xx] Hack: automatically backslash $!
+        grammar = re.sub(r""([^\\])\$"", r""\1\\$"", grammar)
+        return grammar
+"
+nltk|nltk|chunkparser_app.py|002	Function	"    def __init__(
+        self,
+        devset_name=""conll2000"",
+        devset=None,
+        grammar="""",
+        chunk_label=""NP"",
+        tagset=None,
+    ):
+        """"""
+        :param devset_name: The name of the development set; used for
+            display & for save files.  If either the name 'treebank'
+            or the name 'conll2000' is used, and devset is None, then
+            devset will be set automatically.
+        :param devset: A list of chunked sentences
+        :param grammar: The initial grammar to display.
+        :param tagset: Dictionary from tags to string descriptions, used
+            for the help page.  Defaults to ``self.TAGSET``.
+        """"""
+        self._chunk_label = chunk_label
+"
+nltk|nltk|chunkparser_app.py|003	Function	"    def _init_bindings(self, top):
+        top.bind(""<Control-n>"", self._devset_next)
+        top.bind(""<Control-p>"", self._devset_prev)
+        top.bind(""<Control-t>"", self.toggle_show_trace)
+        top.bind(""<KeyPress>"", self.update)
+        top.bind(""<Control-s>"", lambda e: self.save_grammar())
+        top.bind(""<Control-o>"", lambda e: self.load_grammar())
+        self.grammarbox.bind(""<Control-t>"", self.toggle_show_trace)
+        self.grammarbox.bind(""<Control-n>"", self._devset_next)
+        self.grammarbox.bind(""<Control-p>"", self._devset_prev)
+"
+nltk|nltk|chunkparser_app.py|004	Function	"    def _init_fonts(self, top):
+        # TWhat's our font size (default=same as sysfont)
+        self._size = IntVar(top)
+        self._size.set(20)
+        self._font = Font(family=""helvetica"", size=-self._size.get())
+        self._smallfont = Font(
+            family=""helvetica"", size=-(int(self._size.get() * 14 // 20))
+        )
+"
+allenai|allennlp|__main__.py|000	Function	"def _transformers_log_filter(record):
+    if record.msg.startswith(""PyTorch version""):
+        return False
+    return True
+"
+allenai|allennlp|__main__.py|001	Function	"def run():
+    from allennlp.commands import main  # noqa
+    from allennlp.common.util import install_sigterm_handler
+"
+allenai|allennlp|__init__.py|000	Class	"class ArgumentParserWithDefaults(argparse.ArgumentParser):
+    """"""
+    Custom argument parser that will display the default value for an argument
+    in the help message.
+    """"""
+"
+allenai|allennlp|__init__.py|001	Function	"    def _is_empty_default(default: Any) -> bool:
+        if default is None:
+            return True
+        if isinstance(default, (str, list, tuple, set)):
+            return not bool(default)
+        return False
+"
+allenai|allennlp|__init__.py|002	Function	"    def add_argument(self, *args, **kwargs):
+        # Add default value to the help message when the default is meaningful.
+        default = kwargs.get(""default"")
+        if kwargs.get(
+            ""action""
+        ) not in self._action_defaults_to_ignore and not self._is_empty_default(default):
+            description = kwargs.get(""help"", """")
+            kwargs[""help""] = f""{description} (default = {default})""
+        super().add_argument(*args, **kwargs)
+"
+allenai|allennlp|__init__.py|003	Function	"def parse_args(prog: Optional[str] = None) -> Tuple[argparse.ArgumentParser, argparse.Namespace]:
+    """"""
+    Creates the argument parser for the main program and uses it to parse the args.
+    """"""
+    parser = ArgumentParserWithDefaults(description=""Run AllenNLP"", prog=prog)
+    parser.add_argument(""--version"", action=""version"", version=f""%(prog)s {__version__}"")
+"
+allenai|allennlp|__init__.py|004	Function	"    def add_subcommands():
+        for subcommand_name in sorted(Subcommand.list_available()):
+            if subcommand_name in subcommands:
+                continue
+            subcommands.add(subcommand_name)
+            subcommand_class = Subcommand.by_name(subcommand_name)
+            subcommand = subcommand_class()
+            subparser = subcommand.add_subparser(subparsers)
+            if subcommand_class.requires_plugins:
+                subparser.add_argument(
+                    ""--include-package"",
+                    type=str,
+                    action=""append"",
+                    default=[],
+                    help=""additional packages to include"",
+                )
+"
+allenai|allennlp|_checklist_internal.py|000	Class	"class CheckList(Subcommand):
+    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+"
+allenai|allennlp|_checklist_internal.py|001	Class	"class _CheckListManager:
+    def __init__(
+        self,
+        task_suite: TaskSuite,
+        predictor: Predictor,
+        capabilities: Optional[List[str]] = None,
+        max_examples: Optional[int] = None,
+        output_file: Optional[str] = None,
+        print_summary_args: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        self._task_suite = task_suite
+        self._predictor = predictor
+        self._capabilities = capabilities
+        self._max_examples = max_examples
+        self._output_file = None if output_file is None else open(output_file, ""w"")
+        self._print_summary_args = print_summary_args or {}
+"
+allenai|allennlp|_checklist_internal.py|002	Function	"    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+"
+allenai|allennlp|_checklist_internal.py|003	Function	"def _get_predictor(args: argparse.Namespace) -> Predictor:
+    check_for_gpu(args.cuda_device)
+    archive = load_archive(
+        args.archive_file,
+        cuda_device=args.cuda_device,
+    )
+"
+allenai|allennlp|_checklist_internal.py|004	Function	"def _get_task_suite(args: argparse.Namespace) -> TaskSuite:
+    available_tasks = TaskSuite.list_available()
+    if args.task in available_tasks:
+        suite_name = args.task
+    else:
+        raise ConfigurationError(
+            f""'{args.task}' is not a recognized task suite. ""
+            f""Available tasks are: {available_tasks}.""
+        )
+"
+RaRe-Technologies|gensim|test_notebooks.py|000	Function	"def _notebook_run(path):
+    """"""Execute a notebook via nbconvert and collect output.
+       :returns (parsed nb object, execution errors)
+    """"""
+    kernel_name = 'python%d' % sys.version_info[0]
+    this_file_directory = os.path.dirname(__file__)
+    errors = []
+    with tempfile.NamedTemporaryFile(suffix="".ipynb"", mode='wt') as fout:
+        with smart_open(path, 'rb') as f:
+            nb = nbformat.read(f, as_version=4)
+            nb.metadata.get('kernelspec', {})['name'] = kernel_name
+            ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10)
+"
+RaRe-Technologies|gensim|test_notebooks.py|001	Function	"def test_notebooks():
+    for notebook in glob(""*.ipynb""):
+        if "" "" in notebook:
+            continue
+        print(""Testing {}"".format(notebook))
+        nb, errors = _notebook_run(notebook)
+        assert errors == []
+"
+RaRe-Technologies|gensim|check_wheels.py|000	Function	"def to_int(value):
+    value = ''.join((x for x in value if x.isdigit()))
+    try:
+        return int(value)
+    except Exception:
+        return 0
+"
+RaRe-Technologies|gensim|check_wheels.py|001	Function	"def to_tuple(version):
+    return tuple(to_int(x) for x in version.split('.'))
+"
+RaRe-Technologies|gensim|check_wheels.py|002	Function	"def main():
+    project = sys.argv[1]
+    json = requests.get('https://pypi.org/pypi/%s/json' % project).json()
+    for version in sorted(json['releases'], key=to_tuple):
+        print(version)
+        wheel_packages = [
+            p for p in json['releases'][version]
+            if p['packagetype'] == 'bdist_wheel'
+        ]
+        for p in wheel_packages:
+            print('    %(python_version)s %(filename)s' % p)
+"
+huggingface|pytorch-image-models|benchmark.py|000	Class	"class BenchmarkRunner:
+    def __init__(
+            self,
+            model_name,
+            detail=False,
+            device='cuda',
+            torchscript=False,
+            torchcompile=None,
+            aot_autograd=False,
+            precision='float32',
+            fuser='',
+            num_warm_iter=10,
+            num_bench_iter=50,
+            use_train_size=False,
+            **kwargs
+    ):
+        self.model_name = model_name
+        self.detail = detail
+        self.device = device
+        self.amp_dtype, self.model_dtype, self.data_dtype = resolve_precision(precision)
+        self.channels_last = kwargs.pop('channels_last', False)
+        if self.amp_dtype is not None:
+            self.amp_autocast = partial(torch.cuda.amp.autocast, dtype=self.amp_dtype)
+        else:
+            self.amp_autocast = suppress
+"
+huggingface|pytorch-image-models|benchmark.py|001	Class	"class InferenceBenchmarkRunner(BenchmarkRunner):
+"
+huggingface|pytorch-image-models|benchmark.py|002	Class	"class TrainBenchmarkRunner(BenchmarkRunner):
+"
+huggingface|pytorch-image-models|benchmark.py|003	Class	"class ProfileRunner(BenchmarkRunner):
+"
+huggingface|pytorch-image-models|benchmark.py|004	Function	"def timestamp(sync=False):
+    return time.perf_counter()
+"
+huggingface|pytorch-image-models|avg_checkpoints.py|000	Function	"def checkpoint_metric(checkpoint_path):
+    if not checkpoint_path or not os.path.isfile(checkpoint_path):
+        return {}
+    print(""=> Extracting metric from checkpoint '{}'"".format(checkpoint_path))
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    metric = None
+    if 'metric' in checkpoint:
+        metric = checkpoint['metric']
+    elif 'metrics' in checkpoint and 'metric_name' in checkpoint:
+        metrics = checkpoint['metrics']
+        print(metrics)
+        metric = metrics[checkpoint['metric_name']]
+    return metric
+"
+huggingface|pytorch-image-models|avg_checkpoints.py|001	Function	"def main():
+    args = parser.parse_args()
+    # by default use the EMA weights (if present)
+    args.use_ema = not args.no_use_ema
+    # by default sort by checkpoint metric (if present) and avg top n checkpoints
+    args.sort = not args.no_sort
+"
+huggingface|pytorch-image-models|clean_checkpoint.py|000	Function	"def main():
+    args = parser.parse_args()
+"
+huggingface|pytorch-image-models|clean_checkpoint.py|001	Function	"def clean_checkpoint(
+        checkpoint,
+        output,
+        use_ema=True,
+        no_hash=False,
+        clean_aux_bn=False,
+        safe_serialization: bool=False,
+):
+    # Load an existing checkpoint to CPU, strip everything but the state_dict and re-save
+    if checkpoint and os.path.isfile(checkpoint):
+        print(""=> Loading checkpoint '{}'"".format(checkpoint))
+        state_dict = load_state_dict(checkpoint, use_ema=use_ema)
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            if clean_aux_bn and 'aux_bn' in k:
+                # If all aux_bn keys are removed, the SplitBN layers will end up as normal and
+                # load with the unmodified model using BatchNorm2d.
+                continue
+            name = k[7:] if k.startswith('module.') else k
+            new_state_dict[name] = v
+        print(""=> Loaded state_dict from '{}'"".format(checkpoint))
+"
+huggingface|pytorch-image-models|bulk_runner.py|000	Function	"def cmd_from_args(args) -> Tuple[Union[Callable, str], List[str]]:
+    # If ``args`` not passed, defaults to ``sys.argv[:1]``
+    with_python = not args.no_python
+    cmd: Union[Callable, str]
+    cmd_args = []
+    if with_python:
+        cmd = os.getenv(""PYTHON_EXEC"", sys.executable)
+        cmd_args.append(""-u"")
+        if args.module:
+            cmd_args.append(""-m"")
+        cmd_args.append(args.script)
+    else:
+        if args.module:
+            raise ValueError(
+                ""Don't use both the '--no_python' flag""
+                "" and the '--module' flag at the same time.""
+            )
+        cmd = args.script
+    cmd_args.extend(args.script_args)
+"
+huggingface|pytorch-image-models|bulk_runner.py|001	Function	"def main():
+    args = parser.parse_args()
+    cmd, cmd_args = cmd_from_args(args)
+"
+huggingface|pytorch-image-models|bulk_runner.py|002	Function	"def write_results(results_file, results):
+    with open(results_file, mode='w') as cf:
+        dw = csv.DictWriter(cf, fieldnames=results[0].keys())
+        dw.writeheader()
+        for r in results:
+            dw.writerow(r)
+        cf.flush()
+"
+albumentations-team|albumentations|functional.py|000	Function	"def blur(img: np.ndarray, ksize: int) -> np.ndarray:
+    blur_fn = _maybe_process_in_chunks(cv2.blur, ksize=(ksize, ksize))
+    return blur_fn(img)
+"
+albumentations-team|albumentations|functional.py|001	Function	"def median_blur(img: np.ndarray, ksize: int) -> np.ndarray:
+    if img.dtype == np.float32 and ksize not in {3, 5}:
+        raise ValueError(f""Invalid ksize value {ksize}. For a float32 image the only valid ksize values are 3 and 5"")
+"
+albumentations-team|albumentations|functional.py|002	Function	"def gaussian_blur(img: np.ndarray, ksize: int, sigma: float = 0) -> np.ndarray:
+    # When sigma=0, it is computed as `sigma = 0.3*((ksize-1)*0.5 - 1) + 0.8`
+    blur_fn = _maybe_process_in_chunks(cv2.GaussianBlur, ksize=(ksize, ksize), sigmaX=sigma)
+    return blur_fn(img)
+"
+albumentations-team|albumentations|functional.py|003	Function	"def glass_blur(
+    img: np.ndarray, sigma: float, max_delta: int, iterations: int, dxy: np.ndarray, mode: str
+) -> np.ndarray:
+    x = cv2.GaussianBlur(np.array(img), sigmaX=sigma, ksize=(0, 0))
+"
+albumentations-team|albumentations|functional.py|004	Function	"def defocus(img: np.ndarray, radius: int, alias_blur: float) -> np.ndarray:
+    length = np.arange(-max(8, radius), max(8, radius) + 1)
+    ksize = 3 if radius <= 8 else 5
+"
+google|jax|parse_logs.py|000	Class	"class DefaultReport:
+  outcome : str = ""none""
+"
+google|jax|parse_logs.py|001	Function	"def parse_line(line):
+  # TODO(jakevdp): should we parse other report types?
+  parsed = json.loads(line)
+  if parsed.get(""$report_type"") == ""TestReport"":
+    return TestReport._from_json(parsed)
+  return DefaultReport()
+"
+google|jax|parse_logs.py|002	Function	"def main(logfile, outfile):
+  logging.info(""Parsing %s"", logfile)
+  try:
+    with open(logfile, 'r') as f:
+      reports = (parse_line(line) for line in f)
+      failures = (r for r in reports if r.outcome == ""failed"")
+      summary = ""\n"".join(f""{f.nodeid}: {f.longrepr.chain[0][1].message}""
+                          for f in failures)
+    logging.info(""Parsed summary:\n%s"", summary)
+  except Exception:
+    err_info = traceback.format_exc()
+    logging.info(""Parsing failed:\n%s"", err_info)
+    summary = f""Log parsing failed; traceback:\n\n{err_info}""
+  logging.info(""Writing result to %s"", outfile)
+  with open(outfile, 'w') as f:
+    f.write(MSG_FORMAT.format(summary=summary))
+"
+google|jax|oci_cluster_manager.py|000	Function	"def get_regions():
+    return requests.post(_API_URL, json={'name':'list_regions'},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['regions']
+"
+google|jax|oci_cluster_manager.py|001	Function	"def find_existing_cluster():
+    return requests.post(_API_URL, json={'name':'find_cluster'},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['region']
+"
+google|jax|oci_cluster_manager.py|002	Function	"def get_cluster_ip(region):
+    return requests.post(_API_URL, json={'name':'get_cluster_ip', 'region':region},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_ip']
+"
+google|jax|oci_cluster_manager.py|003	Function	"def get_cluster_username(region):
+    return requests.post(_API_URL, json={'name':'get_cluster_username', 'region':region},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_username']
+"
+google|jax|oci_cluster_manager.py|004	Function	"def create_cluster(region):
+    logging.debug(requests.post(_API_URL, json={'name':'create_cluster', 'region':region},
+                                auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS))
+"
+google|jax|extract_e2e_tests_metrics.py|000	Function	"def main(logfile: str, outmd: str, outjson: str, name: str):
+    print(f""Extracting content of {logfile}"")
+    print(f""and writing to {outmd} and {outjson}"")
+"
+google|jax|api_benchmark.py|000	Class	"class AnEnum(enum.IntEnum):
+  A = 123
+  B = 456
+"
+google|jax|api_benchmark.py|001	Function	"def required_devices(num_devices_required):
+  """"""Helper to skip benchmarks that require more devices.""""""
+  def helper1(f):
+    @functools.wraps(f)
+    def helper2(state):
+      if jax.device_count() < num_devices_required:
+        state.skip_with_error(f""requires {num_devices_required} devices"")
+        return
+      return f(state)
+    return helper2
+  return helper1
+"
+google|jax|api_benchmark.py|002	Function	"  def helper1(f):
+    @functools.wraps(f)
+    def helper2(state):
+      if jax.device_count() < num_devices_required:
+        state.skip_with_error(f""requires {num_devices_required} devices"")
+        return
+      return f(state)
+    return helper2
+  return helper1
+"
+google|jax|api_benchmark.py|003	Function	"    def helper2(state):
+      if jax.device_count() < num_devices_required:
+        state.skip_with_error(f""requires {num_devices_required} devices"")
+        return
+      return f(state)
+    return helper2
+  return helper1
+"
+google|jax|api_benchmark.py|004	Function	"def create_mesh(shape, axis_names, state):
+  size = np.prod(shape)
+  if len(jax.devices()) < size:
+    state.skip_with_error(f""Requires {size} devices"")
+    return None
+  devices = sorted(jax.devices(), key=lambda d: d.id)
+  mesh_devices = np.array(devices[:size]).reshape(shape)
+  global_mesh = jax.sharding.Mesh(mesh_devices, axis_names)
+  return global_mesh
+"
+Rapptz|discord.py|abc.py|000	Class	"class _Undefined:
+    def __repr__(self) -> str:
+        return 'see-below'
+"
+Rapptz|discord.py|abc.py|001	Class	"class Snowflake(Protocol):
+    """"""An ABC that details the common operations on a Discord model.
+"
+Rapptz|discord.py|abc.py|002	Class	"class User(Snowflake, Protocol):
+    """"""An ABC that details the common operations on a Discord user.
+"
+Rapptz|discord.py|abc.py|003	Class	"class PrivateChannel:
+    """"""An ABC that details the common operations on a private Discord channel.
+"
+Rapptz|discord.py|abc.py|004	Class	"class _Overwrites:
+    __slots__ = ('id', 'allow', 'deny', 'type')
+"
+Rapptz|discord.py|__main__.py|000	Class	"class Bot(commands.{base}):
+    def __init__(self, intents: discord.Intents, **kwargs):
+        super().__init__(command_prefix=commands.when_mentioned_or('{prefix}'), intents=intents, **kwargs)
+"
+Rapptz|discord.py|__main__.py|001	Class	"    parser.add_argument('--class-name', help='the class name of the cog (default: <name>)', dest='class_name')
+    parser.add_argument('--display-name', help='the cog name (default: <name>)')
+    parser.add_argument('--hide-commands', help='whether to hide all commands in the cog', action='store_true')
+    parser.add_argument('--full', help='add all special methods as well', action='store_true')
+"
+Rapptz|discord.py|__main__.py|002	Function	"def show_version() -> None:
+    entries = []
+"
+Rapptz|discord.py|__main__.py|003	Function	"def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.version:
+        show_version()
+    else:
+        parser.print_help()
+"
+Rapptz|discord.py|__main__.py|004	Function	"    def __init__(self, intents: discord.Intents, **kwargs):
+        super().__init__(command_prefix=commands.when_mentioned_or('{prefix}'), intents=intents, **kwargs)
+"
+Rapptz|discord.py|__init__.py|000	Class	"class VersionInfo(NamedTuple):
+    major: int
+    minor: int
+    micro: int
+    releaselevel: Literal[""alpha"", ""beta"", ""candidate"", ""final""]
+    serial: int
+"
+scrapy|scrapy|conftest.py|000	Function	"def load_response(url: str, filename: str) -> HtmlResponse:
+    input_path = Path(__file__).parent / ""_tests"" / filename
+    return HtmlResponse(url, body=input_path.read_bytes())
+"
+scrapy|scrapy|conftest.py|001	Function	"def setup(namespace):
+    namespace[""load_response""] = load_response
+"
+scrapy|scrapy|conftest.py|002	Function	"def _py_files(folder):
+    return (str(p) for p in Path(folder).rglob(""*.py""))
+"
+scrapy|scrapy|conftest.py|003	Function	"def chdir(tmpdir):
+    """"""Change to pytest-provided temporary directory""""""
+    tmpdir.chdir()
+"
+scrapy|scrapy|conftest.py|004	Function	"def pytest_addoption(parser):
+    parser.addoption(
+        ""--reactor"",
+        default=""default"",
+        choices=[""default"", ""asyncio""],
+    )
+"
+scrapy|scrapy|scrapydocs.py|000	Class	"class settingslist_node(nodes.General, nodes.Element):
+    pass
+"
+scrapy|scrapy|scrapydocs.py|001	Class	"class SettingsListDirective(Directive):
+    def run(self):
+        return [settingslist_node("""")]
+"
+scrapy|scrapy|scrapydocs.py|002	Function	"    def run(self):
+        return [settingslist_node("""")]
+"
+scrapy|scrapy|scrapydocs.py|003	Function	"def is_setting_index(node):
+    if node.tagname == ""index"" and node[""entries""]:
+        # index entries for setting directives look like:
+        # [('pair', 'SETTING_NAME; setting', 'std:setting-SETTING_NAME', '')]
+        entry_type, info, refid = node[""entries""][0][:3]
+        return entry_type == ""pair"" and info.endswith(""; setting"")
+    return False
+"
+scrapy|scrapy|scrapydocs.py|004	Function	"def get_setting_target(node):
+    # target nodes are placed next to the node in the doc tree
+    return node.parent[node.parent.index(node) + 1]
+"
+scrapy|scrapy|conf.py|000	Function	"def setup(app):
+    app.connect(""autodoc-skip-member"", maybe_skip_member)
+"
+scrapy|scrapy|conf.py|001	Function	"def maybe_skip_member(app, what, name, obj, skip, options):
+    if not skip:
+        # autodocs was generating a text ""alias of"" for the following members
+        # https://github.com/sphinx-doc/sphinx/issues/4422
+        return name in {""default_item_class"", ""default_selector_class""}
+    return skip
+"
+certbot|certbot|crypto_util.py|000	Class	"class _DefaultCertSelection:
+    def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
+        self.certs = certs
+"
+certbot|certbot|crypto_util.py|001	Class	"class SSLSocket:  # pylint: disable=too-few-public-methods
+    """"""SSL wrapper for sockets.
+"
+certbot|certbot|crypto_util.py|002	Class	"    class FakeConnection:
+        """"""Fake OpenSSL.SSL.Connection.""""""
+"
+certbot|certbot|crypto_util.py|003	Function	"    def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
+        self.certs = certs
+"
+certbot|certbot|crypto_util.py|004	Function	"    def __call__(self, connection: SSL.Connection) -> Optional[Tuple[crypto.PKey, crypto.X509]]:
+        server_name = connection.get_servername()
+        if server_name:
+            return self.certs.get(server_name, None)
+        return None # pragma: no cover
+"
+certbot|certbot|client.py|000	Class	"class ClientV2:
+    """"""ACME client for a v2 API.
+"
+certbot|certbot|client.py|001	Class	"class ClientNetwork:
+    """"""Wrapper around requests that signs POSTs for authentication.
+"
+certbot|certbot|client.py|002	Function	"    def __init__(self, directory: messages.Directory, net: 'ClientNetwork') -> None:
+        """"""Initialize.
+"
+certbot|certbot|client.py|003	Function	"    def new_account(self, new_account: messages.NewRegistration) -> messages.RegistrationResource:
+        """"""Register.
+"
+certbot|certbot|client.py|004	Function	"    def query_registration(self, regr: messages.RegistrationResource
+                           ) -> messages.RegistrationResource:
+        """"""Query server about registration.
+"
+certbot|certbot|challenges.py|000	Class	"class Challenge(jose.TypedJSONObjectWithFields):
+    # _fields_to_partial_json
+    """"""ACME challenge.""""""
+    TYPES: Dict[str, Type['Challenge']] = {}
+"
+certbot|certbot|challenges.py|001	Class	"class ChallengeResponse(jose.TypedJSONObjectWithFields):
+    # _fields_to_partial_json
+    """"""ACME challenge response.""""""
+    TYPES: Dict[str, Type['ChallengeResponse']] = {}
+"
+certbot|certbot|challenges.py|002	Class	"class UnrecognizedChallenge(Challenge):
+    """"""Unrecognized challenge.
+"
+certbot|certbot|challenges.py|003	Class	"class _TokenChallenge(Challenge):
+    """"""Challenge with token.
+"
+certbot|certbot|challenges.py|004	Class	"class KeyAuthorizationChallengeResponse(ChallengeResponse):
+    """"""Response to Challenges based on Key Authorization.
+"
+wagtail|wagtail|runtests.py|000	Function	"def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        ""--deprecation"",
+        choices=[""all"", ""pending"", ""imminent"", ""none""],
+        default=""imminent"",
+    )
+    parser.add_argument(""--postgres"", action=""store_true"")
+    parser.add_argument(""--elasticsearch5"", action=""store_true"")
+    parser.add_argument(""--elasticsearch6"", action=""store_true"")
+    parser.add_argument(""--elasticsearch7"", action=""store_true"")
+    parser.add_argument(""--emailuser"", action=""store_true"")
+    parser.add_argument(""--disabletimezone"", action=""store_true"")
+    parser.add_argument(""--bench"", action=""store_true"")
+    return parser
+"
+wagtail|wagtail|runtests.py|001	Function	"def parse_args(args=None):
+    return make_parser().parse_known_args(args)
+"
+wagtail|wagtail|runtests.py|002	Function	"def runtests():
+    args, rest = parse_args()
+"
+wagtail|wagtail|conftest.py|000	Function	"def pytest_addoption(parser):
+    parser.addoption(
+        ""--deprecation"",
+        choices=[""all"", ""pending"", ""imminent"", ""none""],
+        default=""pending"",
+    )
+    parser.addoption(""--postgres"", action=""store_true"")
+    parser.addoption(""--elasticsearch"", action=""store_true"")
+"
+wagtail|wagtail|conftest.py|001	Function	"def pytest_configure(config):
+    deprecation = config.getoption(""deprecation"")
+"
+wagtail|wagtail|conftest.py|002	Function	"def pytest_unconfigure(config):
+    from wagtail.test.settings import MEDIA_ROOT, STATIC_ROOT
+"
+wagtail|wagtail|conf.py|000	Function	"def setup(app):
+    app.add_js_file(""js/banner.js"")
+"
+psf|requests|__init__.py|000	Function	"def check_compatibility(urllib3_version, chardet_version, charset_normalizer_version):
+    urllib3_version = urllib3_version.split(""."")
+    assert urllib3_version != [""dev""]  # Verify urllib3 isn't installed from git.
+"
+psf|requests|__init__.py|001	Function	"def _check_cryptography(cryptography_version):
+    # cryptography < 1.3.4
+    try:
+        cryptography_version = list(map(int, cryptography_version.split(""."")))
+    except ValueError:
+        return
+"
+psf|requests|flask_theme_support.py|000	Class	"class FlaskyStyle(Style):
+    background_color = ""#f8f8f8""
+    default_style = """"
+"
+psf|requests|flask_theme_support.py|001	Class	"        # No corresponding class for the following:
+        #Text:                     """", # class:  ''
+        Whitespace:                ""underline #f8f8f8"",      # class: 'w'
+        Error:                     ""#a40000 border:#ef2929"", # class: 'err'
+        Other:                     ""#000000"",                # class 'x'
+"
+pypa|pipenv|conf.py|000	Function	"def setup(app):
+    app.add_css_file(""custom.css"")
+"
+pypa|pipenv|get-pipenv.py|000	Function	"# def determine_pip_install_arguments():
+#     implicit_pip = True
+# +    implicit_setuptools = False
+# -    implicit_setuptools = True
+#     implicit_wheel = True
+#
+#     # Check if the user has requested us not to install setuptools
+# @@ -87,8 +60,6 @@
+#
+#     # We only want to implicitly install setuptools and wheel if they don't
+#     # already exist on the target platform.
+# +    # No need for doing this, since pipenv already has setuptools as
+# +    # a dependency in setup.py
+#     if implicit_setuptools:
+#         try:
+#             import setuptools  # noqa
+# @@ -109,8 +80,6 @@
+#         args += [""setuptools""]
+#     if implicit_wheel:
+#         args += [""wheel""]
+# +
+# +    args += [""pipenv""]
+#
+#     return [""install"", ""--upgrade"", ""--force-reinstall""] + args
+"
+pypa|pipenv|get-pipenv.py|001	Function	"def determine_pip_install_arguments():
+    implicit_pip = True
+    implicit_setuptools = False
+    implicit_wheel = True
+"
+pypa|pipenv|get-pipenv.py|002	Function	"def monkeypatch_for_cert(tmpdir):
+    """"""Patches `pip install` to provide default certificate with the lowest priority.
+"
+pypa|pipenv|get-pipenv.py|003	Function	"    def cert_parse_args(self, args):
+        if not self.parser.get_default_values().cert:
+            # There are no user provided cert -- force use of bundled cert
+            self.parser.defaults[""cert""] = cert_path  # calculated above
+        return install_parse_args(self, args)
+"
+pypa|pipenv|get-pipenv.py|004	Function	"def bootstrap(tmpdir):
+    monkeypatch_for_cert(tmpdir)
+"
+huggingface|datasets|benchmark_iterating.py|000	Function	"def read(dataset: datasets.Dataset, length):
+    for i in range(length):
+        _ = dataset[i]
+"
+huggingface|datasets|benchmark_iterating.py|001	Function	"def read_batch(dataset: datasets.Dataset, length, batch_size):
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_iterating.py|002	Function	"def read_formatted(dataset: datasets.Dataset, length, type):
+    with dataset.formatted_as(type=type):
+        for i in range(length):
+            _ = dataset[i]
+"
+huggingface|datasets|benchmark_iterating.py|003	Function	"def read_formatted_batch(dataset: datasets.Dataset, length, batch_size, type):
+    with dataset.formatted_as(type=type):
+        for i in range(0, length, batch_size):
+            _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_iterating.py|004	Function	"def benchmark_iterating():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    functions = [
+        (read, {""length"": SMALL_TEST}),
+        (read, {""length"": SPEED_TEST_N_EXAMPLES}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 10}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 100}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 1_000}),
+        (read_formatted, {""type"": ""numpy"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""pandas"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""torch"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""tensorflow"", ""length"": SMALL_TEST}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 10}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 1_000}),
+    ]
+"
+huggingface|datasets|benchmark_getitem_100B.py|000	Class	"class RandIter:
+    low: int
+    high: int
+    size: int
+    seed: int
+"
+huggingface|datasets|benchmark_getitem_100B.py|001	Function	"def generate_100B_dataset(num_examples: int, chunk_size: int) -> datasets.Dataset:
+    table = pa.Table.from_pydict({""col"": [0] * chunk_size})
+    table = pa.concat_tables([table] * (num_examples // chunk_size))
+    return datasets.Dataset(table, fingerprint=""table_100B"")
+"
+huggingface|datasets|benchmark_getitem_100B.py|002	Function	"    def __post_init__(self):
+        rng = np.random.default_rng(self.seed)
+        self._sampled_values = rng.integers(low=self.low, high=self.high, size=self.size).tolist()
+"
+huggingface|datasets|benchmark_getitem_100B.py|003	Function	"    def __iter__(self):
+        return iter(self._sampled_values)
+"
+huggingface|datasets|benchmark_getitem_100B.py|004	Function	"    def __len__(self):
+        return self.size
+"
+huggingface|datasets|benchmark_array_xd.py|000	Function	"def write(my_features, dummy_data, tmp_dir):
+    with ArrowWriter(features=my_features, path=os.path.join(tmp_dir, ""beta.arrow"")) as writer:
+        for key, record in dummy_data:
+            example = my_features.encode_example(record)
+            writer.write(example)
+        num_examples, num_bytes = writer.finalize()
+"
+huggingface|datasets|benchmark_array_xd.py|001	Function	"def read_unformated(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for _ in dataset:
+        pass
+"
+huggingface|datasets|benchmark_array_xd.py|002	Function	"def read_formatted_as_numpy(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for _ in dataset:
+        pass
+"
+huggingface|datasets|benchmark_array_xd.py|003	Function	"def read_batch_unformated(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_array_xd.py|004	Function	"def read_batch_formatted_as_numpy(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_indices_mapping.py|000	Function	"def select(dataset: datasets.Dataset):
+    _ = dataset.select(range(0, len(dataset), 2))
+"
+huggingface|datasets|benchmark_indices_mapping.py|001	Function	"def sort(dataset: datasets.Dataset):
+    _ = dataset.sort(""numbers"")
+"
+huggingface|datasets|benchmark_indices_mapping.py|002	Function	"def shuffle(dataset: datasets.Dataset):
+    _ = dataset.shuffle()
+"
+huggingface|datasets|benchmark_indices_mapping.py|003	Function	"def train_test_split(dataset: datasets.Dataset):
+    _ = dataset.train_test_split(0.1)
+"
+huggingface|datasets|benchmark_indices_mapping.py|004	Function	"def shard(dataset: datasets.Dataset, num_shards=10):
+    for shard_id in range(num_shards):
+        _ = dataset.shard(num_shards, shard_id)
+"
+huggingface|transformers|conftest.py|000	Class	"class CustomOutputChecker(OutputChecker):
+    def check_output(self, want, got, optionflags):
+        if IGNORE_RESULT & optionflags:
+            return True
+        return OutputChecker.check_output(self, want, got, optionflags)
+"
+huggingface|transformers|conftest.py|001	Function	"def pytest_configure(config):
+    config.addinivalue_line(
+        ""markers"", ""is_pt_tf_cross_test: mark test to run only when PT and TF interactions are tested""
+    )
+    config.addinivalue_line(
+        ""markers"", ""is_pt_flax_cross_test: mark test to run only when PT and FLAX interactions are tested""
+    )
+    config.addinivalue_line(
+        ""markers"", ""is_pipeline_test: mark test to run only when pipelines are tested""
+    )
+    config.addinivalue_line(""markers"", ""is_staging_test: mark test to run only in the staging environment"")
+"
+huggingface|transformers|conftest.py|002	Function	"def pytest_addoption(parser):
+    from transformers.testing_utils import pytest_addoption_shared
+"
+huggingface|transformers|conftest.py|003	Function	"def pytest_terminal_summary(terminalreporter):
+    from transformers.testing_utils import pytest_terminal_summary_main
+"
+huggingface|transformers|conftest.py|004	Function	"def pytest_sessionfinish(session, exitstatus):
+    # If no tests are collected, pytest exists with code 5, which makes the CI fail.
+    if exitstatus == 5:
+        session.exitstatus = 0
+"
+huggingface|transformers|create_circleci_config.py|000	Class	"class CircleCIJob:
+    name: str
+    additional_env: Dict[str, Any] = None
+    cache_name: str = None
+    cache_version: str = ""0.6""
+    docker_image: List[Dict[str, str]] = None
+    install_steps: List[str] = None
+    marker: Optional[str] = None
+    parallelism: Optional[int] = 1
+    pytest_num_workers: int = 8
+    pytest_options: Dict[str, Any] = None
+    resource_class: Optional[str] = ""xlarge""
+    tests_to_run: Optional[List[str]] = None
+    working_directory: str = ""~/transformers""
+"
+huggingface|transformers|create_circleci_config.py|001	Function	"    def __post_init__(self):
+        # Deal with defaults for mutable attributes.
+        if self.additional_env is None:
+            self.additional_env = {}
+        if self.cache_name is None:
+            self.cache_name = self.name
+        if self.docker_image is None:
+            # Let's avoid changing the default list and make a copy.
+            self.docker_image = copy.deepcopy(DEFAULT_DOCKER_IMAGE)
+        if self.install_steps is None:
+            self.install_steps = []
+        if self.pytest_options is None:
+            self.pytest_options = {}
+        if isinstance(self.tests_to_run, str):
+            self.tests_to_run = [self.tests_to_run]
+        if self.parallelism is None:
+            self.parallelism = 1
+"
+huggingface|transformers|create_circleci_config.py|002	Function	"    def to_dict(self):
+        env = COMMON_ENV_VARIABLES.copy()
+        env.update(self.additional_env)
+        job = {
+            ""working_directory"": self.working_directory,
+            ""docker"": self.docker_image,
+            ""environment"": env,
+        }
+        if self.resource_class is not None:
+            job[""resource_class""] = self.resource_class
+        if self.parallelism is not None:
+            job[""parallelism""] = self.parallelism
+        steps = [
+            ""checkout"",
+            {""attach_workspace"": {""at"": ""~/transformers/test_preparation""}},
+            {
+                ""restore_cache"": {
+                    ""keys"": [
+                        f""v{self.cache_version}-{self.cache_name}-"" + '{{ checksum ""setup.py"" }}',
+                        f""v{self.cache_version}-{self.cache_name}-"",
+                    ]
+                }
+            },
+        ]
+        steps.extend([{""run"": l} for l in self.install_steps])
+        steps.append(
+            {
+                ""save_cache"": {
+                    ""key"": f""v{self.cache_version}-{self.cache_name}-"" + '{{ checksum ""setup.py"" }}',
+                    ""paths"": [""~/.cache/pip""],
+                }
+            }
+        )
+        steps.append({""run"": {""name"": ""Show installed libraries and their versions"", ""command"": ""pip freeze | tee installed.txt""}})
+        steps.append({""store_artifacts"": {""path"": ""~/transformers/installed.txt""}})
+"
+huggingface|transformers|create_circleci_config.py|003	Function	"    def job_name(self):
+        return self.name if ""examples"" in self.name else f""tests_{self.name}""
+"
+huggingface|transformers|create_circleci_config.py|004	Function	"def create_circleci_config(folder=None):
+    if folder is None:
+        folder = os.getcwd()
+    # Used in CircleCIJob.to_dict() to expand the test list (for using parallelism)
+    os.environ[""test_preparation_dir""] = folder
+    jobs = []
+    all_test_file = os.path.join(folder, ""test_list.txt"")
+    if os.path.exists(all_test_file):
+        with open(all_test_file) as f:
+            all_test_list = f.read()
+    else:
+        all_test_list = []
+    if len(all_test_list) > 0:
+        jobs.extend(PIPELINE_TESTS)
+"
+cookiecutter|cookiecutter|cli.py|000	Function	"def version_msg():
+    """"""Return the Cookiecutter version, location and Python powering it.""""""
+    python_version = sys.version
+    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return f""Cookiecutter {__version__} from {location} (Python {python_version})""
+"
+cookiecutter|cookiecutter|cli.py|001	Function	"def validate_extra_context(ctx, param, value):
+    """"""Validate extra context.""""""
+    for string in value:
+        if '=' not in string:
+            raise click.BadParameter(
+                f""EXTRA_CONTEXT should contain items of the form key=value; ""
+                f""'{string}' doesn't match that form""
+            )
+"
+cookiecutter|cookiecutter|cli.py|002	Function	"def list_installed_templates(default_config, passed_config_file):
+    """"""List installed (locally cloned) templates. Use cookiecutter --list-installed.""""""
+    config = get_user_config(passed_config_file, default_config)
+    cookiecutter_folder = config.get('cookiecutters_dir')
+    if not os.path.exists(cookiecutter_folder):
+        click.echo(
+            f""Error: Cannot list installed templates. ""
+            f""Folder does not exist: {cookiecutter_folder}""
+        )
+        sys.exit(-1)
+"
+cookiecutter|cookiecutter|cli.py|003	Function	"def main(
+    template,
+    extra_context,
+    no_input,
+    checkout,
+    verbose,
+    replay,
+    overwrite_if_exists,
+    output_dir,
+    config_file,
+    default_config,
+    debug_file,
+    directory,
+    skip_if_file_exists,
+    accept_hooks,
+    replay_file,
+    list_installed,
+    keep_project_on_failure,
+):
+    """"""Create a project from a Cookiecutter project template (TEMPLATE).
+"
+python|mypy|conf.py|000	Function	"def setup(app: Sphinx) -> None:
+    app.add_object_type(
+        ""confval"",
+        ""confval"",
+        objname=""configuration value"",
+        indextemplate=""pair: %s; configuration value"",
+        doc_field_types=[
+            Field(""type"", label=""Type"", has_arg=False, names=(""type"",)),
+            Field(""default"", label=""Default"", has_arg=False, names=(""default"",)),
+        ],
+    )
+"
+python|mypy|conftest.py|000	Function	"def pytest_configure(config):
+    mypy_source_root = os.path.dirname(os.path.abspath(__file__))
+    if os.getcwd() != mypy_source_root:
+        os.chdir(mypy_source_root)
+"
+python|mypy|conftest.py|001	Function	"def pytest_addoption(parser) -> None:
+    parser.addoption(
+        ""--bench"", action=""store_true"", default=False, help=""Enable the benchmark test runs""
+    )
+"
+python|mypy|apply-cache-diff.py|000	Function	"def make_cache(input_dir: str, sqlite: bool) -> MetadataStore:
+    if sqlite:
+        return SqliteMetadataStore(input_dir)
+    else:
+        return FilesystemMetadataStore(input_dir)
+"
+python|mypy|apply-cache-diff.py|001	Function	"def apply_diff(cache_dir: str, diff_file: str, sqlite: bool = False) -> None:
+    cache = make_cache(cache_dir, sqlite)
+    with open(diff_file) as f:
+        diff = json.load(f)
+"
+python|mypy|apply-cache-diff.py|002	Function	"def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(""--sqlite"", action=""store_true"", default=False, help=""Use a sqlite cache"")
+    parser.add_argument(""cache_dir"", help=""Directory for the cache"")
+    parser.add_argument(""diff"", help=""Cache diff file"")
+    args = parser.parse_args()
+"
+python|mypy|analyze_cache.py|000	Class	"class CacheData:
+    def __init__(
+        self,
+        filename: str,
+        data_json: JsonDict,
+        meta_json: JsonDict,
+        data_size: int,
+        meta_size: int,
+    ) -> None:
+        self.filename = filename
+        self.data = data_json
+        self.meta = meta_json
+        self.data_size = data_size
+        self.meta_size = meta_size
+"
+python|mypy|analyze_cache.py|001	Function	"    def __init__(
+        self,
+        filename: str,
+        data_json: JsonDict,
+        meta_json: JsonDict,
+        data_size: int,
+        meta_size: int,
+    ) -> None:
+        self.filename = filename
+        self.data = data_json
+        self.meta = meta_json
+        self.data_size = data_size
+        self.meta_size = meta_size
+"
+python|mypy|analyze_cache.py|002	Function	"    def total_size(self) -> int:
+        return self.data_size + self.meta_size
+"
+python|mypy|analyze_cache.py|003	Function	"def extract_classes(chunks: Iterable[CacheData]) -> Iterable[JsonDict]:
+    def extract(chunks: Iterable[JsonDict]) -> Iterable[JsonDict]:
+        for chunk in chunks:
+            if isinstance(chunk, dict):
+                yield chunk
+                yield from extract(chunk.values())
+            elif isinstance(chunk, list):
+                yield from extract(chunk)
+"
+python|mypy|analyze_cache.py|004	Function	"    def extract(chunks: Iterable[JsonDict]) -> Iterable[JsonDict]:
+        for chunk in chunks:
+            if isinstance(chunk, dict):
+                yield chunk
+                yield from extract(chunk.values())
+            elif isinstance(chunk, list):
+                yield from extract(chunk)
+"
+joke2k|faker|cli.py|000	Class	"class Command:
+    def __init__(self, argv: Optional[str] = None) -> None:
+        self.argv = argv or sys.argv[:]
+        self.prog_name = Path(self.argv[0]).name
+"
+joke2k|faker|cli.py|001	Class	"            ""class itself)"",
+        )
+"
+joke2k|faker|cli.py|002	Function	"def print_provider(
+    doc: Documentor,
+    provider: BaseProvider,
+    formatters: Dict[str, T],
+    excludes: Optional[List[str]] = None,
+    output: Optional[TextIO] = None,
+) -> None:
+    if output is None:
+        output = sys.stdout
+    if excludes is None:
+        excludes = []
+"
+joke2k|faker|cli.py|003	Function	"def print_doc(
+    provider_or_field: Optional[str] = None,
+    args: Optional[List[T]] = None,
+    lang: str = DEFAULT_LOCALE,
+    output: Optional[Union[TextIO, TextIOWrapper]] = None,
+    seed: Optional[float] = None,
+    includes: Optional[List[str]] = None,
+) -> None:
+    if args is None:
+        args = []
+    if output is None:
+        output = sys.stdout
+    fake = Faker(locale=lang, includes=includes)
+    fake.seed_instance(seed)
+"
+joke2k|faker|cli.py|004	Function	"    def __init__(self, argv: Optional[str] = None) -> None:
+        self.argv = argv or sys.argv[:]
+        self.prog_name = Path(self.argv[0]).name
+"
+flairNLP|flair|data.py|000	Class	"class Dictionary:
+    """"""
+    This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
+    """"""
+"
+flairNLP|flair|data.py|001	Class	"    This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
+    """"""
+"
+flairNLP|flair|data.py|002	Class	"class Label:
+    """"""
+    This class represents a label. Each label has a value and optionally a confidence score. The
+    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
+    """"""
+"
+flairNLP|flair|data.py|003	Class	"    This class represents a label. Each label has a value and optionally a confidence score. The
+    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
+    """"""
+"
+flairNLP|flair|data.py|004	Class	"class DataPoint:
+    """"""
+    This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
+    must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()). Also,
+    each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
+    and the property 'label')
+    """"""
+"
+flairNLP|flair|collect_env.py|000	Function	"def main():
+    print(""#### Versions:"")
+    print(f""##### Flair\n{flair.__version__}"")
+    print(f""##### Pytorch\n{torch.__version__}"")
+    print(f""##### Transformers\n{transformers.__version__}"")
+    print(f""#### GPU\n{torch.cuda.is_available()}"")
+"
+flairNLP|flair|run_ner.py|000	Class	"class ModelArguments:
+    model_name_or_path: str = field(
+        metadata={""help"": ""The model checkpoint for weights initialization.""},
+    )
+    layers: str = field(default=""-1"", metadata={""help"": ""Layers to be fine-tuned.""})
+    subtoken_pooling: str = field(
+        default=""first"",
+        metadata={""help"": ""Subtoken pooling strategy used for fine-tuned.""},
+    )
+    hidden_size: int = field(default=256, metadata={""help"": ""Hidden size for NER model.""})
+    use_crf: bool = field(default=False, metadata={""help"": ""Whether to use a CRF on-top or not.""})
+"
+flairNLP|flair|run_ner.py|001	Class	"class TrainingArguments:
+    num_epochs: int = field(default=10, metadata={""help"": ""The number of training epochs.""})
+    batch_size: int = field(default=8, metadata={""help"": ""Batch size used for training.""})
+    mini_batch_chunk_size: int = field(
+        default=1,
+        metadata={""help"": ""If smaller than batch size, batches will be chunked.""},
+    )
+    learning_rate: float = field(default=5e-05, metadata={""help"": ""Learning rate""})
+    seed: int = field(default=42, metadata={""help"": ""Seed used for reproducible fine-tuning results.""})
+    device: str = field(default=""cuda:0"", metadata={""help"": ""CUDA device string.""})
+    weight_decay: float = field(default=0.0, metadata={""help"": ""Weight decay for optimizer.""})
+    embeddings_storage_mode: str = field(default=""none"", metadata={""help"": ""Defines embedding storage method.""})
+"
+flairNLP|flair|run_ner.py|002	Class	"class FlertArguments:
+    context_size: int = field(default=0, metadata={""help"": ""Context size when using FLERT approach.""})
+    respect_document_boundaries: bool = field(
+        default=False,
+        metadata={""help"": ""Whether to respect document boundaries or not when using FLERT.""},
+    )
+"
+flairNLP|flair|run_ner.py|003	Class	"class DataArguments:
+    dataset_name: str = field(metadata={""help"": ""Flair NER dataset name.""})
+    dataset_arguments: str = field(default="""", metadata={""help"": ""Dataset arguments for Flair NER dataset.""})
+    output_dir: str = field(
+        default=""resources/taggers/ner"",
+        metadata={""help"": ""Defines output directory for final fine-tuned model.""},
+    )
+"
+flairNLP|flair|run_ner.py|004	Function	"def get_flair_corpus(data_args):
+    ner_task_mapping = {}
+"
+flairNLP|flair|__init__.py|000	Function	"def set_seed(seed: int):
+    hf_set_seed(seed)
+"
+PrefectHQ|prefect|bench_tasks.py|000	Function	"def noop_function():
+    pass
+"
+PrefectHQ|prefect|bench_tasks.py|001	Function	"def bench_task_decorator(benchmark: BenchmarkFixture):
+    benchmark(task, noop_function)
+"
+PrefectHQ|prefect|bench_tasks.py|002	Function	"def bench_task_call(benchmark: BenchmarkFixture):
+    noop_task = task(noop_function)
+"
+PrefectHQ|prefect|bench_tasks.py|003	Function	"    def benchmark_flow():
+        benchmark(noop_task)
+"
+PrefectHQ|prefect|bench_tasks.py|004	Function	"def bench_task_submit(benchmark: BenchmarkFixture, num_task_runs: int):
+    noop_task = task(noop_function)
+"
+PrefectHQ|prefect|conftest.py|000	Function	"def reset_object_registry():
+    """"""
+    Ensures each test has a clean object registry.
+    """"""
+    from prefect.context import PrefectObjectRegistry
+"
+PrefectHQ|prefect|bench_flows.py|000	Function	"def noop_function():
+    pass
+"
+PrefectHQ|prefect|bench_flows.py|001	Function	"async def anoop_function():
+    pass
+"
+PrefectHQ|prefect|bench_flows.py|002	Function	"def bench_flow_decorator(benchmark: BenchmarkFixture):
+    benchmark(flow, noop_function)
+"
+PrefectHQ|prefect|bench_flows.py|003	Function	"def bench_flow_call(benchmark: BenchmarkFixture, options):
+    noop_flow = flow(**options)(noop_function)
+    benchmark(noop_flow)
+"
+PrefectHQ|prefect|bench_flows.py|004	Function	"def bench_flow_with_submitted_tasks(benchmark: BenchmarkFixture, num_tasks: int):
+    test_task = task(noop_function)
+"

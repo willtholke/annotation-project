@@ -1,17 +1,37 @@
-# Data Collection README
+# Data Collection
 
-## Features
+This subdirectory contains the logic for collecting Python code snippets from popular GitHub repositories that contain 
+Python projects.
 
-- Search for repositories with a minimum number of stars and forks
-- Filter repositories based on the minimum Python version required
-- Scrape Python files for code snippets (classes and functions)
-- Export the collected snippets to a TSV file
+The main script to run is `adjudicated.py`, which makes GitHub API requests and cleans the data so that it only includes
+repositories that have Python files with version 3.6.0 or greater (as determined by searching through the `setup.py` 
+file for each repository). It takes in user input for the minimum number of stars and forks per repository, the maximum
+number of files to consider across all repositories, the max number of files to consider in each repository, and the max number of snippets to be considered from each file.
+
+The collected snippets are categorized as either a "Class" or a "Function" and are exported to a .tsv file named 'adjudicated.tsv' with the following format: 
+
+- UID: unique identifier for each snippet 
+- Category: class or function 
+- Snippet: the code snippet
+
+Cleaned data will be saved to `/cleaned-data` with a unique filename. Repository data for each API request is 
+saved to `/raw-data`.
+
+Although the program is intended to gather a significant amount of data of high quality, it is important to keep in 
+mind that some misclassifications may still occur.
+
+Note that the GitHub API has rate limits that restrict the number of requests that can be made within a certain time period.
 
 ## Usage
 
-1. Set up your GitHub API token by creating a `.env` file in the root of the project directory and adding the following line:
+Make sure you have the required packages installed, which are handled by pipenv. To install the required packages, run the following command:
 
-```
-GITHUB_API_TOKEN=your_token_here
-```
+1. ```
+   pipenv install
+    ```
 
+2. Before running `adjudicated.py`, create a classic GitHub personal access token with the "repo" scope.
+Then, create a file named `.env` in the root directory with the following:
+    ```
+    GITHUB_API_TOKEN=your_access_token
+    ```
