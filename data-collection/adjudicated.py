@@ -24,7 +24,7 @@ headers = {
 def find_repositories():
     min_stars, min_forks = get_user_input()
 
-    data_dir = "data"
+    data_dir = "data-collection/raw-data"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     data_filename = os.path.join(data_dir,
@@ -36,7 +36,7 @@ def find_repositories():
             f"Data file for minimum stars {min_stars} and minimum forks "
             f"{min_forks} already exists.")
         use_existing_data = input(
-            "Do you want to use the stored data? (yes/no): ").lower()
+            "Do you want to use the stored raw-data? (yes/no): ").lower()
 
         if use_existing_data == 'yes':
             all_items = load_data_from_file(data_filename)
@@ -134,8 +134,8 @@ def filter_python_files(repo, max_files_per_repo, min_version="3.6.0"):
 
         eligible_files = [file for file in files if file["name"].endswith(".py")
                           and file["name"] not in files_to_ignore]
-        selected_files = random.sample(eligible_files, min(len(eligible_files),
-                                                           max_files_per_repo))
+        selected_files = random.sample(eligible_files, min(len(
+            eligible_files), max_files_per_repo))
 
         for file in selected_files:
             print(f"Adding {repo_version[0]}/{file['name']}"
@@ -180,7 +180,7 @@ def collect_data(repositories):
         else:
             print(
                 f"Repository '{r['name']}' "
-                f"was not considered due to no compatible files or version\n")
+                f"was not considered due to no compatible files or version")
 
     return [d for d in data if d is not None]
 
