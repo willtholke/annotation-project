@@ -25,7 +25,7 @@ def fetch_repositories(min_stars, min_forks, headers):
     url = "https://api.github.com/search/repositories"
     query = f"language:python stars:>={min_stars} forks:>={min_forks}"
     repos_per_page = 100
-    max_pages = 5
+    max_pages = 1
     all_items = []
 
     for page in range(1, max_pages + 1):
@@ -41,3 +41,15 @@ def fetch_repositories(min_stars, min_forks, headers):
 def get_max_snippets():
     max_snippets = int(input("Enter the maximum number of snippets you want to grab: "))
     return max_snippets
+
+
+def get_max_files():
+    max_files = int(input("Enter the maximum number of files you want to consider (or -1 for no limit): "))
+    return max_files
+
+
+def get_max_repo_files():
+    max_files = int(input("Enter the maximum number of files you want to "
+                          "consider from each individual repo (or -1 for no "
+                          "limit [not recommended]): "))
+    return max_files

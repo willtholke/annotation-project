@@ -6,7 +6,8 @@ import ast
 from dotenv import load_dotenv
 from collections import defaultdict
 from user_input import get_user_input, save_data_to_file, \
-    load_data_from_file, fetch_repositories, get_max_snippets
+    load_data_from_file, fetch_repositories, get_max_snippets, \
+    get_max_files, get_max_repo_files
 
 load_dotenv(override=True)
 GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN")
@@ -75,16 +76,43 @@ def get_min_python_version(file_content):
     return None
 
 
-def get_repo_files(repo):
-    url = f"https://api.github.com/repos/{repo['full_name']}/contents"
+def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
+    url = f"https://api.github.com/repos/{repo['full_name']}/contents/{path}"
     response = requests.get(url, headers=headers)
     files = response.json()
-    return files
+
+    if not isinstance(files, list):  # In case of a rate limit error or another issue
+        return []
+
+    setup_py = None
+    python_files = []
+
+    # Look for setup.py in the root directory
+    for file in files:
+        if file["type"] == "file" and file["name"] == "setup.py":
+            setup_py = file
+            print(f"Found {repo['name']}/setup.py in the root directory")
+            break
+
+    # If setup.py exists, add it to the list and return
+    if setup_py:
+        python_files.append(setup_py)
+
+    # Otherwise, continue searching for .py files recursively
+    for file in files:
+        if 0 < max_files_per_repo <= current_count + len(python_files):
+            break
+        if file["type"] == "file" and file["name"].endswith(".py"):
+            python_files.append(file)
+        elif file["type"] == "dir":
+            python_files.extend(
+                get_repo_files(repo, max_files_per_repo, file["path"], current_count + len(python_files))
+            )
+
+    return python_files
 
 
-def get_repo_py_version(repo):
-    files = get_repo_files(repo)
-
+def get_repo_py_version(repo, files):
     setup_version = None
     for file in files:
         if file["name"] == "setup.py":
@@ -94,48 +122,58 @@ def get_repo_py_version(repo):
     return repo["name"], setup_version
 
 
-def filter_python_files(repo, min_version="3.6.0"):
-    repo_version = get_repo_py_version(repo)
-
+def filter_python_files(repo, max_files_per_repo, min_version="3.6.0"):
     python_files = []
-    files = get_repo_files(repo)
+    files = get_repo_files(repo, max_files_per_repo) # works
+    repo_version = get_repo_py_version(repo, files)
     considered_repo = False
     if repo_version[1] and repo_version[1] > min_version:
-        print(f"Repository {repo_version[0]} has compatible version {repo_version[1]}")
         considered_repo = True
 
         for file in files:
             if file["name"].endswith(".py"):
-                if file["name"] == "setup.py":
-                    break
-                print(f"Adding {file['name']} to be scraped for snippets!")
+                print(f"Adding "
+                      f"{repo_version[0]}/{file['name']} to be scraped for "
+                      f"snippets!")
                 file["version"] = repo_version
                 python_files.append(file)
+        if not python_files:
+            considered_repo = False
+            print(f"No compatible files found in repository '{repo_version[0]}' other than setup.py\n")
     return python_files, considered_repo
 
 
 def collect_data(repositories):
+    max_files = get_max_files()
     data = []
     processed_repos = set()
-    repo_count = 0
-    file_count = 0
+    files_count = 0
+    considered_repos_count = 0
+    max_files_per_repo = get_max_repo_files()
 
     for r in repositories:
         if r["full_name"] in processed_repos:
             continue
-
-        files, considered_repo = filter_python_files(r)
-        if considered_repo:
-            repo_count += 1
-            file_count += len(files)
-            print(f"Total repositories considered: {repo_count}")
-            print(f"Total files considered: {file_count}\n")
-
+        files, considered_repo = filter_python_files(r, max_files_per_repo=max_files_per_repo)
         if files:
             processed_repos.add(r["full_name"])
             data.append({"username": r["owner"]["login"], "repo_name": r["name"], "files": files})
-    return [d for d in data if d is not None]
+            files_count += len(files)
 
+            if 0 < max_files <= files_count:
+                print(f"Successfully collected {max_files} files to be scraped for snippets!")
+                break
+        if considered_repo:
+            considered_repos_count += 1
+        if files and considered_repo:
+            print([f"Adding {r['name']}/{file['name']} for consideration"
+                   for file in files])
+            print(f"Total repositories considered: {considered_repos_count}")
+            print(f"Total files considered: {files_count}\n")
+        else:
+            print(f"Repository '{r['name']}' was not considered due to no compatible files or version\n")
+
+    return [d for d in data if d is not None]
 
 
 def separate_contents(file_content):
@@ -179,11 +217,9 @@ def select_and_store_snippets(data):
     snippets = []
     counter = defaultdict(int)
     max_snippets = get_max_snippets()
-
     snippet_count = 0
     for repo_data in data:
         repo_name = repo_data['repo_name']
-        print(repo_name)
         for file_idx, file in enumerate(repo_data["files"]):
             file_name = file['name']
             file_content = requests.get(file["download_url"]).text
@@ -221,8 +257,5 @@ def main():
     # os.rename("adjudicated.tsv", "adjudicated.txt")
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     main()
-
-
-# somethinng is wrong with how they're being added to the table
