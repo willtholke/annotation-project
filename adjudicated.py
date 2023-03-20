@@ -1,12 +1,12 @@
 import requests
-import random
 import os
 import re
 import pandas as pd
-import csv
 import ast
 from dotenv import load_dotenv
 from collections import defaultdict
+from user_input import get_user_input, save_data_to_file, \
+    load_data_from_file, fetch_repositories, get_max_snippets
 
 load_dotenv(override=True)
 GITHUB_API_TOKEN = os.getenv("GITHUB_API_TOKEN")
@@ -18,11 +18,38 @@ headers = {
 
 
 def find_repositories():
-    url = "https://api.github.com/search/repositories"
-    query = "language:python stars:>100"
-    params = {"q": query, "sort": "stars", "order": "desc", "per_page": 200}
-    response = requests.get(url, headers=headers, params=params)
-    return response.json()["items"]
+    min_stars, min_forks = get_user_input()
+
+    data_dir = "data"
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    data_filename = os.path.join(data_dir,
+                                 f"repos_min_stars_{min_stars}_min_forks_{min_forks}.txt")
+
+    if os.path.exists(data_filename):
+        print(f"Data file for minimum stars {min_stars} and minimum forks {min_forks} already exists.")
+        use_existing_data = input("Do you want to use the stored data? (yes/no): ").lower()
+
+        if use_existing_data == 'yes':
+            all_items = load_data_from_file(data_filename)
+        else:
+            print("Making new API request...")
+            all_items = fetch_repositories(min_stars, min_forks,
+                                           headers=headers)
+            save_data_to_file(all_items, data_filename)
+    else:
+        all_items = fetch_repositories(min_stars, min_forks, headers=headers)
+        save_data_to_file(all_items, data_filename)
+
+    repo_count = len(all_items)
+    avg_stars = sum(item["stargazers_count"] for item in all_items) / repo_count
+    avg_forks = sum(item["forks_count"] for item in all_items) / repo_count
+
+    print(f"Found {repo_count} repositories!")
+    print(f"Average stars: {avg_stars:.2f}")
+    print(f"Average forks: {avg_forks:.2f}\n")
+
+    return all_items
 
 
 def get_min_python_version(file_content):
@@ -72,32 +99,43 @@ def filter_python_files(repo, min_version="3.6.0"):
 
     python_files = []
     files = get_repo_files(repo)
+    considered_repo = False
     if repo_version[1] and repo_version[1] > min_version:
-        print("repository", repo_version[0], "has compatible version",
-              repo_version[1])
+        print(f"Repository {repo_version[0]} has compatible version {repo_version[1]}")
+        considered_repo = True
+
         for file in files:
             if file["name"].endswith(".py"):
                 if file["name"] == "setup.py":
                     break
-                print("adding", file['name'], "to be scraped for snippets!")
+                print(f"Adding {file['name']} to be scraped for snippets!")
                 file["version"] = repo_version
                 python_files.append(file)
-        print()
-    return python_files
+    return python_files, considered_repo
 
 
 def collect_data(repositories):
     data = []
     processed_repos = set()
+    repo_count = 0
+    file_count = 0
+
     for r in repositories:
         if r["full_name"] in processed_repos:
             continue
-        files = filter_python_files(r)
+
+        files, considered_repo = filter_python_files(r)
+        if considered_repo:
+            repo_count += 1
+            file_count += len(files)
+            print(f"Total repositories considered: {repo_count}")
+            print(f"Total files considered: {file_count}\n")
+
         if files:
             processed_repos.add(r["full_name"])
             data.append({"username": r["owner"]["login"], "repo_name": r["name"], "files": files})
-            print({"username": r["owner"]["login"], "repo_name": r["name"], "files": files})
     return [d for d in data if d is not None]
+
 
 
 def separate_contents(file_content):
@@ -137,9 +175,10 @@ def separate_contents(file_content):
     return categories
 
 
-def select_and_store_snippets(data, max_snippets=None):
+def select_and_store_snippets(data):
     snippets = []
     counter = defaultdict(int)
+    max_snippets = get_max_snippets()
 
     snippet_count = 0
     for repo_data in data:
