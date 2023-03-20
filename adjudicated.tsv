@@ -188,6 +188,143 @@ psf|requests|__init__.py|001	Function	"def _check_cryptography(cryptography_vers
     except ValueError:
         return
 "
+psf|requests|_internal_utils.py|000	Function	"def to_native_string(string, encoding=""ascii""):
+    """"""Given a string object, regardless of type, returns a representation of
+    that string in the native string type, encoding and decoding where
+    necessary. This assumes ASCII unless told otherwise.
+    """"""
+    if isinstance(string, builtin_str):
+        out = string
+    else:
+        out = string.decode(encoding)
+"
+psf|requests|_internal_utils.py|001	Function	"def unicode_is_ascii(u_string):
+    """"""Determine if unicode string only contains ASCII characters.
+"
+psf|requests|adapters.py|000	Class	"class BaseAdapter:
+    """"""The Base Transport Adapter""""""
+"
+psf|requests|adapters.py|001	Class	"class HTTPAdapter(BaseAdapter):
+    """"""The built-in HTTP Adapter for urllib3.
+"
+psf|requests|adapters.py|002	Class	"    HTTPS urls by implementing the Transport Adapter interface. This class will
+    usually be created by the :class:`Session <Session>` class under the
+    covers.
+"
+psf|requests|adapters.py|003	Class	"    usually be created by the :class:`Session <Session>` class under the
+    covers.
+"
+psf|requests|adapters.py|004	Class	"        which we retry a request, import urllib3's ``Retry`` class and pass
+        that instead.
+"
+psf|requests|adapters.py|005	Function	"    def SOCKSProxyManager(*args, **kwargs):
+        raise InvalidSchema(""Missing dependencies for SOCKS support."")
+"
+psf|requests|adapters.py|006	Function	"    def __init__(self):
+        super().__init__()
+"
+psf|requests|adapters.py|007	Function	"    def send(
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
+        """"""Sends PreparedRequest object. Returns Response object.
+"
+psf|requests|adapters.py|008	Function	"    def close(self):
+        """"""Cleans up adapter specific items.""""""
+        raise NotImplementedError
+"
+psf|requests|adapters.py|009	Function	"    def __init__(
+        self,
+        pool_connections=DEFAULT_POOLSIZE,
+        pool_maxsize=DEFAULT_POOLSIZE,
+        max_retries=DEFAULT_RETRIES,
+        pool_block=DEFAULT_POOLBLOCK,
+    ):
+        if max_retries == DEFAULT_RETRIES:
+            self.max_retries = Retry(0, read=False)
+        else:
+            self.max_retries = Retry.from_int(max_retries)
+        self.config = {}
+        self.proxy_manager = {}
+"
+psf|requests|adapters.py|010	Function	"    def __getstate__(self):
+        return {attr: getattr(self, attr, None) for attr in self.__attrs__}
+"
+psf|requests|adapters.py|011	Function	"    def __setstate__(self, state):
+        # Can't handle by adding 'proxy_manager' to self.__attrs__ because
+        # self.poolmanager uses a lambda function, which isn't pickleable.
+        self.proxy_manager = {}
+        self.config = {}
+"
+psf|requests|adapters.py|012	Function	"    def init_poolmanager(
+        self, connections, maxsize, block=DEFAULT_POOLBLOCK, **pool_kwargs
+    ):
+        """"""Initializes a urllib3 PoolManager.
+"
+psf|requests|adapters.py|013	Function	"    def proxy_manager_for(self, proxy, **proxy_kwargs):
+        """"""Return urllib3 ProxyManager for the given proxy.
+"
+psf|requests|adapters.py|014	Function	"    def cert_verify(self, conn, url, verify, cert):
+        """"""Verify a SSL certificate. This method should not be called from user
+        code, and is only exposed for use when subclassing the
+        :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
+"
+psf|requests|adapters.py|015	Function	"    def build_response(self, req, resp):
+        """"""Builds a :class:`Response <requests.Response>` object from a urllib3
+        response. This should not be called from user code, and is only exposed
+        for use when subclassing the
+        :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`
+"
+psf|requests|adapters.py|016	Function	"    def get_connection(self, url, proxies=None):
+        """"""Returns a urllib3 connection for the given URL. This should not be
+        called from user code, and is only exposed for use when subclassing the
+        :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
+"
+psf|requests|adapters.py|017	Function	"    def close(self):
+        """"""Disposes of any internal state.
+"
+psf|requests|adapters.py|018	Function	"    def request_url(self, request, proxies):
+        """"""Obtain the url to use when making the final request.
+"
+psf|requests|adapters.py|019	Function	"    def add_headers(self, request, **kwargs):
+        """"""Add any headers needed by the connection. As of v2.0 this does
+        nothing by default, but is left for overriding by users that subclass
+        the :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
+"
+psf|requests|adapters.py|020	Function	"    def proxy_headers(self, proxy):
+        """"""Returns a dictionary of the headers to add to any request sent
+        through a proxy. This works with urllib3 magic to ensure that they are
+        correctly sent to the proxy, rather than in a tunnelled request if
+        CONNECT is being used.
+"
+psf|requests|adapters.py|021	Function	"    def send(
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
+        """"""Sends PreparedRequest object. Returns Response object.
+"
+psf|requests|api.py|000	Function	"def request(method, url, **kwargs):
+    """"""Constructs and sends a :class:`Request <Request>`.
+"
+psf|requests|api.py|001	Function	"def get(url, params=None, **kwargs):
+    r""""""Sends a GET request.
+"
+psf|requests|api.py|002	Function	"def options(url, **kwargs):
+    r""""""Sends an OPTIONS request.
+"
+psf|requests|api.py|003	Function	"def head(url, **kwargs):
+    r""""""Sends a HEAD request.
+"
+psf|requests|api.py|004	Function	"def post(url, data=None, json=None, **kwargs):
+    r""""""Sends a POST request.
+"
+psf|requests|api.py|005	Function	"def put(url, data=None, **kwargs):
+    r""""""Sends a PUT request.
+"
+psf|requests|api.py|006	Function	"def patch(url, data=None, **kwargs):
+    r""""""Sends a PATCH request.
+"
+psf|requests|api.py|007	Function	"def delete(url, **kwargs):
+    r""""""Sends a DELETE request.
+"
 scrapy|scrapy|setup.py|000	Function	"def has_environment_marker_platform_impl_support():
     """"""Code extracted from 'pytest/setup.py'
     https://github.com/pytest-dev/pytest/blob/7538680c/setup.py#L31
@@ -338,6 +475,61 @@ scrapy|scrapy|conftest.py|007	Function	"def load_response(url: str, filename: st
 "
 scrapy|scrapy|conftest.py|008	Function	"def setup(namespace):
     namespace[""load_response""] = load_response
+"
+scrapy|scrapy|linkfix.py|000	Function	"def main():
+    # Used for remembering the file (and its contents)
+    # so we don't have to open the same file again.
+    _filename = None
+    _contents = None
+"
+scrapy|scrapy|qps-bench-server.py|000	Class	"class Root(Resource):
+    def __init__(self):
+        Resource.__init__(self)
+        self.concurrent = 0
+        self.tail = deque(maxlen=100)
+        self._reset_stats()
+"
+scrapy|scrapy|qps-bench-server.py|001	Function	"    def __init__(self):
+        Resource.__init__(self)
+        self.concurrent = 0
+        self.tail = deque(maxlen=100)
+        self._reset_stats()
+"
+scrapy|scrapy|qps-bench-server.py|002	Function	"    def _reset_stats(self):
+        self.tail.clear()
+        self.start = self.lastmark = self.lasttime = time()
+"
+scrapy|scrapy|qps-bench-server.py|003	Function	"    def getChild(self, request, name):
+        return self
+"
+scrapy|scrapy|qps-bench-server.py|004	Function	"    def render(self, request):
+        now = time()
+        delta = now - self.lasttime
+"
+scrapy|scrapy|qps-bench-server.py|005	Function	"    def _finish(self, request):
+        self.concurrent -= 1
+        if not request.finished and not request._disconnected:
+            request.finish()
+"
+scrapy|scrapy|qpsclient.py|000	Class	"class QPSSpider(Spider):
+    name = ""qps""
+    benchurl = ""http://localhost:8880/""
+"
+scrapy|scrapy|qpsclient.py|001	Function	"    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        if self.qps is not None:
+            self.qps = float(self.qps)
+            self.download_delay = 1 / self.qps
+        elif self.download_delay is not None:
+            self.download_delay = float(self.download_delay)
+"
+scrapy|scrapy|qpsclient.py|002	Function	"    def start_requests(self):
+        url = self.benchurl
+        if self.latency is not None:
+            url += f""?latency={self.latency}""
+"
+scrapy|scrapy|qpsclient.py|003	Function	"    def parse(self, response):
+        pass
 "
 certbot|certbot|challenges.py|000	Class	"class Challenge(jose.TypedJSONObjectWithFields):
     # _fields_to_partial_json
@@ -854,6 +1046,173 @@ certbot|certbot|crypto_util.py|020	Function	"    def _dump_cert(cert: Union[jose
             cert = cert.wrapped
         return crypto.dump_certificate(filetype, cert)
 "
+certbot|certbot|errors.py|000	Class	"class Error(Exception):
+    """"""Generic ACME error.""""""
+"
+certbot|certbot|errors.py|001	Class	"class DependencyError(Error):
+    """"""Dependency error""""""
+"
+certbot|certbot|errors.py|002	Class	"class SchemaValidationError(jose_errors.DeserializationError):
+    """"""JSON schema ACME object validation error.""""""
+"
+certbot|certbot|errors.py|003	Class	"class ClientError(Error):
+    """"""Network error.""""""
+"
+certbot|certbot|errors.py|004	Class	"class UnexpectedUpdate(ClientError):
+    """"""Unexpected update error.""""""
+"
+certbot|certbot|errors.py|005	Class	"class NonceError(ClientError):
+    """"""Server response nonce error.""""""
+"
+certbot|certbot|errors.py|006	Class	"class BadNonce(NonceError):
+    """"""Bad nonce error.""""""
+    def __init__(self, nonce: str, error: Exception, *args: Any) -> None:
+        super().__init__(*args)
+        self.nonce = nonce
+        self.error = error
+"
+certbot|certbot|errors.py|007	Class	"class MissingNonce(NonceError):
+    """"""Missing nonce error.
+"
+certbot|certbot|errors.py|008	Class	"class PollError(ClientError):
+    """"""Generic error when polling for authorization fails.
+"
+certbot|certbot|errors.py|009	Class	"class ValidationError(Error):
+    """"""Error for authorization failures. Contains a list of authorization
+    resources, each of which is invalid and should have an error field.
+    """"""
+    def __init__(self, failed_authzrs: List['messages.AuthorizationResource']) -> None:
+        self.failed_authzrs = failed_authzrs
+        super().__init__()
+"
+certbot|certbot|errors.py|010	Class	"class TimeoutError(Error):  # pylint: disable=redefined-builtin
+    """"""Error for when polling an authorization or an order times out.""""""
+"
+certbot|certbot|errors.py|011	Class	"class IssuanceError(Error):
+    """"""Error sent by the server after requesting issuance of a certificate.""""""
+"
+certbot|certbot|errors.py|012	Class	"class ConflictError(ClientError):
+    """"""Error for when the server returns a 409 (Conflict) HTTP status.
+"
+certbot|certbot|errors.py|013	Class	"class WildcardUnsupportedError(Error):
+    """"""Error for when a wildcard is requested but is unsupported by ACME CA.""""""
+"
+certbot|certbot|errors.py|014	Function	"    def __init__(self, nonce: str, error: Exception, *args: Any) -> None:
+        super().__init__(*args)
+        self.nonce = nonce
+        self.error = error
+"
+certbot|certbot|errors.py|015	Function	"    def __str__(self) -> str:
+        return 'Invalid nonce ({0!r}): {1}'.format(self.nonce, self.error)
+"
+certbot|certbot|errors.py|016	Function	"    def __init__(self, response: requests.Response, *args: Any) -> None:
+        super().__init__(*args)
+        self.response = response
+"
+certbot|certbot|errors.py|017	Function	"    def __str__(self) -> str:
+        return ('Server {0} response did not include a replay '
+                'nonce, headers: {1} (This may be a service outage)'.format(
+                    self.response.request.method, self.response.headers))
+"
+certbot|certbot|errors.py|018	Function	"    def __init__(self, exhausted: Set['messages.AuthorizationResource'],
+                 updated: Mapping['messages.AuthorizationResource',
+                                  'messages.AuthorizationResource']
+                 ) -> None:
+        self.exhausted = exhausted
+        self.updated = updated
+        super().__init__()
+"
+certbot|certbot|errors.py|019	Function	"    def timeout(self) -> bool:
+        """"""Was the error caused by timeout?""""""
+        return bool(self.exhausted)
+"
+certbot|certbot|errors.py|020	Function	"    def __repr__(self) -> str:
+        return '{0}(exhausted={1!r}, updated={2!r})'.format(
+            self.__class__.__name__, self.exhausted, self.updated)
+"
+certbot|certbot|errors.py|021	Function	"    def __init__(self, failed_authzrs: List['messages.AuthorizationResource']) -> None:
+        self.failed_authzrs = failed_authzrs
+        super().__init__()
+"
+certbot|certbot|errors.py|022	Function	"    def __init__(self, error: 'messages.Error') -> None:
+        """"""Initialize.
+"
+certbot|certbot|errors.py|023	Function	"    def __init__(self, location: str) -> None:
+        self.location = location
+        super().__init__()
+"
+certbot|certbot|fields.py|000	Class	"class Fixed(jose.Field):
+    """"""Fixed field.""""""
+"
+certbot|certbot|fields.py|001	Class	"class RFC3339Field(jose.Field):
+    """"""RFC3339 field encoder/decoder.
+"
+certbot|certbot|fields.py|002	Function	"    def __init__(self, json_name: str, value: Any) -> None:
+        self.value = value
+        super().__init__(
+            json_name=json_name, default=value, omitempty=False)
+"
+certbot|certbot|fields.py|003	Function	"    def decode(self, value: Any) -> Any:
+        if value != self.value:
+            raise jose.DeserializationError('Expected {0!r}'.format(self.value))
+        return self.value
+"
+certbot|certbot|fields.py|004	Function	"    def encode(self, value: Any) -> Any:
+        if value != self.value:
+            logger.warning(
+                'Overriding fixed field (%s) with %r', self.json_name, value)
+        return value
+"
+certbot|certbot|fields.py|005	Function	"    def default_encoder(cls, value: datetime.datetime) -> str:
+        return pyrfc3339.generate(value)
+"
+certbot|certbot|fields.py|006	Function	"    def default_decoder(cls, value: str) -> datetime.datetime:
+        try:
+            return pyrfc3339.parse(value)
+        except ValueError as error:
+            raise jose.DeserializationError(error)
+"
+certbot|certbot|fields.py|007	Function	"def fixed(json_name: str, value: Any) -> Any:
+    """"""Generates a type-friendly Fixed field.""""""
+    return Fixed(json_name, value)
+"
+certbot|certbot|fields.py|008	Function	"def rfc3339(json_name: str, omitempty: bool = False) -> Any:
+    """"""Generates a type-friendly RFC3339 field.""""""
+    return RFC3339Field(json_name, omitempty=omitempty)
+"
+certbot|certbot|jws.py|000	Class	"class Header(jose.Header):
+    """"""ACME-specific JOSE Header. Implements nonce, kid, and url.
+    """"""
+    nonce: Optional[bytes] = jose.field('nonce', omitempty=True, encoder=jose.encode_b64jose)
+    kid: Optional[str] = jose.field('kid', omitempty=True)
+    url: Optional[str] = jose.field('url', omitempty=True)
+"
+certbot|certbot|jws.py|001	Class	"class Signature(jose.Signature):
+    """"""ACME-specific Signature. Uses ACME-specific Header for customer fields.""""""
+    __slots__ = jose.Signature._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access,no-member
+"
+certbot|certbot|jws.py|002	Class	"class JWS(jose.JWS):
+    """"""ACME-specific JWS. Includes none, url, and kid in protected header.""""""
+    signature_cls = Signature
+    __slots__ = jose.JWS._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access
+"
+certbot|certbot|jws.py|003	Function	"    def nonce(value: str) -> bytes:  # type: ignore[misc]  # pylint: disable=no-self-argument,missing-function-docstring
+        try:
+            return jose.decode_b64jose(value)
+        except jose.DeserializationError as error:
+            # TODO: custom error
+            raise jose.DeserializationError(""Invalid nonce: {0}"".format(error))
+"
+certbot|certbot|jws.py|004	Function	"    def sign(cls, payload: bytes, key: jose.JWK, alg: jose.JWASignature, nonce: Optional[bytes],
+             url: Optional[str] = None, kid: Optional[str] = None) -> jose.JWS:
+        # Per ACME spec, jwk and kid are mutually exclusive, so only include a
+        # jwk field if kid is not provided.
+        include_jwk = kid is None
+        return super().sign(payload, key=key, alg=alg,
+                            protect=frozenset(['nonce', 'url', 'kid', 'jwk', 'alg']),
+                            nonce=nonce, url=url, kid=kid,
+                            include_jwk=include_jwk)
+"
 openai|whisper|setup.py|000	Function	"def read_version(fname=""whisper/version.py""):
     exec(compile(open(fname, encoding=""utf-8"").read(), fname, ""exec""))
     return locals()[""__version__""]
@@ -894,6 +1253,33 @@ openai|whisper|test_normalizer.py|002	Function	"def test_text_normalizer():
     assert std(""10km"") == ""10 km""
     assert std(""10mm"") == ""10 mm""
     assert std(""RC232"") == ""rc 232""
+"
+openai|whisper|test_timing.py|000	Function	"def test_dtw(N: int, M: int):
+    steps = np.concatenate([np.zeros(N - 1), np.ones(M - 1)])
+    np.random.shuffle(steps)
+    x = np.random.random((N, M)).astype(np.float32)
+"
+openai|whisper|test_timing.py|001	Function	"def test_dtw_cuda_equivalence(N: int, M: int):
+    x_numpy = np.random.randn(N, M).astype(np.float32)
+    x_cuda = torch.from_numpy(x_numpy).cuda()
+"
+openai|whisper|test_timing.py|002	Function	"def test_median_filter(shape):
+    x = torch.randn(*shape)
+"
+openai|whisper|test_timing.py|003	Function	"def test_median_filter_equivalence(shape):
+    x = torch.randn(*shape)
+"
+openai|whisper|test_tokenizer.py|000	Function	"def test_tokenizer():
+    gpt2_tokenizer = get_tokenizer(multilingual=False)
+    multilingual_tokenizer = get_tokenizer(multilingual=True)
+"
+openai|whisper|test_tokenizer.py|001	Function	"def test_split_on_unicode():
+    multilingual_tokenizer = get_tokenizer(multilingual=True)
+"
+openai|whisper|test_transcribe.py|000	Function	"def test_transcribe(model_name: str):
+    device = ""cuda"" if torch.cuda.is_available() else ""cpu""
+    model = whisper.load_model(model_name).to(device)
+    audio_path = os.path.join(os.path.dirname(__file__), ""jfk.flac"")
 "
 httpie|httpie|setup.py|000	Function	"def long_description():
     with open('README.md', encoding='utf-8') as f:
@@ -1080,6 +1466,18 @@ httpie|httpie|build.py|001	Function	"def build_packages(http_binary: Path, httpi
 httpie|httpie|build.py|002	Function	"def main():
     binaries = dict(build_binaries())
     build_packages(binaries['http_cli'], binaries['httpie_cli'])
+"
+httpie|httpie|hook-pip.py|000	Function	"def hook(hook_api):
+    for pkg in [
+        'pip',
+        'setuptools',
+        'distutils',
+        'pkg_resources'
+    ]:
+        datas, binaries, hiddenimports = collect_all(pkg)
+        hook_api.add_datas(datas)
+        hook_api.add_binaries(binaries)
+        hook_api.add_imports(*hiddenimports)
 "
 huggingface|pytorch-image-models|avg_checkpoints.py|000	Function	"def checkpoint_metric(checkpoint_path):
     if not checkpoint_path or not os.path.isfile(checkpoint_path):
@@ -1440,6 +1838,60 @@ huggingface|pytorch-image-models|clean_checkpoint.py|001	Function	"def clean_che
             new_state_dict[name] = v
         print(""=> Loaded state_dict from '{}'"".format(checkpoint))
 "
+huggingface|pytorch-image-models|convert_from_mxnet.py|000	Function	"def convert(mxnet_name, torch_name):
+    # download and load the pre-trained model
+    net = gluoncv.model_zoo.get_model(mxnet_name, pretrained=True)
+"
+huggingface|pytorch-image-models|convert_from_mxnet.py|001	Function	"def map_mx_to_torch_model(mx_name):
+    torch_name = mx_name.lower()
+    if torch_name.startswith('se_'):
+        torch_name = torch_name.replace('se_', 'se')
+    elif torch_name.startswith('senet_'):
+        torch_name = torch_name.replace('senet_', 'senet')
+    elif torch_name.startswith('inceptionv3'):
+        torch_name = torch_name.replace('inceptionv3', 'inception_v3')
+    torch_name = 'gluon_' + torch_name
+    return torch_name
+"
+huggingface|pytorch-image-models|convert_from_mxnet.py|002	Function	"def main():
+    args = parser.parse_args()
+"
+huggingface|pytorch-image-models|convert_nest_flax.py|000	Function	"def convert_nest(checkpoint_path, arch):
+    """"""
+    Expects path to checkpoint which is a dir containing 4 files like in each of these folders
+        - https://console.cloud.google.com/storage/browser/gresearch/nest-checkpoints
+    `arch` is needed to 
+    Returns a state dict that can be used with `torch.nn.Module.load_state_dict`
+    Hint: Follow timm.models.nest.Nest.__init__ and 
+    https://github.com/google-research/nested-transformer/blob/main/models/nest_net.py
+    """"""
+    assert arch in ['nest_base', 'nest_small', 'nest_tiny'], ""Your `arch` is not supported""
+"
+huggingface|pytorch-image-models|generate_readmes.py|000	Function	"def generate_readmes(templates_path: Path, dest_path: Path):
+    """"""Add the code snippet template to the readmes""""""
+    readme_templates_path = templates_path / ""models""
+    code_template_path = templates_path / ""code_snippets.md""
+"
+huggingface|pytorch-image-models|generate_readmes.py|001	Function	"def main():
+    parser = argparse.ArgumentParser(description=""Model index generation config"")
+    parser.add_argument(
+        ""-t"",
+        ""--templates"",
+        default=Path(__file__).parent / "".templates"",
+        type=str,
+        help=""Location of the markdown templates"",
+    )
+    parser.add_argument(
+        ""-d"",
+        ""--dest"",
+        default=Path(__file__).parent / ""models"",
+        type=str,
+        help=""Destination folder that contains the generated model-index files."",
+    )
+    args = parser.parse_args()
+    templates_path = Path(args.templates)
+    dest_readmes_path = Path(args.dest)
+"
 facebookresearch|detectron2|setup.py|000	Function	"def get_version():
     init_py_path = path.join(path.abspath(path.dirname(__file__)), ""detectron2"", ""__init__.py"")
     init_py = open(init_py_path, ""r"").readlines()
@@ -1506,6 +1958,141 @@ pypa|pipenv|get-pipenv.py|005	Function	"def main():
     try:
         # Create a temporary working directory
         tmpdir = tempfile.mkdtemp()
+"
+pypa|pipenv|command.py|000	Function	"def cli(
+    ctx,
+    state,
+    where=False,
+    venv=False,
+    py=False,
+    envs=False,
+    rm=False,
+    bare=False,
+    man=False,
+    support=None,
+    help=False,
+    site_packages=None,
+    **kwargs,
+):
+    from pipenv.patched.pip._vendor import rich
+    from pipenv.utils.shell import system_which
+"
+pypa|pipenv|command.py|001	Function	"def install(state, **kwargs):
+    """"""Installs provided packages and adds them to Pipfile, or (if no packages are given), installs all packages from Pipfile.""""""
+    from pipenv.routines.install import do_install
+"
+pypa|pipenv|command.py|002	Function	"def upgrade(state, **kwargs):
+    from pipenv.routines.update import upgrade
+    from pipenv.utils.project import ensure_project
+"
+pypa|pipenv|command.py|003	Function	"def uninstall(ctx, state, all_dev=False, all=False, **kwargs):
+    """"""Uninstalls a provided package and removes it from Pipfile.""""""
+    from pipenv.routines.uninstall import do_uninstall
+"
+pypa|pipenv|command.py|004	Function	"def lock(ctx, state, **kwargs):
+    """"""Generates Pipfile.lock.""""""
+    from pipenv.routines.lock import do_lock
+    from pipenv.utils.project import ensure_project
+"
+pypa|pipenv|command.py|005	Function	"def shell(
+    state,
+    fancy=False,
+    shell_args=None,
+    anyway=False,
+):
+    """"""Spawns a shell within the virtualenv.""""""
+    from pipenv.routines.shell import do_shell
+"
+pypa|pipenv|command.py|006	Function	"def run(state, command, args):
+    """"""Spawns a command installed into the virtualenv.""""""
+    from pipenv.routines.shell import do_run
+"
+pypa|pipenv|command.py|007	Function	"def check(
+    state,
+    db=None,
+    ignore=None,
+    output=""screen"",
+    key=None,
+    quiet=False,
+    exit_code=True,
+    policy_file="""",
+    save_json="""",
+    audit_and_monitor=True,
+    project=None,
+    use_installed=False,
+    categories="""",
+    **kwargs,
+):
+    """"""Checks for PyUp Safety security vulnerabilities and against PEP 508 markers provided in Pipfile.""""""
+    from pipenv.routines.check import do_check
+"
+pypa|pipenv|command.py|008	Function	"def update(ctx, state, bare=False, dry_run=None, outdated=False, **kwargs):
+    """"""Runs lock when no packages are specified, or upgrade, and then sync.""""""
+    from pipenv.routines.update import do_update
+"
+pypa|pipenv|command.py|009	Function	"def graph(state, bare=False, json=False, json_tree=False, reverse=False):
+    """"""Displays currently-installed dependency graph information.""""""
+    from pipenv.routines.graph import do_graph
+"
+pypa|pipenv|command.py|010	Function	"def run_open(state, module, *args, **kwargs):
+    """"""View a given module in your editor.
+"
+pypa|pipenv|command.py|011	Function	"def sync(ctx, state, bare=False, user=False, unused=False, **kwargs):
+    """"""Installs all packages specified in Pipfile.lock.""""""
+    from pipenv.routines.install import do_sync
+"
+pypa|pipenv|command.py|012	Function	"def clean(state, dry_run=False, bare=False, user=False):
+    """"""Uninstalls all packages not specified in Pipfile.lock.""""""
+    from pipenv.routines.clean import do_clean
+"
+pypa|pipenv|command.py|013	Function	"def scripts(state):
+    """"""Lists scripts in current environment config.""""""
+    if not state.project.pipfile_exists:
+        echo(""No Pipfile present at project home."", err=True)
+        sys.exit(1)
+    scripts = state.project.parsed_pipfile.get(""scripts"", {})
+    first_column_width = max(len(word) for word in [""Command""] + list(scripts))
+    second_column_width = max(len(word) for word in [""Script""] + list(scripts.values()))
+    lines = [""{0:<{width}}  Script"".format(""Command"", width=first_column_width)]
+    lines.append(""{}  {}"".format(""-"" * first_column_width, ""-"" * second_column_width))
+    lines.extend(
+        ""{0:<{width}}  {1}"".format(name, script, width=first_column_width)
+        for name, script in scripts.items()
+    )
+    echo(""\n"".join(line for line in lines))
+"
+pypa|pipenv|command.py|014	Function	"def verify(state):
+    """"""Verify the hash in Pipfile.lock is up-to-date.""""""
+    if not state.project.pipfile_exists:
+        echo(""No Pipfile present at project home."", err=True)
+        sys.exit(1)
+    if state.project.get_lockfile_hash() != state.project.calculate_pipfile_hash():
+        echo(
+            ""Pipfile.lock is out-of-date. Run {} to update."".format(
+                style(""$ pipenv lock"", fg=""yellow"", bold=True)
+            ),
+            err=True,
+        )
+        sys.exit(1)
+    echo(style(""Pipfile.lock is up-to-date."", fg=""green""))
+    sys.exit(0)
+"
+pypa|pipenv|command.py|015	Function	"def requirements(
+    state, dev=False, dev_only=False, hash=False, exclude_markers=False, categories=""""
+):
+    from pipenv.utils.dependencies import convert_deps_to_pip
+"
+pypa|pipenv|command.py|016	Function	"def do_py(project, ctx=None, system=False):
+    if not project.virtualenv_exists:
+        click.echo(
+            ""{}({}){}"".format(
+                click.style(""No virtualenv has been created for this project "", fg=""red""),
+                click.style(project.project_directory, fg=""yellow"", bold=True),
+                click.style("" yet!"", fg=""red""),
+            ),
+            err=True,
+        )
+        ctx.abort()
 "
 google|jax|setup.py|000	Function	"def generate_proto(source):
   if not protoc or not os.path.exists(source):
@@ -2036,4 +2623,592 @@ google|jax|api_benchmark.py|080	Function	"    def body(carry):
       else:
         assert False
       return step + 1, xs
+"
+google|jax|benchmark.py|000	Function	"def benchmark(f: Callable[[], Any], iters: Optional[int] = None,
+              warmup: Optional[int] = None, name: Optional[str] = None,
+              target_total_secs: Optional[Union[int, float]] = None):
+  """"""Benchmarks ``f``. Prints the results and returns the raw times.
+"
+google|jax|benchmark.py|001	Function	"def benchmark_suite(prepare: Callable[..., Callable], params_list: List[Dict],
+                    name: str, target_total_secs: Optional[int] = None):
+  """"""Benchmarks a function for several combinations of parameters.
+"
+google|jax|benchmark.py|002	Function	"def _get_baseline_means(baseline_dir, name):
+  baseline_dir = os.path.expanduser(baseline_dir)
+  filename = os.path.join(baseline_dir, name + "".csv"")
+  if not os.path.exists(filename):
+    raise FileNotFoundError(""Can't find baseline file: %s"" % filename)
+  with open(filename, newline="""") as csvfile:
+    reader = csv.reader(csvfile)
+    header = next(reader)
+    mean_idx = header.index(""mean"")
+    return [float(row[mean_idx]) for row in reader]
+"
+google|jax|benchmark.py|003	Function	"def _export_results(data_header, data, export_dir, name):
+  assert ""mean"" in data_header # For future comparisons via _get_baseline_means
+  export_dir = os.path.expanduser(export_dir)
+  os.makedirs(export_dir, exist_ok=True)
+  filename = os.path.join(export_dir, name + "".csv"")
+  with open(filename, ""w"", newline="""") as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(data_header)
+    writer.writerows(data)
+  return filename
+"
+google|jax|benchmark.py|004	Function	"def _param_str(param):
+  if callable(param):
+    return param.__name__
+  return str(param)
+"
+google|jax|benchmark.py|005	Function	"def _pstd(x):
+  return x.std() / x.mean() * 100
+"
+google|jax|math_benchmark.py|000	Function	"def math_benchmark(*args):
+  def decorator(func):
+    for test_case in args[0]:
+"
+google|jax|math_benchmark.py|001	Function	"  def decorator(func):
+    for test_case in args[0]:
+"
+google|jax|math_benchmark.py|002	Function	"      def wrapper(state, test_case=test_case):
+        return func(state, **test_case)
+"
+google|jax|math_benchmark.py|003	Function	"def jax_unary(state, **kwargs):
+  shape = kwargs['shape']
+  dtype = kwargs['dtype']
+  op = kwargs['op']
+  input0 = np.random.random(shape).astype(dtype)
+  f = op
+  f_jitted = jax.jit(f)
+  f_jitted(input0).block_until_ready()
+  while state:
+    f_jitted(input0).block_until_ready()
+  state.counters['items_per_second'] = Counter(
+      input0.size * state.iterations, Counter.kIsRate
+  )
+"
+google|jax|math_benchmark.py|004	Function	"def jax_binary_op(state, **kwargs):
+  mkn = kwargs['mkn']
+  m = mkn[0]
+  k = mkn[1]
+  n = mkn[2]
+  dtype = kwargs['dtype']
+  op = kwargs['op']
+  a = np.random.random([m, k]).astype(dtype)
+  b = np.random.random([k, n]).astype(dtype)
+  f = op
+  f_jitted = jax.jit(f)
+  f_jitted(a, b).block_until_ready()
+  while state:
+    f_jitted(a, b).block_until_ready()
+  state.counters['items_per_second'] = Counter(
+      state.iterations, Counter.kIsRate
+  )
+"
+google|jax|math_benchmark.py|005	Function	"def main(argv):
+  if FLAGS.set_env:
+    for env_str in FLAGS.set_env:
+      # Stop matching at the first '=' since we want to capture
+      # --set_env='FOO=--foo_a=1 --foo_b=2' all as part of FOO.
+      env_list = env_str.split('=', 1)
+      if len(env_list) == 2:
+        os.environ[env_list[0]] = env_list[1];
+  benchmark.run_benchmarks()
+"
+google|jax|pmap_benchmark.py|000	Function	"def pmap_shard_sharded_device_array_benchmark():
+  """"""Pmap benchmark focusing on shard_args fast path.
+"
+google|jax|pmap_benchmark.py|001	Function	"  def get_benchmark_fn(nargs, nshards):
+    pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
+    shape = (nshards, 4)
+    args = [np.random.random(shape) for _ in range(nargs)]
+    sharded_args = pmap(lambda x: x)(args)
+    assert all(isinstance(arg, jax.Array) for arg in sharded_args)
+    def benchmark_fn():
+      for _ in range(100):
+        pmap_fn(*sharded_args)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|002	Function	"    def benchmark_fn():
+      for _ in range(100):
+        pmap_fn(*sharded_args)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|003	Function	"def pmap_shard_device_array_benchmark():
+  """"""Pmap benchmark focusing on shard_args DeviceArray path.
+"
+google|jax|pmap_benchmark.py|004	Function	"  def get_benchmark_fn(nargs, nshards):
+    pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
+    shape = (nshards, 4)
+    args = [jnp.array(np.random.random(shape)) for _ in range(nargs)]
+    assert all(isinstance(arg, jax.Array) for arg in args)
+    def benchmark_fn():
+      for _ in range(10):
+        pmap_fn(*args)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|005	Function	"    def benchmark_fn():
+      for _ in range(10):
+        pmap_fn(*args)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|006	Function	"def pmap_shard_outputs_benchmark():
+  """"""Pmap benchmark focusing on array_result_handler path.
+"
+google|jax|pmap_benchmark.py|007	Function	"  def get_benchmark_fn(nouts, nshards):
+    pmap_fn = pmap(lambda x: [x + i for i in range(nouts)])
+    shape = (nshards, 4)
+    arg = np.random.random(shape)
+    def benchmark_fn():
+      for _ in range(100):
+        pmap_fn(arg)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|008	Function	"    def benchmark_fn():
+      for _ in range(100):
+        pmap_fn(arg)
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|009	Function	"def sharded_device_array_indexing_benchmark():
+  """"""Benchmark focusing on ShardedDeviceArray indexing.""""""
+  def get_benchmark_fn(indices_fn):
+    nshards = min(8, jax.local_device_count())
+    shape = (nshards, 8, 8)
+    def benchmark_fn():
+      arr = pmap(lambda x: x)(jnp.arange(math.prod(shape)).reshape(shape))
+      indices = indices_fn()
+      for idx in indices:
+        arr[idx]
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|010	Function	"  def get_benchmark_fn(indices_fn):
+    nshards = min(8, jax.local_device_count())
+    shape = (nshards, 8, 8)
+    def benchmark_fn():
+      arr = pmap(lambda x: x)(jnp.arange(math.prod(shape)).reshape(shape))
+      indices = indices_fn()
+      for idx in indices:
+        arr[idx]
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|011	Function	"    def benchmark_fn():
+      arr = pmap(lambda x: x)(jnp.arange(math.prod(shape)).reshape(shape))
+      indices = indices_fn()
+      for idx in indices:
+        arr[idx]
+    return benchmark_fn
+"
+google|jax|pmap_benchmark.py|012	Function	"  def integer_indices():
+    return (i for _ in range(num_internal_iters) for i in range(8))
+"
+google|jax|pmap_benchmark.py|013	Function	"  def integer_2D_indices():
+    return ((i,i) for _ in range(num_internal_iters) for i in range(8))
+"
+google|jax|pmap_benchmark.py|014	Function	"def run_all_benchmarks():
+  pmap_shard_sharded_device_array_benchmark()
+  pmap_shard_device_array_benchmark()
+  pmap_shard_outputs_benchmark()
+  sharded_device_array_indexing_benchmark()
+"
+google|jax|pmap_benchmark.py|015	Function	"def main(unused_argv):
+  run_all_benchmarks()
+"
+cookiecutter|cookiecutter|cli.py|000	Function	"def version_msg():
+    """"""Return the Cookiecutter version, location and Python powering it.""""""
+    python_version = sys.version
+    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return f""Cookiecutter {__version__} from {location} (Python {python_version})""
+"
+cookiecutter|cookiecutter|cli.py|001	Function	"def validate_extra_context(ctx, param, value):
+    """"""Validate extra context.""""""
+    for string in value:
+        if '=' not in string:
+            raise click.BadParameter(
+                f""EXTRA_CONTEXT should contain items of the form key=value; ""
+                f""'{string}' doesn't match that form""
+            )
+"
+cookiecutter|cookiecutter|cli.py|002	Function	"def list_installed_templates(default_config, passed_config_file):
+    """"""List installed (locally cloned) templates. Use cookiecutter --list-installed.""""""
+    config = get_user_config(passed_config_file, default_config)
+    cookiecutter_folder = config.get('cookiecutters_dir')
+    if not os.path.exists(cookiecutter_folder):
+        click.echo(
+            f""Error: Cannot list installed templates. ""
+            f""Folder does not exist: {cookiecutter_folder}""
+        )
+        sys.exit(-1)
+"
+cookiecutter|cookiecutter|cli.py|003	Function	"def main(
+    template,
+    extra_context,
+    no_input,
+    checkout,
+    verbose,
+    replay,
+    overwrite_if_exists,
+    output_dir,
+    config_file,
+    default_config,
+    debug_file,
+    directory,
+    skip_if_file_exists,
+    accept_hooks,
+    replay_file,
+    list_installed,
+    keep_project_on_failure,
+):
+    """"""Create a project from a Cookiecutter project template (TEMPLATE).
+"
+cookiecutter|cookiecutter|config.py|000	Function	"def _expand_path(path):
+    """"""Expand both environment variables and user home in the given path.""""""
+    path = os.path.expandvars(path)
+    path = os.path.expanduser(path)
+    return path
+"
+cookiecutter|cookiecutter|config.py|001	Function	"def merge_configs(default, overwrite):
+    """"""Recursively update a dict with the key/value pair of another.
+"
+cookiecutter|cookiecutter|config.py|002	Function	"def get_config(config_path):
+    """"""Retrieve the config from the specified path, returning a config dict.""""""
+    if not os.path.exists(config_path):
+        raise ConfigDoesNotExistException(f'Config file {config_path} does not exist.')
+"
+cookiecutter|cookiecutter|config.py|003	Function	"def get_user_config(config_file=None, default_config=False):
+    """"""Return the user config as a dict.
+"
+cookiecutter|cookiecutter|environment.py|000	Class	"class ExtensionLoaderMixin:
+    """"""Mixin providing sane loading of extensions specified in a given context.
+"
+cookiecutter|cookiecutter|environment.py|001	Class	"    the next parent class in line of the child.
+    """"""
+"
+cookiecutter|cookiecutter|environment.py|002	Class	"class StrictEnvironment(ExtensionLoaderMixin, Environment):
+    """"""Create strict Jinja2 environment.
+"
+cookiecutter|cookiecutter|environment.py|003	Function	"    def __init__(self, **kwargs):
+        """"""Initialize the Jinja2 Environment object while loading extensions.
+"
+cookiecutter|cookiecutter|environment.py|004	Function	"    def _read_extensions(self, context):
+        """"""Return list of extensions as str to be passed on to the Jinja2 env.
+"
+cookiecutter|cookiecutter|environment.py|005	Function	"    def __init__(self, **kwargs):
+        """"""Set the standard Cookiecutter StrictEnvironment.
+"
+cookiecutter|cookiecutter|exceptions.py|000	Class	"class CookiecutterException(Exception):
+    """"""
+    Base exception class.
+"
+cookiecutter|cookiecutter|exceptions.py|001	Class	"class NonTemplatedInputDirException(CookiecutterException):
+    """"""
+    Exception for when a project's input dir is not templated.
+"
+cookiecutter|cookiecutter|exceptions.py|002	Class	"class UnknownTemplateDirException(CookiecutterException):
+    """"""
+    Exception for ambiguous project template directory.
+"
+cookiecutter|cookiecutter|exceptions.py|003	Class	"class MissingProjectDir(CookiecutterException):
+    """"""
+    Exception for missing generated project directory.
+"
+cookiecutter|cookiecutter|exceptions.py|004	Class	"class ConfigDoesNotExistException(CookiecutterException):
+    """"""
+    Exception for missing config file.
+"
+cookiecutter|cookiecutter|exceptions.py|005	Class	"class InvalidConfiguration(CookiecutterException):
+    """"""
+    Exception for invalid configuration file.
+"
+cookiecutter|cookiecutter|exceptions.py|006	Class	"class UnknownRepoType(CookiecutterException):
+    """"""
+    Exception for unknown repo types.
+"
+cookiecutter|cookiecutter|exceptions.py|007	Class	"class VCSNotInstalled(CookiecutterException):
+    """"""
+    Exception when version control is unavailable.
+"
+cookiecutter|cookiecutter|exceptions.py|008	Class	"class ContextDecodingException(CookiecutterException):
+    """"""
+    Exception for failed JSON decoding.
+"
+cookiecutter|cookiecutter|exceptions.py|009	Class	"class OutputDirExistsException(CookiecutterException):
+    """"""
+    Exception for existing output directory.
+"
+cookiecutter|cookiecutter|exceptions.py|010	Class	"class InvalidModeException(CookiecutterException):
+    """"""
+    Exception for incompatible modes.
+"
+cookiecutter|cookiecutter|exceptions.py|011	Class	"class FailedHookException(CookiecutterException):
+    """"""
+    Exception for hook failures.
+"
+cookiecutter|cookiecutter|exceptions.py|012	Class	"class UndefinedVariableInTemplate(CookiecutterException):
+    """"""
+    Exception for out-of-scope variables.
+"
+cookiecutter|cookiecutter|exceptions.py|013	Class	"class UnknownExtension(CookiecutterException):
+    """"""
+    Exception for un-importable extension.
+"
+cookiecutter|cookiecutter|exceptions.py|014	Class	"class RepositoryNotFound(CookiecutterException):
+    """"""
+    Exception for missing repo.
+"
+cookiecutter|cookiecutter|exceptions.py|015	Class	"class RepositoryCloneFailed(CookiecutterException):
+    """"""
+    Exception for un-cloneable repo.
+"
+cookiecutter|cookiecutter|exceptions.py|016	Class	"class InvalidZipRepository(CookiecutterException):
+    """"""
+    Exception for bad zip repo.
+"
+cookiecutter|cookiecutter|exceptions.py|017	Function	"    def __init__(self, message, error, context):
+        """"""Exception for out-of-scope variables.""""""
+        self.message = message
+        self.error = error
+        self.context = context
+"
+cookiecutter|cookiecutter|exceptions.py|018	Function	"    def __str__(self):
+        """"""Text representation of UndefinedVariableInTemplate.""""""
+        return (
+            f""{self.message}. ""
+            f""Error message: {self.error.message}. ""
+            f""Context: {self.context}""
+        )
+"
+huggingface|datasets|benchmark_array_xd.py|000	Function	"def write(my_features, dummy_data, tmp_dir):
+    with ArrowWriter(features=my_features, path=os.path.join(tmp_dir, ""beta.arrow"")) as writer:
+        for key, record in dummy_data:
+            example = my_features.encode_example(record)
+            writer.write(example)
+        num_examples, num_bytes = writer.finalize()
+"
+huggingface|datasets|benchmark_array_xd.py|001	Function	"def read_unformated(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for _ in dataset:
+        pass
+"
+huggingface|datasets|benchmark_array_xd.py|002	Function	"def read_formatted_as_numpy(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for _ in dataset:
+        pass
+"
+huggingface|datasets|benchmark_array_xd.py|003	Function	"def read_batch_unformated(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_array_xd.py|004	Function	"def read_batch_formatted_as_numpy(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_array_xd.py|005	Function	"def read_col_unformated(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for col in feats:
+        _ = dataset[col]
+"
+huggingface|datasets|benchmark_array_xd.py|006	Function	"def read_col_formatted_as_numpy(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for col in feats:
+        _ = dataset[col]
+"
+huggingface|datasets|benchmark_array_xd.py|007	Function	"def benchmark_array_xd():
+    times = {}
+    read_functions = (
+        read_unformated,
+        read_formatted_as_numpy,
+        read_batch_unformated,
+        read_batch_formatted_as_numpy,
+        read_col_unformated,
+        read_col_formatted_as_numpy,
+    )
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        feats = datasets.Features({""image"": Array2D(SPEED_TEST_SHAPE, dtype=""float32"")})
+        data = generate_examples(features=feats, num_examples=SPEED_TEST_N_EXAMPLES)
+        times[""write_array2d""] = write(feats, data, tmp_dir)
+        for read_func in read_functions:
+            times[read_func.__name__ + "" after write_array2d""] = read_func(feats, tmp_dir)
+"
+huggingface|datasets|benchmark_getitem_100B.py|000	Class	"class RandIter:
+    low: int
+    high: int
+    size: int
+    seed: int
+"
+huggingface|datasets|benchmark_getitem_100B.py|001	Function	"def generate_100B_dataset(num_examples: int, chunk_size: int) -> datasets.Dataset:
+    table = pa.Table.from_pydict({""col"": [0] * chunk_size})
+    table = pa.concat_tables([table] * (num_examples // chunk_size))
+    return datasets.Dataset(table, fingerprint=""table_100B"")
+"
+huggingface|datasets|benchmark_getitem_100B.py|002	Function	"    def __post_init__(self):
+        rng = np.random.default_rng(self.seed)
+        self._sampled_values = rng.integers(low=self.low, high=self.high, size=self.size).tolist()
+"
+huggingface|datasets|benchmark_getitem_100B.py|003	Function	"    def __iter__(self):
+        return iter(self._sampled_values)
+"
+huggingface|datasets|benchmark_getitem_100B.py|004	Function	"    def __len__(self):
+        return self.size
+"
+huggingface|datasets|benchmark_getitem_100B.py|005	Function	"def get_first_row(dataset: datasets.Dataset):
+    _ = dataset[0]
+"
+huggingface|datasets|benchmark_getitem_100B.py|006	Function	"def get_last_row(dataset: datasets.Dataset):
+    _ = dataset[-1]
+"
+huggingface|datasets|benchmark_getitem_100B.py|007	Function	"def get_batch_of_1024_rows(dataset: datasets.Dataset):
+    _ = dataset[range(len(dataset) // 2, len(dataset) // 2 + 1024)]
+"
+huggingface|datasets|benchmark_getitem_100B.py|008	Function	"def get_batch_of_1024_random_rows(dataset: datasets.Dataset):
+    _ = dataset[RandIter(0, len(dataset), 1024, seed=42)]
+"
+huggingface|datasets|benchmark_getitem_100B.py|009	Function	"def benchmark_table_100B():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    functions = (get_first_row, get_last_row, get_batch_of_1024_rows, get_batch_of_1024_random_rows)
+    print(""generating dataset"")
+    dataset = generate_100B_dataset(num_examples=SPEED_TEST_N_EXAMPLES, chunk_size=SPEED_TEST_CHUNK_SIZE)
+    print(""Functions"")
+    for func in functions:
+        print(func.__name__)
+        times[func.__name__] = func(dataset)
+"
+huggingface|datasets|benchmark_indices_mapping.py|000	Function	"def select(dataset: datasets.Dataset):
+    _ = dataset.select(range(0, len(dataset), 2))
+"
+huggingface|datasets|benchmark_indices_mapping.py|001	Function	"def sort(dataset: datasets.Dataset):
+    _ = dataset.sort(""numbers"")
+"
+huggingface|datasets|benchmark_indices_mapping.py|002	Function	"def shuffle(dataset: datasets.Dataset):
+    _ = dataset.shuffle()
+"
+huggingface|datasets|benchmark_indices_mapping.py|003	Function	"def train_test_split(dataset: datasets.Dataset):
+    _ = dataset.train_test_split(0.1)
+"
+huggingface|datasets|benchmark_indices_mapping.py|004	Function	"def shard(dataset: datasets.Dataset, num_shards=10):
+    for shard_id in range(num_shards):
+        _ = dataset.shard(num_shards, shard_id)
+"
+huggingface|datasets|benchmark_indices_mapping.py|005	Function	"def benchmark_indices_mapping():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    functions = (select, sort, shuffle, train_test_split, shard)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        print(""generating dataset"")
+        features = datasets.Features({""text"": datasets.Value(""string""), ""numbers"": datasets.Value(""float32"")})
+        dataset = generate_example_dataset(
+            os.path.join(tmp_dir, ""dataset.arrow""), features, num_examples=SPEED_TEST_N_EXAMPLES
+        )
+        print(""Functions"")
+        for func in functions:
+            print(func.__name__)
+            times[func.__name__] = func(dataset)
+"
+huggingface|datasets|benchmark_iterating.py|000	Function	"def read(dataset: datasets.Dataset, length):
+    for i in range(length):
+        _ = dataset[i]
+"
+huggingface|datasets|benchmark_iterating.py|001	Function	"def read_batch(dataset: datasets.Dataset, length, batch_size):
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_iterating.py|002	Function	"def read_formatted(dataset: datasets.Dataset, length, type):
+    with dataset.formatted_as(type=type):
+        for i in range(length):
+            _ = dataset[i]
+"
+huggingface|datasets|benchmark_iterating.py|003	Function	"def read_formatted_batch(dataset: datasets.Dataset, length, batch_size, type):
+    with dataset.formatted_as(type=type):
+        for i in range(0, length, batch_size):
+            _ = dataset[i : i + batch_size]
+"
+huggingface|datasets|benchmark_iterating.py|004	Function	"def benchmark_iterating():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    functions = [
+        (read, {""length"": SMALL_TEST}),
+        (read, {""length"": SPEED_TEST_N_EXAMPLES}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 10}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 100}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 1_000}),
+        (read_formatted, {""type"": ""numpy"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""pandas"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""torch"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""tensorflow"", ""length"": SMALL_TEST}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 10}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 1_000}),
+    ]
+"
+huggingface|datasets|benchmark_map_filter.py|000	Function	"def map(dataset: datasets.Dataset, **kwargs):
+    _ = dataset.map(**kwargs)
+"
+huggingface|datasets|benchmark_map_filter.py|001	Function	"def filter(dataset: datasets.Dataset, **kwargs):
+    _ = dataset.filter(**kwargs)
+"
+huggingface|datasets|benchmark_map_filter.py|002	Function	"def benchmark_map_filter():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        features = datasets.Features({""text"": datasets.Value(""string""), ""numbers"": datasets.Value(""float32"")})
+        dataset = generate_example_dataset(
+            os.path.join(tmp_dir, ""dataset.arrow""), features, num_examples=SPEED_TEST_N_EXAMPLES
+        )
+"
+huggingface|datasets|benchmark_map_filter.py|003	Function	"        def tokenize(examples):
+            return tokenizer(examples[""text""])
+"
+huggingface|datasets|format.py|000	Function	"def format_json_to_md(input_json_file, output_md_file):
+    with open(input_json_file, encoding=""utf-8"") as f:
+        results = json.load(f)
+"
+huggingface|datasets|utils.py|000	Function	"def get_duration(func):
+    def wrapper(*args, **kwargs):
+        starttime = timeit.default_timer()
+        _ = func(*args, **kwargs)
+        delta = timeit.default_timer() - starttime
+        return delta
+"
+huggingface|datasets|utils.py|001	Function	"    def wrapper(*args, **kwargs):
+        starttime = timeit.default_timer()
+        _ = func(*args, **kwargs)
+        delta = timeit.default_timer() - starttime
+        return delta
+"
+huggingface|datasets|utils.py|002	Function	"def generate_examples(features: dict, num_examples=100, seq_shapes=None):
+    dummy_data = []
+    seq_shapes = seq_shapes or {}
+    for i in range(num_examples):
+        example = {}
+        for col_id, (k, v) in enumerate(features.items()):
+            if isinstance(v, _ArrayXD):
+                data = np.random.rand(*v.shape).astype(v.dtype)
+            elif isinstance(v, datasets.Value):
+                if v.dtype == ""string"":
+                    data = ""The small grey turtle was surprisingly fast when challenged.""
+                else:
+                    data = np.random.randint(10, size=1).astype(v.dtype).item()
+            elif isinstance(v, datasets.Sequence):
+                while isinstance(v, datasets.Sequence):
+                    v = v.feature
+                shape = seq_shapes[k]
+                data = np.random.rand(*shape).astype(v.dtype)
+            example[k] = data
+"
+huggingface|datasets|utils.py|003	Function	"def generate_example_dataset(dataset_path, features, num_examples=100, seq_shapes=None):
+    dummy_data = generate_examples(features, num_examples=num_examples, seq_shapes=seq_shapes)
 "
