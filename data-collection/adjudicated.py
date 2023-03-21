@@ -5,6 +5,7 @@ import re
 import uuid
 from collections import defaultdict
 import csv
+import time
 
 import pandas as pd
 import requests
@@ -87,35 +88,53 @@ def get_min_python_version(file_content):
 
 
 def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
-    url = f"https://api.github.com/repos/{repo['full_name']}/contents/{path}"
-    response = requests.get(url, headers=headers)
-    files = response.json()
     python_files = []
 
-    # In case of a rate limit error or another issue
-    if not isinstance(files, list):
-        reset_time = check_rate_limit(GITHUB_API_TOKEN)
-        if reset_time:
-            print(f"Rate limit hit. The rate limit will reset at {reset_time}.")
-            exit()
+    while True:
+        try:
+            url = f"https://api.github.com/repos/{repo['full_name']}/contents/{path}"
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
 
-    # Look for setup.py in the root directory
-    for file in files:
-        if file["type"] == "file" and file["name"] == "setup.py":
-            python_files.append(file)
-            print(f"Found {repo['name']}/setup.py in the root directory")
+            files = response.json()
+
+            # Look for setup.py in the root directory
+            for file in files:
+                if file["type"] == "file" and file["name"] == "setup.py":
+                    python_files.append(file)
+                    print(
+                        f"Found {repo['name']}/setup.py in the root directory")
+                    break
+
+            # Otherwise, continue searching for .py files recursively
+            for file in files:
+                if 0 < max_files_per_repo < current_count + len(python_files):
+                    break
+                if file["type"] == "file" and file["name"].endswith(".py"):
+                    python_files.append(file)
+                elif file["type"] == "dir":
+                    python_files.extend(
+                        get_repo_files(repo, max_files_per_repo, file["path"],
+                                       current_count + len(python_files)))
             break
 
-    # Otherwise, continue searching for .py files recursively
-    for file in files:
-        if 0 < max_files_per_repo <= current_count + len(python_files):
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code
+
+            # Check if the status code indicates rate limiting (e.g., 429)
+            if status_code == 429:
+                print("Rate limit reached. Waiting for 60 seconds...")
+                time.sleep(60)
+            else:
+                print(f"An error occurred (status code: {status_code}).")
+                # Handle other errors or break the loop if necessary
+                break
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            # Handle unexpected errors or break the loop if necessary
             break
-        if file["type"] == "file" and file["name"].endswith(".py"):
-            python_files.append(file)
-        elif file["type"] == "dir":
-            python_files.extend(
-                get_repo_files(repo, max_files_per_repo, file["path"],
-                               current_count + len(python_files)))
+
     return python_files
 
 
@@ -162,9 +181,30 @@ def collect_data(repositories):
     max_files, max_files_per_repo = get_max_files(), get_max_repo_files()
     data, processed_repos = [], set()
     files_count, considered_repos_count = 0, 0
+    repos_to_ignore = ['public-apis', 'system-design-primer',
+                       'awesome-python', 'Python', 'Python-100-Days',
+                       'youtube-dl', 'thefuck', 'django', 'HelloGitHub',
+                       'flask', 'core', 'awesome-machine-learning', 'keras',
+                       'ansible', 'fastapi', 'scikit-learn', 'cpython',
+                       'stable-diffusion-webui', 'manim', 'funNLP',
+                       'face_recognition', 'you-get', 'localstack',
+                       'PayloadsAllTheThings', 'big-list-of-naughty-strings',
+                       'faceswap', 'yt-dlp', 'rich', 'devops-exercises',
+                       'd2l-zh', 'Real-Time-Voice-Cloning', 'sherlock',
+                       'openpilot', 'DeepFaceLab', 'CppCoreGuidelines',
+                       'python-patterns', 'yolov5',
+                       'Deep-Learning-Papers-Reading-Roadmap', 'cheat.sh',
+                       'ailearning', 'interview_internal_reference',
+                       'sentry', 'bert', 'shadowsocks', 'wtfpython',
+                       'python-cheatsheet', 'XX-Net', 'black', '12306',
+                       'mitmproxy', 'gym', 'jieba', 'airflow', 'hackingtool',
+                       'PaddleOCR', 'diagrams', 'HanLP', 'linux-insides',
+                       'MockingBird', 'GFPGAN']
 
     for r in repositories:
         if r["full_name"] in processed_repos:
+            continue
+        if r["full_name"] in repos_to_ignore:
             continue
         files, considered_repo = filter_python_files(r, max_files_per_repo)
         if files:

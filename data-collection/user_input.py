@@ -26,8 +26,8 @@ def fetch_repositories(min_stars, min_forks, headers):
     query = f"language:python stars:>={min_stars} forks:>={min_forks}"
 
     # Makes requests for REPOS_PER_PAGE * MAX_PAGES repositories
-    repos_per_page = 12
-    max_pages = 1
+    repos_per_page = 100
+    max_pages = 3
     all_items = []
 
     for page in range(1, max_pages + 1):
