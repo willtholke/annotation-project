@@ -1,7 +1,11 @@
 # Data Collection
 
-This subdirectory contains the logic for collecting Python code snippets from popular GitHub repositories that contain 
-Python projects.
+This subdirectory contains the logic for collecting and formatting Python code snippets from popular GitHub repositories 
+that contain Python projects.
+
+## Scripts
+
+### `adjudicated.py`
 
 The main script to run is `adjudicated.py`, which makes GitHub API requests and cleans the data so that it only includes
 repositories that have Python files with version 3.6.0 or greater (as determined by searching through the `setup.py` 
@@ -16,6 +20,14 @@ The collected snippets are categorized as either a "Class" or a "Function" and a
 
 Cleaned data will be saved to `/cleaned-data` with a unique filename. Repository data for each API request is 
 saved to `/raw-data`.
+
+### `conversions.py`
+
+With `conversions.py`, you can revert the .txt adjudicated data to .tsv. You can also revert the .tsv adjudicated data
+to .txt, but this is more of a manual process. This is exceptionally useful if you want to edit the data in .tsv 
+format and convert back to .txt.
+
+## Acknowledgments
 
 Although the program is intended to gather a significant amount of data of high quality, it is important to keep in 
 mind that some misclassifications may still occur.

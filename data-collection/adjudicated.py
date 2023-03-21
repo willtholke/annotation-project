@@ -1,14 +1,16 @@
 import ast
 import os
-import re
-from collections import defaultdict
 import random
-
+import re
 import uuid
+from collections import defaultdict
+import csv
+
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 
+from conversions import create_simple_tsv
 from rate_checker import check_rate_limit
 from user_input import get_user_input, save_data_to_file, \
     load_data_from_file, fetch_repositories, get_max_snippets, \
@@ -92,7 +94,10 @@ def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
 
     # In case of a rate limit error or another issue
     if not isinstance(files, list):
-        return []
+        reset_time = check_rate_limit(GITHUB_API_TOKEN)
+        if reset_time:
+            print(f"Rate limit hit. The rate limit will reset at {reset_time}.")
+            exit()
 
     # Look for setup.py in the root directory
     for file in files:
@@ -258,21 +263,62 @@ def select_and_store_snippets(data):
     return snippets[:max_snippets - 1]
 
 
-def export_to_tsv(snippets):
-    filename = "adjudicated-" + str(uuid.uuid4())[:4] + ".tsv"
+def export(snippets):
+    uid = str(uuid.uuid4())[:4]
+    full_filename = "adjudicated-full-" + uid + ".tsv"
+    simple_filename = "adjudicated-" + uid + ".tsv"
+    simple_txt_filename = "adjudicated-" + uid + ".txt"
+
+    # Create full TSV file
     df = pd.DataFrame(snippets, columns=["UID", "Category", "Snippet"])
-    df.to_csv("data-collection/cleaned-data/" + filename, sep="\t", index=False)
+    df.to_csv("data-collection/cleaned-data/" + full_filename, sep="\t",
+              index=False)
+
+    # Call create_simple_tsv() to save the simplified TSV file
+    create_simple_tsv(df, "data-collection/cleaned-data/" + simple_filename)
+
+    print(f"Exported adjudicated data to {full_filename} and "
+          f"{simple_filename}")
+
+    # Prompt the user to review the simplified TSV file
+    print(
+        f"\nPlease review the simplified TSV file '{simple_filename}' and "
+        f"remove any unhelpful data manually")
+    print("It may take a few moments for the file to appear in your directory")
+    input("After reviewing the data, press any key to continue: ")
+
+    # R Re-read the df_simplified data from the modified TSV file
+    df_simplified = pd.read_csv("data-collection/cleaned-data/" +
+                                simple_filename, sep="\t", header=None,
+                                names=["ID", "Adjudicated", "Label", "Snippet"])
+
+    # Create simplified TXT file
+    export_to_txt(df_simplified, "data-collection/cleaned-data/"
+                  + simple_txt_filename)
+
+    # Print confirmation message 2
+    print(f"Exported adjudicated data to {simple_txt_filename}")
+
+
+def export_to_txt(adjudicated_data, output_file=None):
+    # Replace newline characters within code snippets with <newline>
+    for idx, row in adjudicated_data.iterrows():
+        adjudicated_data.at[idx, "Snippet"] = row["Snippet"].replace("\n", "<newline>")
+
+    with open(output_file, "w", newline="", encoding="utf-8") as tsv_file:
+        tsv_writer = csv.writer(tsv_file, delimiter="\t")
+        tsv_writer.writerows(adjudicated_data.values)
 
 
 def main():
     reset_time = check_rate_limit(GITHUB_API_TOKEN)
-    # if reset_time:
-    #     print(f"Rate limit hit. The rate limit will reset at {reset_time}.")
-    #     return []
+    if reset_time:
+        print(f"Rate limit hit. The rate limit will reset at {reset_time}.")
+        exit()
     repositories = find_repositories()
     data = collect_data(repositories)
     snippets = select_and_store_snippets(data)
-    export_to_tsv(snippets)
+    export(snippets)
 
 
 if __name__ == "__main__":
