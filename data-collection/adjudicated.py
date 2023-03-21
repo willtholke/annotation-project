@@ -1,11 +1,11 @@
 import ast
+import csv
 import os
 import random
 import re
+import time
 import uuid
 from collections import defaultdict
-import csv
-import time
 
 import pandas as pd
 import requests
@@ -92,7 +92,8 @@ def get_repo_files(repo, max_files_per_repo, path="", current_count=0):
 
     while True:
         try:
-            url = f"https://api.github.com/repos/{repo['full_name']}/contents/{path}"
+            url = f"https://api.github.com/repos/{repo['full_name']}" \
+                  f"/contents/{path}"
             response = requests.get(url, headers=headers)
             response.raise_for_status()
 
@@ -181,30 +182,9 @@ def collect_data(repositories):
     max_files, max_files_per_repo = get_max_files(), get_max_repo_files()
     data, processed_repos = [], set()
     files_count, considered_repos_count = 0, 0
-    repos_to_ignore = ['public-apis', 'system-design-primer',
-                       'awesome-python', 'Python', 'Python-100-Days',
-                       'youtube-dl', 'thefuck', 'django', 'HelloGitHub',
-                       'flask', 'core', 'awesome-machine-learning', 'keras',
-                       'ansible', 'fastapi', 'scikit-learn', 'cpython',
-                       'stable-diffusion-webui', 'manim', 'funNLP',
-                       'face_recognition', 'you-get', 'localstack',
-                       'PayloadsAllTheThings', 'big-list-of-naughty-strings',
-                       'faceswap', 'yt-dlp', 'rich', 'devops-exercises',
-                       'd2l-zh', 'Real-Time-Voice-Cloning', 'sherlock',
-                       'openpilot', 'DeepFaceLab', 'CppCoreGuidelines',
-                       'python-patterns', 'yolov5',
-                       'Deep-Learning-Papers-Reading-Roadmap', 'cheat.sh',
-                       'ailearning', 'interview_internal_reference',
-                       'sentry', 'bert', 'shadowsocks', 'wtfpython',
-                       'python-cheatsheet', 'XX-Net', 'black', '12306',
-                       'mitmproxy', 'gym', 'jieba', 'airflow', 'hackingtool',
-                       'PaddleOCR', 'diagrams', 'HanLP', 'linux-insides',
-                       'MockingBird', 'GFPGAN']
 
     for r in repositories:
         if r["full_name"] in processed_repos:
-            continue
-        if r["full_name"] in repos_to_ignore:
             continue
         files, considered_repo = filter_python_files(r, max_files_per_repo)
         if files:
@@ -343,7 +323,8 @@ def export(snippets):
 def export_to_txt(adjudicated_data, output_file=None):
     # Replace newline characters within code snippets with <newline>
     for idx, row in adjudicated_data.iterrows():
-        adjudicated_data.at[idx, "Snippet"] = row["Snippet"].replace("\n", "<newline>")
+        adjudicated_data.at[idx, "Snippet"] = \
+            row["Snippet"].replace("\n", "<newline>")
 
     with open(output_file, "w", newline="", encoding="utf-8") as tsv_file:
         tsv_writer = csv.writer(tsv_file, delimiter="\t")
