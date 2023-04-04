@@ -1,9 +1,9 @@
-0	adjudicated	disagree	"def benchmark(f: Callable[[], Any], iters: Optional[int] = None,
+0	adjudicated	3	"def benchmark(f: Callable[[], Any], iters: Optional[int] = None,
               warmup: Optional[int] = None, name: Optional[str] = None,
               target_total_secs: Optional[Union[int, float]] = None):
   """"""Benchmarks ``f``. Prints the results and returns the raw times.
   """""""
-1	adjudicated	disagree	"def benchmark_suite(prepare: Callable[..., Callable], params_list: List[Dict],
+1	adjudicated	5	"def benchmark_suite(prepare: Callable[..., Callable], params_list: List[Dict],
                     name: str, target_total_secs: Optional[int] = None):
   """"""Benchmarks a function for several combinations of parameters.
   """""""
@@ -36,7 +36,7 @@
     for test_case in args[0]:"
 6	adjudicated	4	"def wrapper(state, test_case=test_case):
   return func(state, **test_case)"
-7	adjudicated	disagree	"def jax_unary(state, **kwargs):
+7	adjudicated	4	"def jax_unary(state, **kwargs):
   shape = kwargs['shape']
   dtype = kwargs['dtype']
   op = kwargs['op']
@@ -49,7 +49,7 @@
   state.counters['items_per_second'] = Counter(
       input0.size * state.iterations, Counter.kIsRate
   )"
-8	adjudicated	disagree	"def jax_binary_op(state, **kwargs):
+8	adjudicated	4	"def jax_binary_op(state, **kwargs):
   mkn = kwargs['mkn']
   m = mkn[0]
   k = mkn[1]
@@ -66,24 +66,24 @@
   state.counters['items_per_second'] = Counter(
       state.iterations, Counter.kIsRate
   )"
-9	adjudicated	disagree	"def get_regions():
+9	adjudicated	4	"def get_regions():
     return requests.post(_API_URL, json={'name':'list_regions'},
                          auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['regions']"
-10	adjudicated	disagree	"def find_existing_cluster():
+10	adjudicated	2	"def find_existing_cluster():
     return requests.post(_API_URL, json={'name':'find_cluster'},
                          auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['region']"
-11	adjudicated	disagree	"def get_cluster_ip(region):
+11	adjudicated	2	"def get_cluster_ip(region):
     return requests.post(_API_URL, json={'name':'get_cluster_ip', 'region':region},
                          auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_ip']"
-12	adjudicated	disagree	"def get_cluster_username(region):
+12	adjudicated	3	"def get_cluster_username(region):
     return requests.post(_API_URL, json={'name':'get_cluster_username', 'region':region},
                          auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_username']"
-13	adjudicated	disagree	"def create_cluster(region):
+13	adjudicated	4	"def create_cluster(region):
     logging.debug(requests.post(_API_URL, json={'name':'create_cluster', 'region':region},
                                 auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS))"
 14	adjudicated	4	"class DefaultReport:
   outcome : str = ""none"""
-15	adjudicated	disagree	"def parse_line(line):
+15	adjudicated	4	"def parse_line(line):
   # TODO(jakevdp): should we parse other report types?
   parsed = json.loads(line)
   if parsed.get(""$report_type"") == ""TestReport"":
@@ -105,10 +105,10 @@
   logging.info(""Writing result to %s"", outfile)
   with open(outfile, 'w') as f:
     f.write(MSG_FORMAT.format(summary=summary))"
-17	adjudicated	disagree	"class AnEnum(enum.IntEnum):
+17	adjudicated	4	"class AnEnum(enum.IntEnum):
   A = 123
   B = 456"
-18	adjudicated	disagree	"def required_devices(num_devices_required):
+18	adjudicated	5	"def required_devices(num_devices_required):
   """"""Helper to skip benchmarks that require more devices.""""""
   def helper1(f):
     @functools.wraps(f)
@@ -119,7 +119,7 @@
       return f(state)
     return helper2
   return helper1"
-19	adjudicated	disagree	"def create_mesh(shape, axis_names, state):
+19	adjudicated	3	"def create_mesh(shape, axis_names, state):
   size = np.prod(shape)
   if len(jax.devices()) < size:
     state.skip_with_error(f""Requires {size} devices"")
@@ -148,11 +148,11 @@
       ""sys.version_info[1]))"")])
   major, minor = map(int, version_output.split("".""))
   return major, minor"
-24	adjudicated	disagree	"def check_python_version(python_version):
+24	adjudicated	5	"def check_python_version(python_version):
   if python_version < (3, 8):
     print(""ERROR: JAX requires Python 3.8 or newer, found "", python_version)
     sys.exit(-1)"
-25	adjudicated	disagree	"def get_benchmark_fn(nargs, nshards):
+25	adjudicated	4	"def get_benchmark_fn(nargs, nshards):
   pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
   shape = (nshards, 4)
   args = [np.random.random(shape) for _ in range(nargs)]
@@ -162,11 +162,11 @@
     for _ in range(100):
       pmap_fn(*sharded_args)
   return benchmark_fn"
-26	adjudicated	disagree	"def benchmark_fn():
+26	adjudicated	3	"def benchmark_fn():
   for _ in range(100):
     pmap_fn(*sharded_args)
 return benchmark_fn"
-27	adjudicated	disagree	"def get_benchmark_fn(nargs, nshards):
+27	adjudicated	3	"def get_benchmark_fn(nargs, nshards):
   pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
   shape = (nshards, 4)
   args = [jnp.array(np.random.random(shape)) for _ in range(nargs)]
@@ -175,10 +175,10 @@ return benchmark_fn"
     for _ in range(10):
       pmap_fn(*args)
   return benchmark_fn"
-28	adjudicated	disagree	"def main(logfile: str, outmd: str, outjson: str, name: str):
+28	adjudicated	3	"def main(logfile: str, outmd: str, outjson: str, name: str):
     print(f""Extracting content of {logfile}"")
     print(f""and writing to {outmd} and {outjson}"")"
-29	adjudicated	disagree	"class MakeCutouts(nn.Module):
+29	adjudicated	4	"class MakeCutouts(nn.Module):
   def __init__(self, cut_size, cut_power=1.0):
       super().__init__()"
 30	adjudicated	4	"class CLIPGuidedStableDiffusion(DiffusionPipeline):
@@ -207,7 +207,7 @@ return benchmark_fn"
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
     return (x - y).norm(dim=-1).div(2).arcsin().pow(2).mul(2)"
-31	adjudicated	disagree	"class DDIMNoiseComparativeAnalysisPipeline(DiffusionPipeline):
+31	adjudicated	3	"class DDIMNoiseComparativeAnalysisPipeline(DiffusionPipeline):
     r""""""
     This model inherits from [`DiffusionPipeline`]. Check the superclass documentation for the generic methods the
     library implements for all the pipelines (such as downloading or saving, running on a particular device, etc.)
@@ -217,13 +217,13 @@ return benchmark_fn"
         return image
     elif isinstance(image, PIL.Image.Image):
         image = [image]"
-33	adjudicated	disagree	"def check_inputs(self, strength):
+33	adjudicated	4	"def check_inputs(self, strength):
     if strength < 0 or strength > 1:
         raise ValueError(f""The value of strength should in [0.0, 1.0] but is {strength}"")"
-34	adjudicated	disagree	"def get_timesteps(self, num_inference_steps, strength, device):
+34	adjudicated	5	"def get_timesteps(self, num_inference_steps, strength, device):
     # get the original timestep using init_timestep
     init_timestep = min(int(num_inference_steps * strength), num_inference_steps)"
-35	adjudicated	disagree	"class CheckpointMergerPipeline(DiffusionPipeline):
+35	adjudicated	4	"class CheckpointMergerPipeline(DiffusionPipeline):
     """"""
     A class that that supports merging diffusion models based on the discussion here:
     https://github.com/huggingface/diffusers/issues/877
@@ -251,7 +251,7 @@ return benchmark_fn"
                 temp_dict.pop(key)
                 meta_keys.append(key)
         return (temp_dict, meta_keys)"
-36	adjudicated	disagree	"class ImagicStableDiffusionPipeline(DiffusionPipeline):
+36	adjudicated	4	"class ImagicStableDiffusionPipeline(DiffusionPipeline):
     r""""""
     Pipeline for imagic image editing.
     See paper here: https://arxiv.org/pdf/2210.09276.pdf
@@ -280,14 +280,14 @@ return benchmark_fn"
         # speed and memory
         slice_size = self.unet.config.attention_head_dim // 2
     self.unet.set_attention_slice(slice_size)"
-39	adjudicated	disagree	"def disable_attention_slicing(self):
+39	adjudicated	4	"def disable_attention_slicing(self):
     r""""""
     Disable sliced attention computation. If `enable_attention_slicing` was previously invoked, this method will go
     back to computing attention in one step.
     """"""
     # set slice_size = `None` to disable `attention slicing`
     self.enable_attention_slicing(None)"
-40	adjudicated	disagree	"class ComposableStableDiffusionPipeline(DiffusionPipeline):
+40	adjudicated	3	"class ComposableStableDiffusionPipeline(DiffusionPipeline):
     r""""""
     Pipeline for text-to-image generation using Stable Diffusion."
 41	adjudicated	4	"def __init__(
@@ -309,7 +309,7 @@ return benchmark_fn"
     requires_safety_checker: bool = True,
 ):
     super().__init__()"
-42	adjudicated	disagree	"def enable_vae_slicing(self):
+42	adjudicated	4	"def enable_vae_slicing(self):
     r""""""
     Enable sliced VAE decoding.
     """""""
@@ -419,34 +419,34 @@ return benchmark_fn"
     t = timestep"
 53	adjudicated	4	"def set_seed(seed: int):
     hf_set_seed(seed)"
-54	adjudicated	disagree	"class Entity:
+54	adjudicated	4	"class Entity:
     """"""
     Internal class to represent entities while converting biomedical NER corpora to a standardized format
     (only used for pre-processing purposes!). Each entity consists of the char span it addresses in
     the original text as well as the type of entity (e.g. Chemical, Gene, and so on).
     """""""
-55	adjudicated	disagree	"class DpEntry(NamedTuple):
+55	adjudicated	4	"class DpEntry(NamedTuple):
     position_end: int
     entity_count: int
     entity_lengths_sum: int
     last_entity: Optional[Entity]"
-56	adjudicated	disagree	"class ClassificationCorpus(Corpus):
+56	adjudicated	4	"class ClassificationCorpus(Corpus):
     """"""
     A classification corpus from FastText-formatted text files.
     """""""
-57	adjudicated	disagree	"class ClassificationDataset(FlairDataset):
+57	adjudicated	4	"class ClassificationDataset(FlairDataset):
     """"""
     Dataset for classification instantiated from a single FastText-formatted file.
     """""""
-58	adjudicated	disagree	"class CSVClassificationCorpus(Corpus):
+58	adjudicated	4	"class CSVClassificationCorpus(Corpus):
     """"""
     Classification corpus instantiated from CSV data files.
     """""""
-59	adjudicated	disagree	"class CSVClassificationDataset(FlairDataset):
+59	adjudicated	4	"class CSVClassificationDataset(FlairDataset):
     """"""
     Dataset for text classification from CSV column formatted data.
     """""""
-60	adjudicated	disagree	"def main():
+60	adjudicated	4	"def main():
     print(""#### Versions:"")
     print(f""##### Flair\n{flair.__version__}"")
     print(f""##### Pytorch\n{torch.__version__}"")
@@ -476,15 +476,15 @@ return benchmark_fn"
                 flair_dataset = flair_dataset.datasets[0]
             else:
                 break"
-62	adjudicated	disagree	"class FlairDatapointDataset(FlairDataset, Generic[DT]):
+62	adjudicated	3	"class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """"""
     A simple Dataset object to wrap a List of Datapoints, for example Sentences
     """""""
-63	adjudicated	disagree	"class SentenceDataset(FlairDatapointDataset):
+63	adjudicated	4	"class SentenceDataset(FlairDatapointDataset):
     @deprecated(version=""0.11"", reason=""The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'"")
     def __init__(self, sentences: Union[Sentence, List[Sentence]]):
         super().__init__(sentences)"
-64	adjudicated	disagree	"class ModelArguments:
+64	adjudicated	3	"class ModelArguments:
     model_name_or_path: str = field(
         metadata={""help"": ""The model checkpoint for weights initialization.""},
     )
@@ -495,7 +495,7 @@ return benchmark_fn"
     )
     hidden_size: int = field(default=256, metadata={""help"": ""Hidden size for NER model.""})
     use_crf: bool = field(default=False, metadata={""help"": ""Whether to use a CRF on-top or not.""})"
-65	adjudicated	disagree	"class TrainingArguments:
+65	adjudicated	4	"class TrainingArguments:
     num_epochs: int = field(default=10, metadata={""help"": ""The number of training epochs.""})
     batch_size: int = field(default=8, metadata={""help"": ""Batch size used for training.""})
     mini_batch_chunk_size: int = field(
@@ -507,13 +507,13 @@ return benchmark_fn"
     device: str = field(default=""cuda:0"", metadata={""help"": ""CUDA device string.""})
     weight_decay: float = field(default=0.0, metadata={""help"": ""Weight decay for optimizer.""})
     embeddings_storage_mode: str = field(default=""none"", metadata={""help"": ""Defines embedding storage method.""})"
-66	adjudicated	disagree	"class FlertArguments:
+66	adjudicated	3	"class FlertArguments:
     context_size: int = field(default=0, metadata={""help"": ""Context size when using FLERT approach.""})
     respect_document_boundaries: bool = field(
         default=False,
         metadata={""help"": ""Whether to respect document boundaries or not when using FLERT.""},
     )"
-67	adjudicated	disagree	"class DataArguments:
+67	adjudicated	3	"class DataArguments:
     dataset_name: str = field(metadata={""help"": ""Flair NER dataset name.""})
     dataset_arguments: str = field(default="""", metadata={""help"": ""Dataset arguments for Flair NER dataset.""})
     output_dir: str = field(
@@ -522,23 +522,23 @@ return benchmark_fn"
     )"
 68	adjudicated	4	"def get_flair_corpus(data_args):
     ner_task_mapping = {}"
-69	adjudicated	disagree	"class Dictionary:
+69	adjudicated	4	"class Dictionary:
     """"""
     This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
     """""""
-70	adjudicated	disagree	"class Label:
+70	adjudicated	4	"class Label:
     """"""
     This class represents a label. Each label has a value and optionally a confidence score. The
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """""""
-71	adjudicated	disagree	"class DataPoint:
+71	adjudicated	4	"class DataPoint:
     """"""
     This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
     must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()). Also,
     each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
     and the property 'label')
     """""""
-72	adjudicated	disagree	"def setup(app: Sphinx) -> None:
+72	adjudicated	4	"def setup(app: Sphinx) -> None:
     app.add_object_type(
         ""confval"",
         ""confval"",
@@ -558,7 +558,7 @@ return benchmark_fn"
     cache = make_cache(cache_dir, sqlite)
     with open(diff_file) as f:
         diff = json.load(f)"
-75	adjudicated	disagree	"def main() -> None:
+75	adjudicated	4	"def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(""--sqlite"", action=""store_true"", default=False, help=""Use a sqlite cache"")
     parser.add_argument(""cache_dir"", help=""Directory for the cache"")
@@ -595,7 +595,7 @@ return benchmark_fn"
             yield from extract(chunk.values())
         elif isinstance(chunk, list):
             yield from extract(chunk)"
-80	adjudicated	disagree	"class It(Iterator[str]):
+80	adjudicated	5	"class It(Iterator[str]):
     stop = False"
 81	adjudicated	4	"class Aw(Awaitable[int]):
     def __await__(self) -> Generator[str, Any, int]:
@@ -633,11 +633,11 @@ return benchmark_fn"
     parser.addoption(
         ""--bench"", action=""store_true"", default=False, help=""Enable the benchmark test runs""
     )"
-88	adjudicated	disagree	"def parse_commit_title(diff: str) -> str:
+88	adjudicated	4	"def parse_commit_title(diff: str) -> str:
     m = re.search(""\n    ([^ ].*)"", diff)
     assert m is not None, ""Could not parse diff""
     return m.group(1)"
-89	adjudicated	disagree	"def main() -> None:
+89	adjudicated	3	"def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         ""--typeshed-dir"", help=""location of typeshed"", metavar=""dir"", required=True
@@ -648,7 +648,7 @@ return benchmark_fn"
     commit = args.commit"
 90	adjudicated	4	"def setup(app):
     app.add_css_file(""custom.css"")"
-91	adjudicated	disagree	"class PipenvGroup(DYMMixin, Group):
+91	adjudicated	5	"class PipenvGroup(DYMMixin, Group):
     """"""Custom Group class provides formatted main help"""""""
 92	adjudicated	4	"class State:
     def __init__(self):
@@ -698,17 +698,17 @@ return benchmark_fn"
 ):
     from pipenv.patched.pip._vendor import rich
     from pipenv.utils.shell import system_which"
-96	adjudicated	disagree	"def install(state, **kwargs):
+96	adjudicated	5	"def install(state, **kwargs):
     """"""Installs provided packages and adds them to Pipfile, or (if no packages are given), installs all packages from Pipfile.""""""
     from pipenv.routines.install import do_install
     "
-97	adjudicated	disagree	"def upgrade(state, **kwargs):
+97	adjudicated	5	"def upgrade(state, **kwargs):
     from pipenv.routines.update import upgrade
     from pipenv.utils.project import ensure_project"
-98	adjudicated	disagree	"def uninstall(ctx, state, all_dev=False, all=False, **kwargs):
+98	adjudicated	4	"def uninstall(ctx, state, all_dev=False, all=False, **kwargs):
     """"""Uninstalls a provided package and removes it from Pipfile.""""""
     from pipenv.routines.uninstall import do_uninstall"
-99	adjudicated	disagree	"def lock(ctx, state, **kwargs):
+99	adjudicated	5	"def lock(ctx, state, **kwargs):
     """"""Generates Pipfile.lock.""""""
     from pipenv.routines.lock import do_lock
     from pipenv.utils.project import ensure_project"
@@ -716,21 +716,21 @@ return benchmark_fn"
     implicit_pip = True
     implicit_setuptools = False
     implicit_wheel = True"
-101	adjudicated	disagree	"def monkeypatch_for_cert(tmpdir):
+101	adjudicated	5	"def monkeypatch_for_cert(tmpdir):
     """"""Patches `pip install` to provide default certificate with the lowest priority.
     """""""
-102	adjudicated	disagree	"def cert_parse_args(self, args):
+102	adjudicated	5	"def cert_parse_args(self, args):
     if not self.parser.get_default_values().cert:
         # There are no user provided cert -- force use of bundled cert
         self.parser.defaults[""cert""] = cert_path  # calculated above
     return install_parse_args(self, args)"
-103	adjudicated	disagree	"def bootstrap(tmpdir):
+103	adjudicated	4	"def bootstrap(tmpdir):
     monkeypatch_for_cert(tmpdir)"
-104	adjudicated	disagree	"def map(dataset: datasets.Dataset, **kwargs):
+104	adjudicated	4	"def map(dataset: datasets.Dataset, **kwargs):
     _ = dataset.map(**kwargs)"
-105	adjudicated	disagree	"def filter(dataset: datasets.Dataset, **kwargs):
+105	adjudicated	4	"def filter(dataset: datasets.Dataset, **kwargs):
     _ = dataset.filter(**kwargs"
-106	adjudicated	disagree	"def benchmark_map_filter():
+106	adjudicated	4	"def benchmark_map_filter():
     times = {""num examples"": SPEED_TEST_N_EXAMPLES}
     with tempfile.TemporaryDirectory() as tmp_dir:
         features = datasets.Features({""text"": datasets.Value(""string""), ""numbers"": datasets.Value(""float32"")})
@@ -744,11 +744,11 @@ return benchmark_fn"
     high: int
     size: int
     seed: int"
-109	adjudicated	disagree	"def generate_100B_dataset(num_examples: int, chunk_size: int) -> datasets.Dataset:
+109	adjudicated	5	"def generate_100B_dataset(num_examples: int, chunk_size: int) -> datasets.Dataset:
     table = pa.Table.from_pydict({""col"": [0] * chunk_size})
     table = pa.concat_tables([table] * (num_examples // chunk_size))
     return datasets.Dataset(table, fingerprint=""table_100B"")"
-110	adjudicated	disagree	"def __post_init__(self):
+110	adjudicated	4	"def __post_init__(self):
     rng = np.random.default_rng(self.seed)
     self._sampled_values = rng.integers(low=self.low, high=self.high, size=self.size).tolist()"
 111	adjudicated	4	"def __iter__(self):
@@ -772,7 +772,7 @@ return benchmark_fn"
     with dataset.formatted_as(type=type):
         for i in range(0, length, batch_size):
             _ = dataset[i : i + batch_size]"
-118	adjudicated	disagree	"def benchmark_iterating():
+118	adjudicated	3	"def benchmark_iterating():
     times = {""num examples"": SPEED_TEST_N_EXAMPLES}
     functions = [
         (read, {""length"": SMALL_TEST}),
@@ -787,18 +787,18 @@ return benchmark_fn"
         (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 10}),
         (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 1_000}),
     ]"
-119	adjudicated	disagree	"def get_duration(func):
+119	adjudicated	3	"def get_duration(func):
     def wrapper(*args, **kwargs):
         starttime = timeit.default_timer()
         _ = func(*args, **kwargs)
         delta = timeit.default_timer() - starttime
         return delta"
-120	adjudicated	disagree	"def wrapper(*args, **kwargs):
+120	adjudicated	4	"def wrapper(*args, **kwargs):
     starttime = timeit.default_timer()
     _ = func(*args, **kwargs)
     delta = timeit.default_timer() - starttime
     return delta"
-121	adjudicated	disagree	"def generate_examples(features: dict, num_examples=100, seq_shapes=None):
+121	adjudicated	3	"def generate_examples(features: dict, num_examples=100, seq_shapes=None):
     dummy_data = []
     seq_shapes = seq_shapes or {}
     for i in range(num_examples):
@@ -853,18 +853,18 @@ return benchmark_fn"
     dataset.set_format(""numpy"")
     for i in range(0, len(dataset), batch_size):
         _ = dataset[i : i + batch_size]"
-128	adjudicated	disagree	"def select(dataset: datasets.Dataset):
+128	adjudicated	3	"def select(dataset: datasets.Dataset):
     _ = dataset.select(range(0, len(dataset), 2))"
-129	adjudicated	disagree	"def sort(dataset: datasets.Dataset):
+129	adjudicated	4	"def sort(dataset: datasets.Dataset):
     _ = dataset.sort(""numbers"")"
-130	adjudicated	disagree	"def shuffle(dataset: datasets.Dataset):
+130	adjudicated	4	"def shuffle(dataset: datasets.Dataset):
     _ = dataset.shuffle()"
-131	adjudicated	disagree	"def train_test_split(dataset: datasets.Dataset):
+131	adjudicated	3	"def train_test_split(dataset: datasets.Dataset):
     _ = dataset.train_test_split(0.1)"
-132	adjudicated	disagree	"def shard(dataset: datasets.Dataset, num_shards=10):
+132	adjudicated	4	"def shard(dataset: datasets.Dataset, num_shards=10):
     for shard_id in range(num_shards):
         _ = dataset.shard(num_shards, shard_id)"
-133	adjudicated	disagree	"class RegexpChunkApp:
+133	adjudicated	4	"class RegexpChunkApp:
     """"""
     A graphical tool for exploring the regular expression based chunk
     parser ``nltk.chunk.RegexpChunkParser``.
@@ -879,7 +879,7 @@ return benchmark_fn"
     # [xx] Hack: automatically backslash $!
     grammar = re.sub(r""([^\\])\$"", r""\1\\$"", grammar)
     return grammar"
-135	adjudicated	disagree	"def _init_bindings(self, top):
+135	adjudicated	4	"def _init_bindings(self, top):
     top.bind(""<Control-n>"", self._devset_next)
     top.bind(""<Control-p>"", self._devset_prev)
     top.bind(""<Control-t>"", self.toggle_show_trace)
@@ -889,7 +889,7 @@ return benchmark_fn"
     self.grammarbox.bind(""<Control-t>"", self.toggle_show_trace)
     self.grammarbox.bind(""<Control-n>"", self._devset_next)
     self.grammarbox.bind(""<Control-p>"", self._devset_prev)"
-136	adjudicated	disagree	"def _init_fonts(self, top):
+136	adjudicated	4	"def _init_fonts(self, top):
     # TWhat's our font size (default=same as sysfont)
     self._size = IntVar(top)
     self._size.set(20)
@@ -897,7 +897,7 @@ return benchmark_fn"
     self._smallfont = Font(
         family=""helvetica"", size=-(int(self._size.get() * 14 // 20))
     )"
-137	adjudicated	disagree	"class RecursiveDescentApp:
+137	adjudicated	4	"class RecursiveDescentApp:
     """"""
     A graphical tool for exploring the recursive descent parser.  The tool
     displays the parser's tree and the remaining text, and allows the
@@ -920,7 +920,7 @@ return benchmark_fn"
     # See: <http://www.astro.washington.edu/owen/ROTKFolklore.html>
     self._sysfont = Font(font=Button()[""font""])
     root.option_add(""*Font"", self._sysfont)"
-140	adjudicated	disagree	"def _init_bindings(self):
+140	adjudicated	4	"def _init_bindings(self):
     # Key bindings are a good thing.
     self._top.bind(""<Control-q>"", self.destroy)
     self._top.bind(""<Control-x>"", self.destroy)
@@ -972,7 +972,7 @@ return benchmark_fn"
     def __init__(self, model, page, count):
         self.model, self.count, self.page = model, count, page
         threading.Thread.__init__(self)"
-145	adjudicated	disagree	"class Zone:
+145	adjudicated	3	"class Zone:
     def __init__(self, image, initialField, initialText):
         frm = Frame(root)
         frm.config(background=""white"")
@@ -989,7 +989,7 @@ return benchmark_fn"
         for i in range(2):
             self.txt.tag_config(colors[i], background=colors[i])
             self.txt.tag_config(""emph"" + colors[i], foreground=emphColors[i])"
-146	adjudicated	disagree	"class FindZone(Zone):
+146	adjudicated	5	"class FindZone(Zone):
     def addTags(self, m):
         color = next(self.colorCycle)
         self.txt.tag_add(color, ""1.0+%sc"" % m.start(), ""1.0+%sc"" % m.end())
@@ -999,7 +999,7 @@ return benchmark_fn"
             )
         except:
             pass"
-147	adjudicated	disagree	"class ReplaceZone(Zone):
+147	adjudicated	4	"class ReplaceZone(Zone):
     def addTags(self, m):
         s = sz.rex.sub(self.repl, m.group())
         self.txt.delete(
@@ -1058,7 +1058,7 @@ return benchmark_fn"
     self.after = self.top.after(POLL_INTERVAL, self._poll)"
 154	adjudicated	4	"class EdgeList(ColorizedList):
     ARROW = SymbolWidget.SYMBOLS[""rightarrow""]"
-155	adjudicated	disagree	"class ChartMatrixView:
+155	adjudicated	4	"class ChartMatrixView:
     """"""
     A view of a chart that displays the contents of the corresponding matrix.
     """""""
@@ -1071,19 +1071,19 @@ return benchmark_fn"
         self._treewidgets = []
         self._selection = None
         self._selectbox = None"
-157	adjudicated	disagree	"class ChartView:
+157	adjudicated	4	"class ChartView:
     """"""
     A component for viewing charts.  This is used by ``ChartParserApp`` to
     allow students to interactively experiment with various chart
     parsing techniques.  It is also used by ``Chart.draw()``.
     """""""
-158	adjudicated	disagree	"def _fake_PIPE(*args, **kwargs):
+158	adjudicated	4	"def _fake_PIPE(*args, **kwargs):
     raise NotImplementedError(""subprocess.PIPE is not supported."")"
-159	adjudicated	disagree	"def _fake_Popen(*args, **kwargs):
+159	adjudicated	3	"def _fake_Popen(*args, **kwargs):
     raise NotImplementedError(""subprocess.Popen is not supported."")"
-160	adjudicated	disagree	"def demo():
+160	adjudicated	4	"def demo():
     print(""To run the demo code for a module, type nltk.module.demo()"")"
-161	adjudicated	disagree	"def make_parser():
+161	adjudicated	5	"def make_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         ""--deprecation"",
@@ -1100,9 +1100,9 @@ return benchmark_fn"
     return parser"
 162	adjudicated	3	"def parse_args(args=None):
     return make_parser().parse_known_args(args)"
-163	adjudicated	disagree	"def runtests():
+163	adjudicated	4	"def runtests():
     args, rest = parse_args()"
-164	adjudicated	disagree	"def pytest_addoption(parser):
+164	adjudicated	4	"def pytest_addoption(parser):
     parser.addoption(
         ""--deprecation"",
         choices=[""all"", ""pending"", ""imminent"", ""none""],
@@ -1129,27 +1129,27 @@ return benchmark_fn"
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path"
-171	adjudicated	disagree	"def merge_configs(default, overwrite):
+171	adjudicated	3	"def merge_configs(default, overwrite):
     """"""Recursively update a dict with the key/value pair of another.
 
     def get_config(config_path):
     """"""Retrieve the config from the specified path, returning a config dict.""""""
     if not os.path.exists(config_path):
         raise ConfigDoesNotExistException(f'Config file {config_path} does not exist.')"
-172	adjudicated	disagree	"def get_config(config_path):
+172	adjudicated	5	"def get_config(config_path):
     """"""Retrieve the config from the specified path, returning a config dict.""""""
     if not os.path.exists(config_path):
         raise ConfigDoesNotExistException(f'Config file {config_path} does not exist.')"
-173	adjudicated	disagree	"class ConfigDoesNotExistException(CookiecutterException):
+173	adjudicated	4	"class ConfigDoesNotExistException(CookiecutterException):
     """"""
     Exception for missing config file.
     """""""
-174	adjudicated	disagree	"def version_msg():
+174	adjudicated	5	"def version_msg():
     """"""Return the Cookiecutter version, location and Python powering it.""""""
     python_version = sys.version
     location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return f""Cookiecutter {__version__} from {location} (Python {python_version})"""
-175	adjudicated	disagree	"def validate_extra_context(ctx, param, value):
+175	adjudicated	5	"def validate_extra_context(ctx, param, value):
     """"""Validate extra context.""""""
     for string in value:
         if '=' not in string:
@@ -1157,7 +1157,7 @@ return benchmark_fn"
                 f""EXTRA_CONTEXT should contain items of the form key=value; ""
                 f""'{string}' doesn't match that form""
             )"
-176	adjudicated	disagree	"def list_installed_templates(default_config, passed_config_file):
+176	adjudicated	4	"def list_installed_templates(default_config, passed_config_file):
     """"""List installed (locally cloned) templates. Use cookiecutter --list-installed.""""""
     config = get_user_config(passed_config_file, default_config)
     cookiecutter_folder = config.get('cookiecutters_dir')
@@ -1167,7 +1167,7 @@ return benchmark_fn"
             f""Folder does not exist: {cookiecutter_folder}""
         )
         sys.exit(-1)"
-177	adjudicated	disagree	"def main(
+177	adjudicated	4	"def main(
     template,
     extra_context,
     no_input,
@@ -1209,7 +1209,7 @@ return benchmark_fn"
     return node.parent[node.parent.index(node) + 1]"
 184	adjudicated	4	"def setup(app):
     app.connect(""autodoc-skip-member"", maybe_skip_member)"
-185	adjudicated	disagree	"def maybe_skip_member(app, what, name, obj, skip, options):
+185	adjudicated	4	"def maybe_skip_member(app, what, name, obj, skip, options):
     if not skip:
         # autodocs was generating a text ""alias of"" for the following members
         # https://github.com/sphinx-doc/sphinx/issues/4422
@@ -1223,7 +1223,7 @@ return benchmark_fn"
 187	adjudicated	4	"class QPSSpider(Spider):
     name = ""qps""
     benchurl = ""http://localhost:8880/"""
-188	adjudicated	disagree	"def __init__(self, *a, **kw):
+188	adjudicated	5	"def __init__(self, *a, **kw):
     super().__init__(*a, **kw)
     if self.qps is not None:
         self.qps = float(self.qps)
@@ -1266,11 +1266,11 @@ return benchmark_fn"
 198	adjudicated	4	"def render(self, request):
     now = time()
     delta = now - self.lasttime"
-199	adjudicated	disagree	"def test_dtw(N: int, M: int):
+199	adjudicated	4	"def test_dtw(N: int, M: int):
     steps = np.concatenate([np.zeros(N - 1), np.ones(M - 1)])
     np.random.shuffle(steps)
     x = np.random.random((N, M)).astype(np.float32)"
-200	adjudicated	disagree	"def test_dtw_cuda_equivalence(N: int, M: int):
+200	adjudicated	5	"def test_dtw_cuda_equivalence(N: int, M: int):
     x_numpy = np.random.randn(N, M).astype(np.float32)
     x_cuda = torch.from_numpy(x_numpy).cuda()"
 201	adjudicated	4	"def test_median_filter(shape):
@@ -1329,13 +1329,13 @@ return benchmark_fn"
 215	adjudicated	4	"class _Undefined:
     def __repr__(self) -> str:
         return 'see-below'"
-216	adjudicated	disagree	"class Snowflake(Protocol):
+216	adjudicated	4	"class Snowflake(Protocol):
     """"""An ABC that details the common operations on a Discord model.
     """""""
-217	adjudicated	disagree	"class User(Snowflake, Protocol):
+217	adjudicated	3	"class User(Snowflake, Protocol):
     """"""An ABC that details the common operations on a Discord user.
     """""""
-218	adjudicated	disagree	"class PrivateChannel:
+218	adjudicated	4	"class PrivateChannel:
     """"""An ABC that details the common operations on a private Discord channel.
     """""""
 219	adjudicated	4	"class _Overwrites:
@@ -1346,40 +1346,40 @@ return benchmark_fn"
     micro: int
     releaselevel: Literal[""alpha"", ""beta"", ""candidate"", ""final""]
     serial: int"
-221	adjudicated	disagree	"class Bot(commands.{base}):
+221	adjudicated	3	"class Bot(commands.{base}):
     def __init__(self, intents: discord.Intents, **kwargs):
         super().__init__(command_prefix=commands.when_mentioned_or('{prefix}'), intents=intents, **kwargs)"
-222	adjudicated	disagree	"def show_version() -> None:
+222	adjudicated	4	"def show_version() -> None:
     entries = []"
-223	adjudicated	disagree	"def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+223	adjudicated	4	"def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.version:
         show_version()
     else:
         parser.print_help()"
-224	adjudicated	disagree	"class Parameter:
+224	adjudicated	4	"class Parameter:
     """"""A class that contains the parameter information of a :class:`Command` callback.
     """""""
-225	adjudicated	disagree	"class ContextMenu:
+225	adjudicated	5	"class ContextMenu:
     """"""A class that implements a context menu application command.
     """""""
-226	adjudicated	disagree	"class BaseActivity:
+226	adjudicated	5	"class BaseActivity:
     """"""The base activity that all user-settable activities inherit from.
     A user-settable activity is one that can be used in :meth:`Client.change_presence`.
     """""""
-227	adjudicated	disagree	"class Activity(BaseActivity):
+227	adjudicated	4	"class Activity(BaseActivity):
     """"""Represents an activity in Discord.
     """""""
-228	adjudicated	disagree	"class Game(BaseActivity):
+228	adjudicated	4	"class Game(BaseActivity):
     """"""A slimmed down version of :class:`Activity` that represents a Discord game.
     """""""
-229	adjudicated	disagree	"class Streaming(BaseActivity):
+229	adjudicated	4	"class Streaming(BaseActivity):
     """"""A slimmed down version of :class:`Activity` that represents a Discord streaming status.
     """""""
-230	adjudicated	disagree	"class Spotify:
+230	adjudicated	3	"class Spotify:
     """"""Represents a Spotify listening activity from Discord. This is a special case of
     :class:`Activity` that makes it easier to work with the Spotify integration.
     """""""
-231	adjudicated	disagree	"class Cooldown:
+231	adjudicated	4	"class Cooldown:
     """"""Represents a cooldown for a command.
     """""""
 232	adjudicated	4	"def __init__(self, rate: float, per: float) -> None:
@@ -1388,13 +1388,13 @@ return benchmark_fn"
     self._window: float = 0.0
     self._tokens: int = self.rate
     self._last: float = 0.0"
-233	adjudicated	disagree	"def get_tokens(self, current: Optional[float] = None) -> int:
+233	adjudicated	5	"def get_tokens(self, current: Optional[float] = None) -> int:
     """"""Returns the number of available tokens before rate limiting is applied.
     """""""
-234	adjudicated	disagree	"def get_retry_after(self, current: Optional[float] = None) -> float:
+234	adjudicated	5	"def get_retry_after(self, current: Optional[float] = None) -> float:
     """"""Returns the time in seconds until the cooldown will be reset.
     """""""
-235	adjudicated	disagree	"def update_rate_limit(self, current: Optional[float] = None, *, tokens: int = 1) -> Optional[float]:
+235	adjudicated	5	"def update_rate_limit(self, current: Optional[float] = None, *, tokens: int = 1) -> Optional[float]:
     """"""Updates the cooldown rate limit.
     """""""
 236	adjudicated	4	"def close_api_gracefully(apis):
@@ -1415,7 +1415,7 @@ return benchmark_fn"
         sys.exit(0)
     except psutil.NoSuchProcess:
         pass"
-237	adjudicated	disagree	"async def wait_api_start(api_name, pid, port):
+237	adjudicated	4	"async def wait_api_start(api_name, pid, port):
     timeout = 60
     start_time = time.time()
     started = is_pid_listen_port(pid, port)
@@ -1423,7 +1423,7 @@ return benchmark_fn"
         await asyncio.sleep(0.5)
         started = is_pid_listen_port(pid, port)
     return api_name, port, started"
-238	adjudicated	disagree	"async def wait_apis_start():
+238	adjudicated	5	"async def wait_apis_start():
     futures = [
         wait_api_start(api_name, api_data['process'].pid, api_data['port'])
         for api_name, api_data in apis.items() if 'port' in api_data
@@ -1436,7 +1436,7 @@ return benchmark_fn"
             log.logger.error(f""ERROR: {api_name} API cant start on {port}"")"
 239	adjudicated	4	"def index():
     return ""MindsDB Hanler Discovery"", 200"
-240	adjudicated	disagree	"def register():
+240	adjudicated	4	"def register():
     try:
         params = request.json
         host = params.get(""host"")
@@ -1459,19 +1459,19 @@ return benchmark_fn"
     except Exception as e:
         return {""error"": str(e)}, 500
     return res, 200"
-242	adjudicated	disagree	"class QuietSimpleHTTPServer(SimpleHTTPRequestHandler):
+242	adjudicated	4	"class QuietSimpleHTTPServer(SimpleHTTPRequestHandler):
     def log_message(self, *args, **kwargs):
         pass"
 243	adjudicated	4	"class Context:
     benchmarks: ClassVar[List[BaseRunner]] = []
     stack: ExitStack = field(default_factory=ExitStack)
     runner: pyperf.Runner = field(default_factory=pyperf.Runner)"
-244	adjudicated	disagree	"class BaseRunner:
+244	adjudicated	4	"class BaseRunner:
     """"""
     An individual benchmark case. By default it has the category
     (e.g like startup or download) and a name.
     """""""
-245	adjudicated	disagree	"class CommandRunner(BaseRunner):
+245	adjudicated	5	"class CommandRunner(BaseRunner):
     """"""
     Run a single command, and benchmark it.
     """""""
@@ -1490,7 +1490,7 @@ return benchmark_fn"
                 target_script,
             ]
         )"
-247	adjudicated	disagree	"def build_packages(http_binary: Path, httpie_binary: Path) -> None:
+247	adjudicated	4	"def build_packages(http_binary: Path, httpie_binary: Path) -> None:
     import httpie"
 248	adjudicated	4	"def main():
     binaries = dict(build_binaries())
