@@ -1,4 +1,4 @@
-250	label-na	azhang-temp	"def find_committers(since: str, until: str) -> FullNames:
+250	azhang	label-na	"def find_committers(since: str, until: str) -> FullNames:
     url = f'{REPO_URL}/commits'
     page = 1
     per_page = 100
@@ -8,7 +8,7 @@
         'per_page': per_page,
     }
     committers: FullNames = set()"
-251	label-na	azhang	"def find_reporters(since: str, until: str) -> GitHubLogins:
+251	azhang	label-na	"def find_reporters(since: str, until: str) -> GitHubLogins:
     url = f'{API_URL}/search/issues'
     page = 1
     per_page = 100
@@ -17,14 +17,14 @@
         'per_page': per_page,
     }
     reporters: GitHubLogins = set()"
-252	label-na	azhang	"def merge_all_the_people(release: str, contributors: People, committers: FullNames, reporters: GitHubLogins) -> None:
+252	azhang	label-na	"def merge_all_the_people(release: str, contributors: People, committers: FullNames, reporters: GitHubLogins) -> None:
     """"""
     >>> contributors = {'Alice': new_person(github='alice', twitter='alice')}
     >>> merge_all_the_people('2.6.0', contributors, {}, {})
     >>> contributors
     {'Alice': {'committed': [], 'reported': [], 'github': 'alice', 'twitter': 'alice'}}
     """""""
-253	label-na	azhang	"def hook(hook_api):
+253	azhang	label-na	"def hook(hook_api):
     for pkg in [
         'pip',
         'setuptools',
@@ -35,14 +35,14 @@
         hook_api.add_datas(datas)
         hook_api.add_binaries(binaries)
         hook_api.add_imports(*hiddenimports)"
-254	label-na	azhang	"def generate_documentation() -> str:
+254	azhang	label-na	"def generate_documentation() -> str:
     database = load_database()
     structure = build_docs_structure(database)
     template = Template(source=TPL_FILE.read_text(encoding='utf-8'))
     output = template.render(structure=structure)
     output = clean_template_output(output)
     return output"
-255	label-na	azhang	"def save_doc_file(content: str) -> None:
+255	azhang	label-na	"def save_doc_file(content: str) -> None:
     current_doc = load_doc_file()
     marker_start = current_doc.find(MARKER_START) + len(MARKER_START)
     assert marker_start > 0, 'cannot find the start marker'
@@ -57,7 +57,7 @@
     )
     if current_doc != updated_doc:
         DOC_FILE.write_text(updated_doc, encoding='utf-8')"
-256	label-na	azhang	"def build_docs_structure(database: Database):
+256	azhang	label-na	"def build_docs_structure(database: Database):
     tools = database[KEY_TOOLS]
     assert len(tools) == len({tool['title'] for tool in tools.values()}), 'tool titles need to be unique'
     tree = database[KEY_DOC_STRUCTURE]
@@ -68,20 +68,20 @@
         structure.append((platform, platform_tools))
     return structure
 "
-257	label-na	azhang	"def clean_template_output(output):
+257	azhang	label-na	"def clean_template_output(output):
     output = '\n'.join(line.strip() for line in output.strip().splitlines())
     output = re.sub('\n{3,}', '\n\n', output)
     return output"
-258	label-na	azhang	"def load_database() -> Database:
+258	azhang	label-na	"def load_database() -> Database:
     return yaml.safe_load(DB_FILE.read_text(encoding='utf-8'))"
-259	label-na	azhang	"def benchmark(ane):
+259	azhang	label-na	"def benchmark(ane):
   tin = ANETensor(512*0x20)
   tout = ANETensor(512*0x20)
   dat = open(""../ops/gemm.hwx"", ""rb"").read()
   for k,v in ane.debug(dat[0x4000:0x4300], 16).items():
     print(k,v)
   comp = ane.compile(dat)"
-260	label-na	azhang	"def get_macho(fn):
+260	azhang	label-na	"def get_macho(fn):
   # mod to make the header okay
   # MH_CIGAM_64 is good
   dat = open(fn, ""rb"").read()
@@ -91,16 +91,16 @@
     f.write(dat)
     f.close()
   return MachO.MachO(f.name)"
-261	label-na	azhang	"def compare(x, y):
+261	azhang	label-na	"def compare(x, y):
   ss = []
   ln = []
   ln2 = []"
-262	label-na	azhang	"def fj(x):
+262	azhang	label-na	"def fj(x):
   ss = []
   for i in range(0, 0x10, 4):
     ss.append(' '.join(x[i:i+4]))
   return '  '.join(ss)"
-263	label-na	azhang	"class ANETensor:
+263	azhang	label-na	"class ANETensor:
   def __init__(self, *shape):
     self.shape = shape
     self.dtype = np.float16
@@ -108,21 +108,21 @@
     assert(self.sz <= 0x4000)
     self.tt = libane.ANE_TensorCreate(self.sz, 1)
     assert(self.tt is not None)"
-264	label-na	azhang	"class ANE:
+264	azhang	label-na	"class ANE:
   def __init__(self):
     init_libane()
     libane.ANE_Open()"
-265	label-na	azhang	"def init_libane():
+265	azhang	label-na	"def init_libane():
   global libane, aneregs
   libane = cdll.LoadLibrary(os.path.join(basedir, ""libane.dylib""))"
-266	label-na	azhang	"def __init__(self, *shape):
+266	azhang	label-na	"def __init__(self, *shape):
   self.shape = shape
   self.dtype = np.float16
   self.sz = int(np.prod(shape))
   assert(self.sz <= 0x4000)
   self.tt = libane.ANE_TensorCreate(self.sz, 1)
   assert(self.tt is not None)"
-267	label-na	azhang	"def data(self):
+267	azhang	label-na	"def data(self):
   data = libane.ANE_TensorData(self.tt)
   assert(data is not None)
   #print(hex(addressof(data.contents)))
@@ -130,7 +130,7 @@
   ret = np.frombuffer(buf, dtype=self.dtype)
   #print(ret.data)
   return ret"
-268	label-na	azhang	"class vm_region_submap_short_info_data_64(ctypes.Structure):
+268	azhang	label-na	"class vm_region_submap_short_info_data_64(ctypes.Structure):
   _pack_ = 1
   _fields_ = [
       (""protection"", ctypes.c_uint32),
@@ -148,51 +148,51 @@
       (""user_wired_count"", ctypes.c_uint32),
   ]
 submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
-269	label-na	azhang	"def get_pid(name):
+269	azhang	label-na	"def get_pid(name):
   try:
     output = check_output([""pgrep"", name])
     return int(output)
   except:
     return None"
-270	label-na	azhang	"class Challenge(jose.TypedJSONObjectWithFields):
+270	azhang	label-na	"class Challenge(jose.TypedJSONObjectWithFields):
     # _fields_to_partial_json
     """"""ACME challenge.""""""
     TYPES: Dict[str, Type['Challenge']] = {}"
-271	label-na	azhang	"class ChallengeResponse(jose.TypedJSONObjectWithFields):
+271	azhang	label-na	"class ChallengeResponse(jose.TypedJSONObjectWithFields):
     # _fields_to_partial_json
     """"""ACME challenge response.""""""
     TYPES: Dict[str, Type['ChallengeResponse']] = {}"
-272	label-na	azhang	"class UnrecognizedChallenge(Challenge):
+272	azhang	label-na	"class UnrecognizedChallenge(Challenge):
     """"""Unrecognized challenge."""""""
-273	label-na	azhang	"class _TokenChallenge(Challenge):
+273	azhang	label-na	"class _TokenChallenge(Challenge):
     """"""Challenge with token."""""""
-274	label-na	azhang	"class KeyAuthorizationChallengeResponse(ChallengeResponse):
+274	azhang	label-na	"class KeyAuthorizationChallengeResponse(ChallengeResponse):
     """"""Response to Challenges based on Key Authorization.
     """""""
-275	label-na	azhang	"class Fixed(jose.Field):
+275	azhang	label-na	"class Fixed(jose.Field):
     """"""Fixed field."""""""
-276	label-na	azhang	"class RFC3339Field(jose.Field):
+276	azhang	label-na	"class RFC3339Field(jose.Field):
     """"""RFC3339 field encoder/decoder.""""""
 
     def __init__(self, json_name: str, value: Any) -> None:
     self.value = value
     super().__init__(
         json_name=json_name, default=value, omitempty=False)"
-277	label-na	azhang	"def decode(self, value: Any) -> Any:
+277	azhang	label-na	"def decode(self, value: Any) -> Any:
     if value != self.value:
         raise jose.DeserializationError('Expected {0!r}'.format(self.value))
     return self.value"
-278	label-na	azhang	"def encode(self, value: Any) -> Any:
+278	azhang	label-na	"def encode(self, value: Any) -> Any:
     if value != self.value:
         logger.warning(
             'Overriding fixed field (%s) with %r', self.json_name, value)
     return value"
-279	label-na	azhang	"class _DefaultCertSelection:
+279	azhang	label-na	"class _DefaultCertSelection:
     def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
         self.certs = certs"
-280	label-na	azhang	"class SSLSocket:  # pylint: disable=too-few-public-methods
+280	azhang	label-na	"class SSLSocket:  # pylint: disable=too-few-public-methods
     """"""SSL wrapper for sockets."""""""
-281	label-na	azhang	"class FakeConnection:
+281	azhang	label-na	"class FakeConnection:
     """"""Fake OpenSSL.SSL.Connection.""""""
 
     def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
@@ -203,50 +203,50 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         if server_name:
             return self.certs.get(server_name, None)
         return None # pragma: no cover"
-282	label-na	azhang	"class Error(Exception):
+282	azhang	label-na	"class Error(Exception):
     """"""Generic ACME error."""""""
-283	label-na	azhang	"class DependencyError(Error):
+283	azhang	label-na	"class DependencyError(Error):
     """"""Dependency error"""""""
-284	label-na	azhang	"class SchemaValidationError(jose_errors.DeserializationError):
+284	azhang	label-na	"class SchemaValidationError(jose_errors.DeserializationError):
     """"""JSON schema ACME object validation error."""""""
-285	label-na	azhang	"class ClientError(Error):
+285	azhang	label-na	"class ClientError(Error):
     """"""Network error."""""""
-286	label-na	azhang	"class UnexpectedUpdate(ClientError):
+286	azhang	label-na	"class UnexpectedUpdate(ClientError):
     """"""Unexpected update error."""""""
-287	label-na	azhang	"class _Constant(jose.JSONDeSerializable, Hashable):
+287	azhang	label-na	"class _Constant(jose.JSONDeSerializable, Hashable):
     """"""ACME constant.""""""
     __slots__ = ('name',)
     POSSIBLE_NAMES: Dict[str, '_Constant'] = NotImplemented"
-288	label-na	azhang	"class IdentifierType(_Constant):
+288	azhang	label-na	"class IdentifierType(_Constant):
     """"""ACME identifier type.""""""
     POSSIBLE_NAMES: Dict[str, _Constant] = {}"
-289	label-na	azhang	"class Identifier(jose.JSONObjectWithFields):
+289	azhang	label-na	"class Identifier(jose.JSONObjectWithFields):
     """"""ACME identifier."""""""
-290	label-na	azhang	"class Error(jose.JSONObjectWithFields, errors.Error):
+290	azhang	label-na	"class Error(jose.JSONObjectWithFields, errors.Error):
     """"""ACME error."""""""
-291	label-na	azhang	"class Status(_Constant):
+291	azhang	label-na	"class Status(_Constant):
     """"""ACME ""status"" field.""""""
     POSSIBLE_NAMES: Dict[str, _Constant] = {}"
-292	label-na	azhang	"class Header(jose.Header):
+292	azhang	label-na	"class Header(jose.Header):
     """"""ACME-specific JOSE Header. Implements nonce, kid, and url.
     """"""
     nonce: Optional[bytes] = jose.field('nonce', omitempty=True, encoder=jose.encode_b64jose)
     kid: Optional[str] = jose.field('kid', omitempty=True)
     url: Optional[str] = jose.field('url', omitempty=True)"
-293	label-na	azhang	"class Signature(jose.Signature):
+293	azhang	label-na	"class Signature(jose.Signature):
     """"""ACME-specific Signature. Uses ACME-specific Header for customer fields.""""""
     __slots__ = jose.Signature._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access,no-member"
-294	label-na	azhang	"class JWS(jose.JWS):
+294	azhang	label-na	"class JWS(jose.JWS):
     """"""ACME-specific JWS. Includes none, url, and kid in protected header.""""""
     signature_cls = Signature
     __slots__ = jose.JWS._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access"
-295	label-na	azhang	"def nonce(value: str) -> bytes:  # type: ignore[misc]  # pylint: disable=no-self-argument,missing-function-docstring
+295	azhang	label-na	"def nonce(value: str) -> bytes:  # type: ignore[misc]  # pylint: disable=no-self-argument,missing-function-docstring
     try:
         return jose.decode_b64jose(value)
     except jose.DeserializationError as error:
         # TODO: custom error
         raise jose.DeserializationError(""Invalid nonce: {0}"".format(error))"
-296	label-na	azhang	"def sign(cls, payload: bytes, key: jose.JWK, alg: jose.JWASignature, nonce: Optional[bytes],
+296	azhang	label-na	"def sign(cls, payload: bytes, key: jose.JWK, alg: jose.JWASignature, nonce: Optional[bytes],
          url: Optional[str] = None, kid: Optional[str] = None) -> jose.JWS:
     # Per ACME spec, jwk and kid are mutually exclusive, so only include a
     # jwk field if kid is not provided.
@@ -255,19 +255,19 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
                         protect=frozenset(['nonce', 'url', 'kid', 'jwk', 'alg']),
                         nonce=nonce, url=url, kid=kid,
                         include_jwk=include_jwk)"
-297	label-na	azhang	"class ClientV2:
+297	azhang	label-na	"class ClientV2:
     """"""ACME client for a v2 API."""""""
-298	label-na	azhang	"class ClientNetwork:
+298	azhang	label-na	"class ClientNetwork:
     """"""Wrapper around requests that signs POSTs for authentication.
     """""""
-299	label-na	azhang	"def __init__(self, directory: messages.Directory, net: 'ClientNetwork') -> None:
+299	azhang	label-na	"def __init__(self, directory: messages.Directory, net: 'ClientNetwork') -> None:
     """"""Initialize."""""""
-300	label-na	azhang	"def new_account(self, new_account: messages.NewRegistration) -> messages.RegistrationResource:
+300	azhang	label-na	"def new_account(self, new_account: messages.NewRegistration) -> messages.RegistrationResource:
     """"""Register."""""""
-301	label-na	azhang	"def query_registration(self, regr: messages.RegistrationResource
+301	azhang	label-na	"def query_registration(self, regr: messages.RegistrationResource
                        ) -> messages.RegistrationResource:
     """"""Query server about registration."""""""
-302	label-na	azhang	"def get_random_crop_coords(height: int, width: int, crop_height: int, crop_width: int, h_start: float, w_start: float):
+302	azhang	label-na	"def get_random_crop_coords(height: int, width: int, crop_height: int, crop_width: int, h_start: float, w_start: float):
     # h_start is [0, 1) and should map to [0, (height - crop_height)]  (note inclusive)
     # This is conceptually equivalent to mapping onto `range(0, (height - crop_height + 1))`
     # See: https://github.com/albumentations-team/albumentations/pull/1080
@@ -276,7 +276,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     x1 = int((width - crop_width + 1) * w_start)
     x2 = x1 + crop_width
     return x1, y1, x2, y2"
-303	label-na	azhang	"def random_crop(img: np.ndarray, crop_height: int, crop_width: int, h_start: float, w_start: float):
+303	azhang	label-na	"def random_crop(img: np.ndarray, crop_height: int, crop_width: int, h_start: float, w_start: float):
     height, width = img.shape[:2]
     if height < crop_height or width < crop_width:
         raise ValueError(
@@ -288,7 +288,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     x1, y1, x2, y2 = get_random_crop_coords(height, width, crop_height, crop_width, h_start, w_start)
     img = img[y1:y2, x1:x2]
     return img"
-304	label-na	azhang	"def crop_bbox_by_coords(
+304	azhang	label-na	"def crop_bbox_by_coords(
     bbox: BoxInternalType,
     crop_coords: Tuple[int, int, int, int],
     crop_height: int,
@@ -298,35 +298,35 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
 ):
     """"""Crop a bounding box using the provided coordinates of bottom-left and top-right corners in pixels and the
     required height and width of the crop."""""""
-305	label-na	azhang	"def bbox_random_crop(
+305	azhang	label-na	"def bbox_random_crop(
     bbox: BoxInternalType, crop_height: int, crop_width: int, h_start: float, w_start: float, rows: int, cols: int
 ):
     crop_coords = get_random_crop_coords(rows, cols, crop_height, crop_width, h_start, w_start)
     return crop_bbox_by_coords(bbox, crop_coords, crop_height, crop_width, rows, cols)"
-306	label-na	azhang	"def crop_keypoint_by_coords(
+306	azhang	label-na	"def crop_keypoint_by_coords(
     keypoint: KeypointInternalType, crop_coords: Tuple[int, int, int, int]
 ):  # skipcq: PYL-W0613
     """"""Crop a keypoint using the provided coordinates of bottom-left and top-right corners in pixels and the
     required height and width of the crop."
-307	label-na	azhang	"class Blur(ImageOnlyTransform):
+307	azhang	label-na	"class Blur(ImageOnlyTransform):
     """"""Blur the input image using a random-sized kernel.
     """""""
-308	label-na	azhang	"class MotionBlur(Blur):
+308	azhang	label-na	"class MotionBlur(Blur):
     """"""Apply motion blur to the input image using a random-sized kernel.
     """""""
-309	label-na	azhang	"class MedianBlur(Blur):
+309	azhang	label-na	"class MedianBlur(Blur):
     """"""Blur the input image using a median filter with a random aperture linear size.
     """""""
-310	label-na	azhang	"class GaussianBlur(ImageOnlyTransform):
+310	azhang	label-na	"class GaussianBlur(ImageOnlyTransform):
     """"""Blur the input image using a Gaussian filter with a random kernel size.
     """""""
-311	label-na	azhang	"class GlassBlur(Blur):
+311	azhang	label-na	"class GlassBlur(Blur):
     """"""Apply glass noise to the input image."""""""
-312	label-na	azhang	"class Command:
+312	azhang	label-na	"class Command:
     def __init__(self, argv: Optional[str] = None) -> None:
         self.argv = argv or sys.argv[:]
         self.prog_name = Path(self.argv[0]).name"
-313	label-na	azhang	"def print_provider(
+313	azhang	label-na	"def print_provider(
     doc: Documentor,
     provider: BaseProvider,
     formatters: Dict[str, T],
@@ -337,7 +337,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         output = sys.stdout
     if excludes is None:
         excludes = []"
-314	label-na	azhang	"def print_doc(
+314	azhang	label-na	"def print_doc(
     provider_or_field: Optional[str] = None,
     args: Optional[List[T]] = None,
     lang: str = DEFAULT_LOCALE,
@@ -351,31 +351,31 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         output = sys.stdout
     fake = Faker(locale=lang, includes=includes)
     fake.seed_instance(seed)"
-315	label-na	azhang	"def __init__(self, argv: Optional[str] = None) -> None:
+315	azhang	label-na	"def __init__(self, argv: Optional[str] = None) -> None:
     self.argv = argv or sys.argv[:]
     self.prog_name = Path(self.argv[0]).name"
-316	label-na	azhang	"def _session_faker(request):
+316	azhang	label-na	"def _session_faker(request):
     """"""Fixture that stores the session level ``Faker`` instance."
-317	label-na	azhang	"def faker(request):
+317	azhang	label-na	"def faker(request):
     """"""Fixture that returns a seeded and suitable ``Faker`` instance.""""""
     if ""faker_locale"" in request.fixturenames:
         locale = request.getfixturevalue(""faker_locale"")
         fake = Faker(locale=locale)
     else:
         fake = request.getfixturevalue(""_session_faker"")"
-318	label-na	azhang	"def timer(func):
+318	azhang	label-na	"def timer(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         tic = time.perf_counter()
         await func(*args, **kwargs)
         toc = time.perf_counter()
         return f""{toc - tic:.4f}"""
-319	label-na	azhang	"async def wrapper(*args, **kwargs):
+319	azhang	label-na	"async def wrapper(*args, **kwargs):
     tic = time.perf_counter()
     await func(*args, **kwargs)
     toc = time.perf_counter()
     return f""{toc - tic:.4f}"""
-320	label-na	azhang	"async def set_str(client, gather, data):
+320	azhang	label-na	"async def set_str(client, gather, data):
     if gather:
         for _ in range(count // 100):
             await asyncio.gather(
@@ -387,7 +387,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     else:
         for i in range(count):
             await client.set(f""bench:str_{i}"", data)"
-321	label-na	azhang	"async def set_int(client, gather, data):
+321	azhang	label-na	"async def set_int(client, gather, data):
     if gather:
         for _ in range(count // 100):
             await asyncio.gather(
@@ -399,7 +399,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     else:
         for i in range(count):
             await client.set(f""bench:int_{i}"", data)"
-322	label-na	azhang	"async def get_str(client, gather):
+322	azhang	label-na	"async def get_str(client, gather):
     if gather:
         for _ in range(count // 100):
             await asyncio.gather(
@@ -408,7 +408,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     else:
         for i in range(count):
             await client.get(f""bench:str_{i}"")"
-323	label-na	azhang	"class Benchmark:
+323	azhang	label-na	"class Benchmark:
     ARGUMENTS = ()
 
     def __init__(self):
@@ -429,9 +429,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
 
     def run(self, **kwargs):
         pass"
-324	label-na	azhang	"def __init__(self):
+324	azhang	label-na	"def __init__(self):
     self._client = None"
-325	label-na	azhang	"def get_client(self, **kwargs):
+325	azhang	label-na	"def get_client(self, **kwargs):
     # eventually make this more robust and take optional args from
     # argparse
     if self._client is None or kwargs:
@@ -440,11 +440,11 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         pool = redis.ConnectionPool(**kwargs)
         self._client = redis.Redis(connection_pool=pool)
     return self._client"
-326	label-na	azhang	"def setup(self, **kwargs):
+326	azhang	label-na	"def setup(self, **kwargs):
     pass"
-327	label-na	azhang	"def run(self, **kwargs):
+327	azhang	label-na	"def run(self, **kwargs):
     pass"
-328	label-na	azhang	"class StringJoiningConnection(Connection):
+328	azhang	label-na	"class StringJoiningConnection(Connection):
     def send_packed_command(self, command, check_health=True):
         ""Send an already packed command to the Redis server""
         if not self._sock:
@@ -461,7 +461,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         except Exception:
             self.disconnect()
             raise"
-329	label-na	azhang	"class ListJoiningConnection(Connection):
+329	azhang	label-na	"class ListJoiningConnection(Connection):
     def send_packed_command(self, command, check_health=True):
         if not self._sock:
             self.connect()
@@ -480,7 +480,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         except Exception:
             self.disconnect()
             raise"
-330	label-na	azhang	"def pack_command(self, *args):
+330	azhang	label-na	"def pack_command(self, *args):
     ""Pack a series of arguments into a value Redis command""
     args_output = SYM_EMPTY.join(
         [
@@ -494,26 +494,26 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         (SYM_STAR, str(len(args)).encode(), SYM_CRLF, args_output)
     )
     return output"
-331	label-na	azhang	"def timer(func):
+331	azhang	label-na	"def timer(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         tic = time.perf_counter()
         await func(*args, **kwargs)
         toc = time.perf_counter()
         return f""{toc - tic:.4f}"""
-332	label-na	azhang	"async def wrapper(*args, **kwargs):
+332	azhang	label-na	"async def wrapper(*args, **kwargs):
     tic = time.perf_counter()
     await func(*args, **kwargs)
     toc = time.perf_counter()
     return f""{toc - tic:.4f}"""
-333	label-na	azhang	"async def warmup(client):
+333	azhang	label-na	"async def warmup(client):
     await asyncio.gather(
         *(asyncio.create_task(client.exists(f""bench:warmup_{i}"")) for i in range(100))
     )"
-334	label-na	azhang	"async def run(client):
+334	azhang	label-na	"async def run(client):
     data_str = ""a"" * size
     data_int = int(""1"" * size)"
-335	label-na	azhang	"async def main(loop):
+335	azhang	label-na	"async def main(loop):
     arc = aredis.StrictRedisCluster(
         host=host,
         port=port,
@@ -530,7 +530,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     print(f""{loop} {await warmup(arc)} aredis"")
     print(await run(arc))
     arc.connection_pool.disconnect()"
-336	label-na	azhang	"def parse_args():
+336	azhang	label-na	"def parse_args():
     parser = ArgumentParser()
     parser.add_argument(
         ""-n"", type=int, help=""Total number of requests (default 100000)"", default=100000
@@ -547,7 +547,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         help=""Data size of SET/GET value in bytes (default 2)"",
         default=2,
     )"
-337	label-na	azhang	"def run():
+337	azhang	label-na	"def run():
     args = parse_args()
     r = redis.Redis()
     r.flushall()
@@ -560,7 +560,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     lrange_300(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
     lpop(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
     hmset(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)"
-338	label-na	azhang	"def timer(func):
+338	azhang	label-na	"def timer(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.monotonic()
@@ -575,7 +575,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         print(f""Rate = {count/duration}"")
         print()
         return ret"
-339	label-na	azhang	"def wrapper(*args, **kwargs):
+339	azhang	label-na	"def wrapper(*args, **kwargs):
     start = time.monotonic()
     ret = func(*args, **kwargs)
     duration = time.monotonic() - start
@@ -588,24 +588,24 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     print(f""Rate = {count/duration}"")
     print()
     return ret"
-340	label-na	azhang	"def set_str(conn, num, pipeline_size, data_size):
+340	azhang	label-na	"def set_str(conn, num, pipeline_size, data_size):
     if pipeline_size > 1:
         conn = conn.pipeline()"
-341	label-na	azhang	"def setup(self, value_size, read_size, parser):
+341	azhang	label-na	"def setup(self, value_size, read_size, parser):
     r = self.get_client(parser_class=parser, socket_read_size=read_size)
     r.set(""benchmark"", ""a"" * value_size)"
-342	label-na	azhang	"def run(self, value_size, read_size, parser):
+342	azhang	label-na	"def run(self, value_size, read_size, parser):
     r = self.get_client()
     r.get(""benchmark"")"
-343	label-na	azhang	"def to_int(value):
+343	azhang	label-na	"def to_int(value):
     value = ''.join((x for x in value if x.isdigit()))
     try:
         return int(value)
     except Exception:
         return 0"
-344	label-na	azhang	"def to_tuple(version):
+344	azhang	label-na	"def to_tuple(version):
     return tuple(to_int(x) for x in version.split('.'))"
-345	label-na	azhang	"def main():
+345	azhang	label-na	"def main():
     project = sys.argv[1]
     json = requests.get('https://pypi.org/pypi/%s/json' % project).json()
     for version in sorted(json['releases'], key=to_tuple):
@@ -616,7 +616,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         ]
         for p in wheel_packages:
             print('    %(python_version)s %(filename)s' % p)"
-346	label-na	azhang	"def _notebook_run(path):
+346	azhang	label-na	"def _notebook_run(path):
     """"""Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """"""
@@ -628,55 +628,55 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             nb = nbformat.read(f, as_version=4)
             nb.metadata.get('kernelspec', {})['name'] = kernel_name
             ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10)"
-347	label-na	azhang	"def test_notebooks():
+347	azhang	label-na	"def test_notebooks():
     for notebook in glob(""*.ipynb""):
         if "" "" in notebook:
             continue
         print(""Testing {}"".format(notebook))
         nb, errors = _notebook_run(notebook)
         assert errors == []"
-348	label-na	azhang	"class MyCorpus:
+348	azhang	label-na	"class MyCorpus:
     def __iter__(self):
         for line in open('https://radimrehurek.com/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())"
-349	label-na	azhang	"def __iter__(self):
+349	azhang	label-na	"def __iter__(self):
     for line in open('https://radimrehurek.com/mycorpus.txt'):
         # assume there's one document per line, tokens separated by whitespace
         yield dictionary.doc2bow(line.lower().split())"
-350	label-na	azhang	"class BaseAdapter:
+350	azhang	label-na	"class BaseAdapter:
     """"""The Base Transport Adapter"""""""
-351	label-na	azhang	"class HTTPAdapter(BaseAdapter):
+351	azhang	label-na	"class HTTPAdapter(BaseAdapter):
     """"""The built-in HTTP Adapter for urllib3.
     """""""
-352	label-na	azhang	"def request(method, url, **kwargs):
+352	azhang	label-na	"def request(method, url, **kwargs):
     """"""Constructs and sends a :class:`Request <Request>`.
     """""""
-353	label-na	azhang	"def get(url, params=None, **kwargs):
+353	azhang	label-na	"def get(url, params=None, **kwargs):
     r""""""Sends a GET request.
     """"""
 "
-354	label-na	azhang	"def options(url, **kwargs):
+354	azhang	label-na	"def options(url, **kwargs):
     r""""""Sends an OPTIONS request.
     """""""
-355	label-na	azhang	"def head(url, **kwargs):
+355	azhang	label-na	"def head(url, **kwargs):
     r""""""Sends a HEAD request.
     """""""
-356	label-na	azhang	"def post(url, data=None, json=None, **kwargs):
+356	azhang	label-na	"def post(url, data=None, json=None, **kwargs):
     r""""""Sends a POST request.
     """""""
-357	label-na	azhang	"class FlaskyStyle(Style):
+357	azhang	label-na	"class FlaskyStyle(Style):
     background_color = ""#f8f8f8""
     default_style = """""
-358	label-na	azhang	"class AuthBase:
+358	azhang	label-na	"class AuthBase:
     """"""Base class that all auth implementations derive from"""""""
-359	label-na	azhang	"class HTTPBasicAuth(AuthBase):
+359	azhang	label-na	"class HTTPBasicAuth(AuthBase):
     """"""Attaches HTTP Basic Authentication to the given Request object."""""""
-360	label-na	azhang	"class HTTPProxyAuth(HTTPBasicAuth):
+360	azhang	label-na	"class HTTPProxyAuth(HTTPBasicAuth):
     """"""Attaches HTTP Proxy Authentication to a given Request object."""""""
-361	label-na	azhang	"class HTTPDigestAuth(AuthBase):
+361	azhang	label-na	"class HTTPDigestAuth(AuthBase):
     """"""Attaches HTTP Digest Authentication to the given Request object."""""""
-362	label-na	azhang	"def to_native_string(string, encoding=""ascii""):
+362	azhang	label-na	"def to_native_string(string, encoding=""ascii""):
     """"""Given a string object, regardless of type, returns a representation of
     that string in the native string type, encoding and decoding where
     necessary. This assumes ASCII unless told otherwise.
@@ -685,48 +685,48 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         out = string
     else:
         out = string.decode(encoding)"
-363	label-na	azhang	"def unicode_is_ascii(u_string):
+363	azhang	label-na	"def unicode_is_ascii(u_string):
     """"""Determine if unicode string only contains ASCII characters.
     """""""
-364	label-na	azhang	"def check_compatibility(urllib3_version, chardet_version, charset_normalizer_version):
+364	azhang	label-na	"def check_compatibility(urllib3_version, chardet_version, charset_normalizer_version):
     urllib3_version = urllib3_version.split(""."")
     assert urllib3_version != [""dev""]  # Verify urllib3 isn't installed from git."
-365	label-na	azhang	"def _check_cryptography(cryptography_version):
+365	azhang	label-na	"def _check_cryptography(cryptography_version):
     # cryptography < 1.3.4
     try:
         cryptography_version = list(map(int, cryptography_version.split(""."")))
     except ValueError:
         return"
-366	label-na	azhang	class CompletionRefresher(object):
-367	label-na	azhang	"def __init__(self):
+366	azhang	label-na	class CompletionRefresher(object):
+367	azhang	label-na	"def __init__(self):
     self._completer_thread = None
     self._restart_refresh = threading.Event()"
-368	label-na	azhang	"def refresh(self, executor, callbacks, completer_options=None):
+368	azhang	label-na	"def refresh(self, executor, callbacks, completer_options=None):
     """"""Creates a SQLCompleter object and populates it with the relevant
     completion suggestions in a background thread.
     """""""
-369	label-na	azhang	"def is_refreshing(self):
+369	azhang	label-na	"def is_refreshing(self):
     return self._completer_thread and self._completer_thread.is_alive()"
-370	label-na	azhang	"def _bg_refresh(self, sqlexecute, callbacks, completer_options):
+370	azhang	label-na	"def _bg_refresh(self, sqlexecute, callbacks, completer_options):
     completer = SQLCompleter(**completer_options)"
-371	label-na	azhang	"class OutputStyle(PygmentsStyle):
+371	azhang	label-na	"class OutputStyle(PygmentsStyle):
     default_style = """"
     styles = style"
-372	label-na	azhang	"def parse_pygments_style(token_name, style_object, style_dict):
+372	azhang	label-na	"def parse_pygments_style(token_name, style_object, style_dict):
     """"""Parse token type and style string.
     """""""
-373	label-na	azhang	"def mycli_bindings(mycli):
+373	azhang	label-na	"def mycli_bindings(mycli):
     """"""Custom key bindings for mycli.""""""
     kb = KeyBindings()"
-374	label-na	azhang	"def _(event):
+374	azhang	label-na	"def _(event):
     """"""Enable/Disable SmartCompletion Mode.""""""
     _logger.debug('Detected F2 key.')
     mycli.completer.smart_completion = not mycli.completer.smart_completion"
-375	label-na	azhang	"def _(event):
+375	azhang	label-na	"def _(event):
     """"""Enable/Disable Multiline Mode.""""""
     _logger.debug('Detected F3 key.')
     mycli.multi_line = not mycli.multi_line"
-376	label-na	azhang	"def _(event):
+376	azhang	label-na	"def _(event):
     """"""Toggle between Vi and Emacs mode.""""""
     _logger.debug('Detected F4 key.')
     if mycli.key_bindings == ""vi"":
@@ -735,7 +735,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     else:
         event.app.editing_mode = EditingMode.VI
         mycli.key_bindings = ""vi"""
-377	label-na	azhang	"def _(event):
+377	azhang	label-na	"def _(event):
     """"""Force autocompletion at cursor.""""""
     _logger.debug('Detected <Tab> key.')
     b = event.app.current_buffer
@@ -743,39 +743,39 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         b.complete_next()
     else:
         b.start_completion(select_first=True)"
-378	label-na	azhang	"def log(logger, level, message):
+378	azhang	label-na	"def log(logger, level, message):
     """"""Logs message to stderr if logging isn't initialized."""""""
-379	label-na	azhang	"def read_config_file(f, list_values=True):
+379	azhang	label-na	"def read_config_file(f, list_values=True):
     """"""Read a config file.
     """""""
-380	label-na	azhang	"def get_included_configs(config_file: Union[str, TextIOWrapper]) -> list:
+380	azhang	label-na	"def get_included_configs(config_file: Union[str, TextIOWrapper]) -> list:
     """"""Get a list of configuration files that are included into config_path
     with !includedir directive.
     """""""
-381	label-na	azhang	"def read_config_files(files, list_values=True):
+381	azhang	label-na	"def read_config_files(files, list_values=True):
     """"""Read and merge a list of config files."""""""
-382	label-na	azhang	"def create_default_config(list_values=True):
+382	azhang	label-na	"def create_default_config(list_values=True):
     import mycli
     default_config_file = resources.open_text(mycli, 'myclirc')
     return read_config_file(default_config_file, list_values=list_values)"
-383	label-na	azhang	"def cli_is_multiline(mycli):
+383	azhang	label-na	"def cli_is_multiline(mycli):
     @Condition
     def cond():
         doc = get_app().layout.get_buffer_by_name(DEFAULT_BUFFER).document"
-384	label-na	azhang	"def cond():
+384	azhang	label-na	"def cond():
     doc = get_app().layout.get_buffer_by_name(DEFAULT_BUFFER).document"
-385	label-na	azhang	"def _multiline_exception(text):
+385	azhang	label-na	"def _multiline_exception(text):
     orig = text
     text = text.strip()"
-386	label-na	azhang	"def create_toolbar_tokens_func(mycli, show_fish_help):
+386	azhang	label-na	"def create_toolbar_tokens_func(mycli, show_fish_help):
     """"""Return a function that generates the toolbar tokens.""""""
     def get_toolbar_tokens():
         result = []
         result.append(('class:bottom-toolbar', ' '))"
-387	label-na	azhang	"def get_toolbar_tokens():
+387	azhang	label-na	"def get_toolbar_tokens():
     result = []
     result.append(('class:bottom-toolbar', ' '))"
-388	label-na	azhang	"def _get_vi_mode():
+388	azhang	label-na	"def _get_vi_mode():
     """"""Get the current vi mode for display.""""""
     return {
         InputMode.INSERT: 'I',
@@ -784,16 +784,16 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         InputMode.REPLACE_SINGLE: 'R',
         InputMode.INSERT_MULTIPLE: 'M',
     }[get_app().vi_state.input_mode]"
-389	label-na	azhang	"class CountInstances(Subcommand):
+389	azhang	label-na	"class CountInstances(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
         description = """"""Count the number of training instances in an experiment config file.""""""
         subparser = parser.add_parser(self.name, description=description, help=description)
         subparser.add_argument(""param_path"", type=str, help=""path to an experiment config file"")"
-390	label-na	azhang	"def count_instances_from_args(args: argparse.Namespace):
+390	azhang	label-na	"def count_instances_from_args(args: argparse.Namespace):
     from allennlp.training.util import data_loaders_from_params"
-391	label-na	azhang	"class CheckList(Subcommand):
+391	azhang	label-na	"class CheckList(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:"
-392	label-na	azhang	"class _CheckListManager:
+392	azhang	label-na	"class _CheckListManager:
     def __init__(
         self,
         task_suite: TaskSuite,
@@ -809,13 +809,13 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         self._max_examples = max_examples
         self._output_file = None if output_file is None else open(output_file, ""w"")
         self._print_summary_args = print_summary_args or {}"
-393	label-na	azhang	"def _get_predictor(args: argparse.Namespace) -> Predictor:
+393	azhang	label-na	"def _get_predictor(args: argparse.Namespace) -> Predictor:
     check_for_gpu(args.cuda_device)
     archive = load_archive(
         args.archive_file,
         cuda_device=args.cuda_device,
     )"
-394	label-na	azhang	"def _get_task_suite(args: argparse.Namespace) -> TaskSuite:
+394	azhang	label-na	"def _get_task_suite(args: argparse.Namespace) -> TaskSuite:
     available_tasks = TaskSuite.list_available()
     if args.task in available_tasks:
         suite_name = args.task
@@ -824,35 +824,35 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             f""'{args.task}' is not a recognized task suite. ""
             f""Available tasks are: {available_tasks}.""
         )"
-395	label-na	azhang	"class BuildVocab(Subcommand):
+395	azhang	label-na	"class BuildVocab(Subcommand):
     def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
         description = """"""Build a vocabulary from an experiment config file.""""""
         subparser = parser.add_parser(self.name, description=description, help=description)"
-396	label-na	azhang	"def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+396	azhang	label-na	"def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
     description = """"""Build a vocabulary from an experiment config file.""""""
     subparser = parser.add_parser(self.name, description=description, help=description)"
-397	label-na	azhang	"def build_vocab_from_args(args: argparse.Namespace):
+397	azhang	label-na	"def build_vocab_from_args(args: argparse.Namespace):
     if not args.output_path.endswith("".tar.gz""):
         raise ValueError(""param 'output_path' should end with '.tar.gz'"")"
-398	label-na	azhang	"def _transformers_log_filter(record):
+398	azhang	label-na	"def _transformers_log_filter(record):
     if record.msg.startswith(""PyTorch version""):
         return False
     return True"
-399	label-na	azhang	"def run():
+399	azhang	label-na	"def run():
     from allennlp.commands import main  # noqa
     from allennlp.common.util import install_sigterm_handler"
-400	label-na	azhang	"class ArgumentParserWithDefaults(argparse.ArgumentParser):
+400	azhang	label-na	"class ArgumentParserWithDefaults(argparse.ArgumentParser):
     """"""
     Custom argument parser that will display the default value for an argument
     in the help message.
     """""""
-401	label-na	azhang	"def _is_empty_default(default: Any) -> bool:
+401	azhang	label-na	"def _is_empty_default(default: Any) -> bool:
     if default is None:
         return True
     if isinstance(default, (str, list, tuple, set)):
         return not bool(default)
     return False"
-402	label-na	azhang	"def add_argument(self, *args, **kwargs):
+402	azhang	label-na	"def add_argument(self, *args, **kwargs):
     # Add default value to the help message when the default is meaningful.
     default = kwargs.get(""default"")
     if kwargs.get(
@@ -861,13 +861,13 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         description = kwargs.get(""help"", """")
         kwargs[""help""] = f""{description} (default = {default})""
     super().add_argument(*args, **kwargs)"
-403	label-na	azhang	"def parse_args(prog: Optional[str] = None) -> Tuple[argparse.ArgumentParser, argparse.Namespace]:
+403	azhang	label-na	"def parse_args(prog: Optional[str] = None) -> Tuple[argparse.ArgumentParser, argparse.Namespace]:
     """"""
     Creates the argument parser for the main program and uses it to parse the args.
     """"""
     parser = ArgumentParserWithDefaults(description=""Run AllenNLP"", prog=prog)
     parser.add_argument(""--version"", action=""version"", version=f""%(prog)s {__version__}"")"
-404	label-na	azhang	"def add_subcommands():
+404	azhang	label-na	"def add_subcommands():
     for subcommand_name in sorted(Subcommand.list_available()):
         if subcommand_name in subcommands:
             continue
@@ -883,9 +883,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
                 default=[],
                     help=""additional packages to include"",
         )"
-405	label-na	azhang	"class CachedPath(Subcommand):
+405	azhang	label-na	"class CachedPath(Subcommand):
     requires_plugins: bool = False"
-406	label-na	azhang	"def add_subparser(self,
+406	azhang	label-na	"def add_subparser(self,
                   parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
     description = """"""Cache remote files to the AllenNLP cache.""""""
     subparser = parser.add_parser(
@@ -931,7 +931,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         help=""""""Remove any cache entries matching the given resource patterns."""""",
     )
     return subparser"
-407	label-na	azhang	"def _cached_path(args: argparse.Namespace):
+407	azhang	label-na	"def _cached_path(args: argparse.Namespace):
     logger.info(""Cache directory: %s"", args.cache_dir)
     if args.inspect:
         if args.extract_archive or args.force_extract or args.remove:
@@ -942,7 +942,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         inspect_cache(patterns=args.resources, cache_dir=args.cache_dir)
     elif args.remove:
         from allennlp.common.util import format_size"
-408	label-na	azhang	"class CheckList(Subcommand):  # type: ignore
+408	azhang	label-na	"class CheckList(Subcommand):  # type: ignore
     def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
         description = """"""Dummy command because checklist is not installed.""""""
         subparser = parser.add_parser(
@@ -952,13 +952,13 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         )
         subparser.set_defaults(func=_dummy_output)
         return subparser"
-409	label-na	azhang	"def _dummy_output(args: argparse.Namespace):
+409	azhang	label-na	"def _dummy_output(args: argparse.Namespace):
    logger.info(
         ""The checklist integration of allennlp is optional; if you're using conda, ""
         ""it can be installed with `conda install allennlp-checklist`, ""
         ""otherwise use `pip install allennlp[checklist]`.""
     )"
-410	label-na	azhang	"def add_subparser(self,
+410	azhang	label-na	"def add_subparser(self,
                   parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
     description = """"""Dummy command because checklist is not installed.""""""
     subparser = parser.add_parser(
@@ -968,31 +968,31 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     )
     subparser.set_defaults(func=_dummy_output)
     return subparser"
-411	label-na	azhang	"def pgcli_bindings(pgcli):
+411	azhang	label-na	"def pgcli_bindings(pgcli):
     """"""Custom key bindings for pgcli.""""""
     kb = KeyBindings()"
-412	label-na	azhang	"def _(event):
+412	azhang	label-na	"def _(event):
     """"""Enable/Disable SmartCompletion Mode.""""""
     _logger.debug(""Detected F2 key."")
     pgcli.completer.smart_completion = not pgcli.completer.smart_completion"
-413	label-na	azhang	"def _(event):
+413	azhang	label-na	"def _(event):
     """"""Enable/Disable Multiline Mode.""""""
     _logger.debug(""Detected F3 key."")
     pgcli.multi_line = not pgcli.multi_line"
-414	label-na	azhang	"def _(event):
+414	azhang	label-na	"def _(event):
     """"""Toggle between Vi and Emacs mode.""""""
     _logger.debug(""Detected F4 key."")
     pgcli.vi_mode = not pgcli.vi_mode
     event.app.editing_mode = EditingMode.VI if pgcli.vi_mode else EditingMode.EMACS"
-415	label-na	azhang	"def _(event):
+415	azhang	label-na	"def _(event):
     """"""Toggle between Vi and Emacs mode.""""""
     _logger.debug(""Detected F5 key."")
     pgcli.explain_mode = not pgcli.explain_mode"
-416	label-na	azhang	"def keyring_initialize(keyring_enabled, *, logger):
+416	azhang	label-na	"def keyring_initialize(keyring_enabled, *, logger):
     """"""Initialize keyring only if explicitly enabled""""""
     global keyring
     """""""
-417	label-na	azhang	"def keyring_get_password(key):
+417	azhang	label-na	"def keyring_get_password(key):
     """"""Attempt to get password from keyring""""""
     # Find password from store
     passwd = """"
@@ -1007,7 +1007,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             fg=""red"",
         )
     return passwd"
-418	label-na	azhang	"def keyring_set_password(key, passwd):
+418	azhang	label-na	"def keyring_set_password(key, passwd):
     try:
         keyring.set_password(""pgcli"", key, passwd)
     except Exception as e:
@@ -1016,14 +1016,14 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             err=True,
             fg=""red"",
         )"
-419	label-na	azhang	"def config_location():
+419	azhang	label-na	"def config_location():
     if ""XDG_CONFIG_HOME"" in os.environ:
         return ""%s/pgcli/"" % expanduser(os.environ[""XDG_CONFIG_HOME""])
     elif platform.system() == ""Windows"":
         return os.getenv(""USERPROFILE"") + ""\\AppData\\Local\\dbcli\\pgcli\\""
     else:
         return expanduser(""~/.config/pgcli/"")"
-420	label-na	azhang	"def load_config(usr_cfg, def_cfg=None):
+420	azhang	label-na	"def load_config(usr_cfg, def_cfg=None):
     # avoid config merges when possible. For writing, we need an umerged config instance.
     # see https://github.com/dbcli/pgcli/issues/1240 and https://github.com/DiffSK/configobj/issues/171
     if def_cfg:
@@ -1034,22 +1034,22 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         cfg = ConfigObj(expanduser(usr_cfg), interpolation=False, encoding=""utf-8"")
     cfg.filename = expanduser(usr_cfg)
     return cfg"
-421	label-na	azhang	"def ensure_dir_exists(path):
+421	azhang	label-na	"def ensure_dir_exists(path):
     parent_dir = expanduser(dirname(path))
     os.makedirs(parent_dir, exist_ok=True)"
-422	label-na	azhang	"def write_default_config(source, destination, overwrite=False):
+422	azhang	label-na	"def write_default_config(source, destination, overwrite=False):
     destination = expanduser(destination)
     if not overwrite and exists(destination):
         return"
-423	label-na	azhang	"def upgrade_config(config, def_config):
+423	azhang	label-na	"def upgrade_config(config, def_config):
     cfg = load_config(config, def_config)
     cfg.write()"
-424	label-na	azhang	"class ExplainOutputFormatter:
+424	azhang	label-na	"class ExplainOutputFormatter:
     def __init__(self, max_width):
         self.max_width = max_width"
-425	label-na	azhang	"def __init__(self, max_width):
+425	azhang	label-na	"def __init__(self, max_width):
     self.max_width = max_width"
-426	label-na	azhang	"def format_output(self, cur, headers, **output_kwargs):
+426	azhang	label-na	"def format_output(self, cur, headers, **output_kwargs):
     # explain query results should always contain 1 row each
     [(data,)] = list(cur)
     explain_list = json.loads(data)
@@ -1057,9 +1057,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     for explain in explain_list:
         visualizer.load(explain)
         yield visualizer.get_list()"
-427	label-na	azhang	"def load_ipython_extension(ipython):
+427	azhang	label-na	"def load_ipython_extension(ipython):
     """"""This is called via the ipython command '%load_ext pgcli.magic'"""""""
-428	label-na	azhang	"def pgcli_line_magic(line):
+428	azhang	label-na	"def pgcli_line_magic(line):
     _logger.debug(""pgcli magic called: %r"", line)
     parsed = sql.parse.parse(line, {})
     # ""get"" was renamed to ""set"" in ipython-sql:
@@ -1072,29 +1072,29 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         # a new positional argument was added to Connection.set in version 0.4.0 of ipython-sql
         except TypeError:
             conn = sql.connection.Connection.set(parsed[""connection""], False)"
-429	label-na	azhang	"class CompletionRefresher:
+429	azhang	label-na	"class CompletionRefresher:
     refreshers = OrderedDict()"
-430	label-na	azhang	"def __init__(self):
+430	azhang	label-na	"def __init__(self):
     self._completer_thread = None
     self._restart_refresh = threading.Event()"
-431	label-na	azhang	"def refresh(self, executor, special, callbacks, history=None, settings=None):
+431	azhang	label-na	"def refresh(self, executor, special, callbacks, history=None, settings=None):
     """"""
     Creates a PGCompleter object and populates it with the relevant
     completion suggestions in a background thread.
     """""""
-432	label-na	azhang	"def is_refreshing(self):
+432	azhang	label-na	"def is_refreshing(self):
     return self._completer_thread and self._completer_thread.is_alive()"
-433	label-na	azhang	"def _bg_refresh(self, pgexecute, special, callbacks, history=None, settings=None):
+433	azhang	label-na	"def _bg_refresh(self, pgexecute, special, callbacks, history=None, settings=None):
     settings = settings or {}
     completer = PGCompleter(
         smart_completion=True, pgspecial=special, settings=settings
     )"
-434	label-na	azhang	"class CustomOutputChecker(OutputChecker):
+434	azhang	label-na	"class CustomOutputChecker(OutputChecker):
     def check_output(self, want, got, optionflags):
         if IGNORE_RESULT & optionflags:
             return True
         return OutputChecker.check_output(self, want, got, optionflags)"
-435	label-na	azhang	"def pytest_configure(config):
+435	azhang	label-na	"def pytest_configure(config):
     config.addinivalue_line(
         ""markers"", ""is_pt_tf_cross_test: mark test to run only when PT and TF interactions are tested""
     )
@@ -1105,15 +1105,15 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         ""markers"", ""is_pipeline_test: mark test to run only when pipelines are tested""
     )
     config.addinivalue_line(""markers"", ""is_staging_test: mark test to run only in the staging environment"")"
-436	label-na	azhang	"def pytest_addoption(parser):
+436	azhang	label-na	"def pytest_addoption(parser):
     from transformers.testing_utils import pytest_addoption_shared"
-437	label-na	azhang	"def pytest_terminal_summary(terminalreporter):
+437	azhang	label-na	"def pytest_terminal_summary(terminalreporter):
     from transformers.testing_utils import pytest_terminal_summary_main"
-438	label-na	azhang	"def pytest_sessionfinish(session, exitstatus):
+438	azhang	label-na	"def pytest_sessionfinish(session, exitstatus):
     # If no tests are collected, pytest exists with code 5, which makes the CI fail.
     if exitstatus == 5:
         session.exitstatus = 0"
-439	label-na	azhang	"class CircleCIJob:
+439	azhang	label-na	"class CircleCIJob:
     name: str
     additional_env: Dict[str, Any] = None
     cache_name: str = None
@@ -1127,7 +1127,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     resource_class: Optional[str] = ""xlarge""
     tests_to_run: Optional[List[str]] = None
     working_directory: str = ""~/transformers"""
-440	label-na	azhang	"def __post_init__(self):
+440	azhang	label-na	"def __post_init__(self):
     # Deal with defaults for mutable attributes.
     if self.additional_env is None:
         self.additional_env = {}
@@ -1144,7 +1144,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         self.tests_to_run = [self.tests_to_run]
     if self.parallelism is None:
         self.parallelism = 1"
-441	label-na	azhang	"def to_dict(self):
+441	azhang	label-na	"def to_dict(self):
     env = COMMON_ENV_VARIABLES.copy()
     env.update(self.additional_env)
     job = {
@@ -1180,9 +1180,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     steps.append({""run"": {""name"": ""Show installed libraries and their versions"",
                           ""command"": ""pip freeze | tee installed.txt""}})
     steps.append({""store_artifacts"": {""path"": ""~/transformers/installed.txt""}})"
-442	label-na	azhang	"def job_name(self):
+442	azhang	label-na	"def job_name(self):
     return self.name if ""examples"" in self.name else f""tests_{self.name}"""
-443	label-na	azhang	"def create_circleci_config(folder=None):
+443	azhang	label-na	"def create_circleci_config(folder=None):
     if folder is None:
         folder = os.getcwd()
     # Used in CircleCIJob.to_dict() to expand the test list (for using parallelism)
@@ -1196,9 +1196,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         all_test_list = []
     if len(all_test_list) > 0:
         jobs.extend(PIPELINE_TESTS)"
-444	label-na	azhang	"def hello(name: str = ""world""):
+444	azhang	label-na	"def hello(name: str = ""world""):
     prefect.get_run_logger().info(f""Hello {name}!"")"
-445	label-na	azhang	"async def apply_deployment_20(deployment):
+445	azhang	label-na	"async def apply_deployment_20(deployment):
     async with prefect.get_client() as client:
         flow_id = await client.create_flow_from_name(deployment.flow_name)
         return await client.create_deployment(
@@ -1207,15 +1207,15 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             path=deployment.path,
             entrypoint=deployment.entrypoint,
         )"
-446	label-na	azhang	"async def create_flow_run(deployment_id):
+446	azhang	label-na	"async def create_flow_run(deployment_id):
     async with prefect.get_client() as client:
         return await client.create_flow_run_from_deployment(
             deployment_id, parameters={""name"": ""integration tests""}
         )"
-447	label-na	azhang	"async def read_flow_run(flow_run_id):
+447	azhang	label-na	"async def read_flow_run(flow_run_id):
     async with prefect.get_client() as client:
         return await client.read_flow_run(flow_run_id)"
-448	label-na	azhang	"def main():
+448	azhang	label-na	"def main():
     # Create deployment
     if Version(prefect.__version__) < Version(""2.1.0""):
         deployment = Deployment(
@@ -1229,42 +1229,42 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     else:
         deployment = Deployment.build_from_flow(flow=hello, name=""test-deployment"")
         deployment_id = deployment.apply()"
-449	label-na	azhang	"def hello(name: str = ""world""):
+449	azhang	label-na	"def hello(name: str = ""world""):
     prefect.get_run_logger().info(f""Hello {name}!"")"
-450	label-na	azhang	"async def apply_deployment(deployment):
+450	azhang	label-na	"async def apply_deployment(deployment):
     async with prefect.get_client() as client:
         flow_id = await client.create_flow_from_name(deployment.flow_name)
         await client.create_deployment(flow_id=flow_id, name=deployment.name)"
-451	label-na	azhang	"def noop_function():
+451	azhang	label-na	"def noop_function():
     pass"
-452	label-na	azhang	"def bench_task_decorator(benchmark: BenchmarkFixture):
+452	azhang	label-na	"def bench_task_decorator(benchmark: BenchmarkFixture):
     benchmark(task, noop_function)"
-453	label-na	azhang	"def bench_task_call(benchmark: BenchmarkFixture):
+453	azhang	label-na	"def bench_task_call(benchmark: BenchmarkFixture):
     noop_task = task(noop_function)"
-454	label-na	azhang	"def benchmark_flow():
+454	azhang	label-na	"def benchmark_flow():
     benchmark(noop_task)"
-455	label-na	azhang	"def bench_task_submit(benchmark: BenchmarkFixture, num_task_runs: int):
+455	azhang	label-na	"def bench_task_submit(benchmark: BenchmarkFixture, num_task_runs: int):
     noop_task = task(noop_function)"
-456	label-na	azhang	"def reset_object_registry():
+456	azhang	label-na	"def reset_object_registry():
     """"""
     Ensures each test has a clean object registry.
     """"""
     from prefect.context import PrefectObjectRegistry"
-457	label-na	azhang	"def noop_function():
+457	azhang	label-na	"def noop_function():
     pass"
-458	label-na	azhang	"async def anoop_function():
+458	azhang	label-na	"async def anoop_function():
     pass"
-459	label-na	azhang	"def bench_flow_decorator(benchmark: BenchmarkFixture):
+459	azhang	label-na	"def bench_flow_decorator(benchmark: BenchmarkFixture):
     benchmark(flow, noop_function)"
-460	label-na	azhang	"def bench_flow_call(benchmark: BenchmarkFixture, options):
+460	azhang	label-na	"def bench_flow_call(benchmark: BenchmarkFixture, options):
     noop_flow = flow(**options)(noop_function)
     benchmark(noop_flow)"
-461	label-na	azhang	"def bench_flow_with_submitted_tasks(benchmark: BenchmarkFixture, num_tasks: int):
+461	azhang	label-na	"def bench_flow_with_submitted_tasks(benchmark: BenchmarkFixture, num_tasks: int):
     test_task = task(noop_function)"
-462	label-na	azhang	"def convert(mxnet_name, torch_name):
+462	azhang	label-na	"def convert(mxnet_name, torch_name):
     # download and load the pre-trained model
     net = gluoncv.model_zoo.get_model(mxnet_name, pretrained=True)"
-463	label-na	azhang	"def map_mx_to_torch_model(mx_name):
+463	azhang	label-na	"def map_mx_to_torch_model(mx_name):
     torch_name = mx_name.lower()
     if torch_name.startswith('se_'):
         torch_name = torch_name.replace('se_', 'se')
@@ -1274,9 +1274,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         torch_name = torch_name.replace('inceptionv3', 'inception_v3')
     torch_name = 'gluon_' + torch_name
     return torch_name"
-464	label-na	azhang	"def main():
+464	azhang	label-na	"def main():
     args = parser.parse_args()"
-465	label-na	azhang	"def convert_nest(checkpoint_path, arch):
+465	azhang	label-na	"def convert_nest(checkpoint_path, arch):
     """"""
     Expects path to checkpoint which is a dir containing 4 files like in each of these folders
         - https://console.cloud.google.com/storage/browser/gresearch/nest-checkpoints
@@ -1286,7 +1286,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     https://github.com/google-research/nested-transformer/blob/main/models/nest_net.py
     """"""
     assert arch in ['nest_base', 'nest_small', 'nest_tiny'], ""Your `arch` is not supported"""
-466	label-na	azhang	"class BenchmarkRunner:
+466	azhang	label-na	"class BenchmarkRunner:
     def __init__(
             self,
             model_name,
@@ -1311,12 +1311,12 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             self.amp_autocast = partial(torch.cuda.amp.autocast, dtype=self.amp_dtype)
         else:
             self.amp_autocast = suppress"
-467	label-na	azhang	class InferenceBenchmarkRunner(BenchmarkRunner):
-468	label-na	azhang	class TrainBenchmarkRunner(BenchmarkRunner):
-469	label-na	azhang	class ProfileRunner(BenchmarkRunner):
-470	label-na	azhang	"def timestamp(sync=False):
+467	azhang	label-na	class InferenceBenchmarkRunner(BenchmarkRunner):
+468	azhang	label-na	class TrainBenchmarkRunner(BenchmarkRunner):
+469	azhang	label-na	class ProfileRunner(BenchmarkRunner):
+470	azhang	label-na	"def timestamp(sync=False):
     return time.perf_counter()"
-471	label-na	azhang	"def cmd_from_args(args) -> Tuple[Union[Callable, str], List[str]]:
+471	azhang	label-na	"def cmd_from_args(args) -> Tuple[Union[Callable, str], List[str]]:
     # If ``args`` not passed, defaults to ``sys.argv[:1]``
     with_python = not args.no_python
     cmd: Union[Callable, str]
@@ -1335,17 +1335,17 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             )
         cmd = args.script
     cmd_args.extend(args.script_args)"
-472	label-na	azhang	"def main():
+472	azhang	label-na	"def main():
     args = parser.parse_args()
     cmd, cmd_args = cmd_from_args(args)"
-473	label-na	azhang	"def write_results(results_file, results):
+473	azhang	label-na	"def write_results(results_file, results):
     with open(results_file, mode='w') as cf:
         dw = csv.DictWriter(cf, fieldnames=results[0].keys())
         dw.writeheader()
         for r in results:
             dw.writerow(r)
         cf.flush()"
-474	label-na	azhang	"def checkpoint_metric(checkpoint_path):
+474	azhang	label-na	"def checkpoint_metric(checkpoint_path):
     if not checkpoint_path or not os.path.isfile(checkpoint_path):
         return {}
     print(""=> Extracting metric from checkpoint '{}'"".format(checkpoint_path))
@@ -1358,17 +1358,17 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
         print(metrics)
         metric = metrics[checkpoint['metric_name']]
     return metric"
-475	label-na	azhang	"def main():
+475	azhang	label-na	"def main():
     args = parser.parse_args()
     # by default use the EMA weights (if present)
     args.use_ema = not args.no_use_ema
     # by default sort by checkpoint metric (if present) and avg top n checkpoints
     args.sort = not args.no_sort"
-476	label-na	azhang	"def generate_readmes(templates_path: Path, dest_path: Path):
+476	azhang	label-na	"def generate_readmes(templates_path: Path, dest_path: Path):
     """"""Add the code snippet template to the readmes""""""
     readme_templates_path = templates_path / ""models""
     code_template_path = templates_path / ""code_snippets.md"""
-477	label-na	azhang	"def main():
+477	azhang	label-na	"def main():
     parser = argparse.ArgumentParser(description=""Model index generation config"")
     parser.add_argument(
         ""-t"",
@@ -1387,9 +1387,9 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     args = parser.parse_args()
     templates_path = Path(args.templates)
     dest_readmes_path = Path(args.dest)"
-478	label-na	azhang	"def main():
+478	azhang	label-na	"def main():
     args = parser.parse_args()"
-479	label-na	azhang	"def clean_checkpoint(
+479	azhang	label-na	"def clean_checkpoint(
         checkpoint,
         output,
         use_ema=True,
@@ -1410,27 +1410,27 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             name = k[7:] if k.startswith('module.') else k
             new_state_dict[name] = v
         print(""=> Loaded state_dict from '{}'"".format(checkpoint))"
-480	label-na	azhang	"def pytest_addoption(parser):
+480	azhang	label-na	"def pytest_addoption(parser):
     parser.addoption(""--runslow"", action=""store_true"", help=""run slow tests"")"
-481	label-na	azhang	"def pytest_runtest_setup(item):
+481	azhang	label-na	"def pytest_runtest_setup(item):
     if ""slow"" in item.keywords and not item.config.getoption(""--runslow""):
         pytest.skip(""need --runslow option to run"")"
-482	label-na	azhang	"def pytest_collection_modifyitems(config, items):
+482	azhang	label-na	"def pytest_collection_modifyitems(config, items):
     for item in items:
         if ""skip_with_pyarrow_strings"" in item.keywords:
             item.add_marker(skip_with_pyarrow_strings)
         if ""xfail_with_pyarrow_strings"" in item.keywords:
             item.add_marker(xfail_with_pyarrow_strings)"
-483	label-na	azhang	"def shuffle_method(request):
+483	azhang	label-na	"def shuffle_method(request):
     with dask.config.set({""dataframe.shuffle.method"": request.param}):
         yield request.param"
-484	label-na	azhang	"class NumpyBackendEntrypoint(ArrayBackendEntrypoint):
+484	azhang	label-na	"class NumpyBackendEntrypoint(ArrayBackendEntrypoint):
     @classmethod
     def to_backend_dispatch(cls):
         return to_numpy_dispatch"
-485	label-na	azhang	"def percentile(a, q, method=""linear""):
+485	azhang	label-na	"def percentile(a, q, method=""linear""):
     return _percentile(a, q, method)"
-486	label-na	azhang	"def _concatenate(arrays, axis=0):
+486	azhang	label-na	"def _concatenate(arrays, axis=0):
     out = np.ma.concatenate(arrays, axis=axis)
     fill_values = [i.fill_value for i in arrays if hasattr(i, ""fill_value"")]
     if any(isinstance(f, np.ndarray) for f in fill_values):
@@ -1444,7 +1444,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
             out.fill_value = fill_values[0]
     return out
 "
-487	label-na	azhang	"def _tensordot(a, b, axes=2):
+487	azhang	label-na	"def _tensordot(a, b, axes=2):
     # Much of this is stolen from numpy/core/numeric.py::tensordot
     # Please see license at https://github.com/numpy/numpy/blob/master/LICENSE.txt
     try:
@@ -1466,22 +1466,22 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     except TypeError:
         axes_b = [axes_b]
         nb = 1"
-488	label-na	azhang	"def keepdims_wrapper(a_callable):
+488	azhang	label-na	"def keepdims_wrapper(a_callable):
     """"""
     A wrapper for functions that don't provide keepdims to ensure that they do.
     """""""
-489	label-na	azhang	"def keepdims_wrapped_callable(x, axis=None, keepdims=None, *args, **kwargs):
+489	azhang	label-na	"def keepdims_wrapped_callable(x, axis=None, keepdims=None, *args, **kwargs):
     r = a_callable(x, *args, axis=axis, **kwargs)"
-490	label-na	azhang	"def coarsen(reduction, x, axes, trim_excess=False, **kwargs):
+490	azhang	label-na	"def coarsen(reduction, x, axes, trim_excess=False, **kwargs):
     """"""Coarsen array by applying reduction to fixed size neighborhoods
     """""""
-491	label-na	azhang	"def trim(x, axes=None):
+491	azhang	label-na	"def trim(x, axes=None):
     """"""Trim boundaries off of array
     """""""
-492	label-na	azhang	"def topk(a, k, axis, keepdims):
+492	azhang	label-na	"def topk(a, k, axis, keepdims):
     """"""Chunk and combine function of topk
     """""""
-493	label-na	azhang	"def blockwise(
+493	azhang	label-na	"def blockwise(
     func,
     out_ind,
     *args,
@@ -1508,13 +1508,13 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     """"""
 
 "
-494	label-na	azhang	"def main():
+494	azhang	label-na	"def main():
     run_cli()"
-495	label-na	azhang	"class VersioneerConfig:
+495	azhang	label-na	"class VersioneerConfig:
     """"""Container for Versioneer configuration parameters."""""""
-496	label-na	azhang	"class NotThisMethod(Exception):
+496	azhang	label-na	"class NotThisMethod(Exception):
     """"""Exception raised if a method is not valid for the current scenario."""""""
-497	label-na	azhang	"def get_keywords():
+497	azhang	label-na	"def get_keywords():
     """"""Get the keywords needed to look up the version information.""""""
     # these strings will be replaced by git during git-archive.
     # setup.py/versioneer.py will grep for the variable names, so they must
@@ -1524,7 +1524,7 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     git_full = ""$Format:%H$""
     keywords = {""refnames"": git_refnames, ""full"": git_full}
     return keywords"
-498	label-na	azhang	"def get_config():
+498	azhang	label-na	"def get_config():
     """"""Create, populate and return the VersioneerConfig() object.""""""
     # these strings are filled in when 'setup.py versioneer' creates
     # _version.py
@@ -1536,5 +1536,5 @@ submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
     cfg.versionfile_source = ""dask/_version.py""
     cfg.verbose = False
     return cfg"
-499	label-na	azhang	"def register_vcs_handler(vcs, method):  # decorator
+499	azhang	label-na	"def register_vcs_handler(vcs, method):  # decorator
     """"""Decorator to mark a method as the handler for a particular VCS."""""""
