@@ -1,4 +1,3 @@
-Index	Labeler	Label	Code
 0	atruong	3	"def benchmark(f: Callable[[], Any], iters: Optional[int] = None,
               warmup: Optional[int] = None, name: Optional[str] = None,
               target_total_secs: Optional[Union[int, float]] = None):
@@ -1437,7 +1436,7 @@ return benchmark_fn"
             log.logger.error(f""ERROR: {api_name} API cant start on {port}"")"
 239	atruong	4	"def index():
     return ""MindsDB Hanler Discovery"", 200"
-240	atruong	34	"def register():
+240	atruong	3	"def register():
     try:
         params = request.json
         host = params.get(""host"")
