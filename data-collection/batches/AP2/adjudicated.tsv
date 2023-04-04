@@ -1,0 +1,3043 @@
+0	adjudicated	disagree	"def benchmark(f: Callable[[], Any], iters: Optional[int] = None,
+              warmup: Optional[int] = None, name: Optional[str] = None,
+              target_total_secs: Optional[Union[int, float]] = None):
+  """"""Benchmarks ``f``. Prints the results and returns the raw times.
+  """""""
+1	adjudicated	disagree	"def benchmark_suite(prepare: Callable[..., Callable], params_list: List[Dict],
+                    name: str, target_total_secs: Optional[int] = None):
+  """"""Benchmarks a function for several combinations of parameters.
+  """""""
+2	adjudicated	4	"def _get_baseline_means(baseline_dir, name):
+  baseline_dir = os.path.expanduser(baseline_dir)
+  filename = os.path.join(baseline_dir, name + "".csv"")
+  if not os.path.exists(filename):
+    raise FileNotFoundError(""Can't find baseline file: %s"" % filename)
+  with open(filename, newline="""") as csvfile:
+    reader = csv.reader(csvfile)
+    header = next(reader)
+    mean_idx = header.index(""mean"")
+    return [float(row[mean_idx]) for row in reader]"
+3	adjudicated	5	"def _export_results(data_header, data, export_dir, name):
+  assert ""mean"" in data_header # For future comparisons via _get_baseline_means
+  export_dir = os.path.expanduser(export_dir)
+  os.makedirs(export_dir, exist_ok=True)
+  filename = os.path.join(export_dir, name + "".csv"")
+  with open(filename, ""w"", newline="""") as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(data_header)
+    writer.writerows(data)
+  return filename"
+4	adjudicated	3	"def _param_str(param):
+  if callable(param):
+    return param.__name__
+  return str(param)"
+5	adjudicated	3	"def math_benchmark(*args):
+  def decorator(func):
+    for test_case in args[0]:"
+6	adjudicated	4	"def wrapper(state, test_case=test_case):
+  return func(state, **test_case)"
+7	adjudicated	disagree	"def jax_unary(state, **kwargs):
+  shape = kwargs['shape']
+  dtype = kwargs['dtype']
+  op = kwargs['op']
+  input0 = np.random.random(shape).astype(dtype)
+  f = op
+  f_jitted = jax.jit(f)
+  f_jitted(input0).block_until_ready()
+  while state:
+    f_jitted(input0).block_until_ready()
+  state.counters['items_per_second'] = Counter(
+      input0.size * state.iterations, Counter.kIsRate
+  )"
+8	adjudicated	disagree	"def jax_binary_op(state, **kwargs):
+  mkn = kwargs['mkn']
+  m = mkn[0]
+  k = mkn[1]
+  n = mkn[2]
+  dtype = kwargs['dtype']
+  op = kwargs['op']
+  a = np.random.random([m, k]).astype(dtype)
+  b = np.random.random([k, n]).astype(dtype)
+  f = op
+  f_jitted = jax.jit(f)
+  f_jitted(a, b).block_until_ready()
+  while state:
+    f_jitted(a, b).block_until_ready()
+  state.counters['items_per_second'] = Counter(
+      state.iterations, Counter.kIsRate
+  )"
+9	adjudicated	disagree	"def get_regions():
+    return requests.post(_API_URL, json={'name':'list_regions'},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['regions']"
+10	adjudicated	disagree	"def find_existing_cluster():
+    return requests.post(_API_URL, json={'name':'find_cluster'},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['region']"
+11	adjudicated	disagree	"def get_cluster_ip(region):
+    return requests.post(_API_URL, json={'name':'get_cluster_ip', 'region':region},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_ip']"
+12	adjudicated	disagree	"def get_cluster_username(region):
+    return requests.post(_API_URL, json={'name':'get_cluster_username', 'region':region},
+                         auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS).json()['cluster_username']"
+13	adjudicated	disagree	"def create_cluster(region):
+    logging.debug(requests.post(_API_URL, json={'name':'create_cluster', 'region':region},
+                                auth=_API_AUTH, timeout=_REQUEST_TIMEOUT_SECONDS))"
+14	adjudicated	4	"class DefaultReport:
+  outcome : str = ""none"""
+15	adjudicated	disagree	"def parse_line(line):
+  # TODO(jakevdp): should we parse other report types?
+  parsed = json.loads(line)
+  if parsed.get(""$report_type"") == ""TestReport"":
+    return TestReport._from_json(parsed)
+  return DefaultReport()"
+16	adjudicated	4	"def main(logfile, outfile):
+  logging.info(""Parsing %s"", logfile)
+  try:
+    with open(logfile, 'r') as f:
+      reports = (parse_line(line) for line in f)
+      failures = (r for r in reports if r.outcome == ""failed"")
+      summary = ""\n"".join(f""{f.nodeid}: {f.longrepr.chain[0][1].message}""
+                          for f in failures)
+    logging.info(""Parsed summary:\n%s"", summary)
+  except Exception:
+    err_info = traceback.format_exc()
+    logging.info(""Parsing failed:\n%s"", err_info)
+    summary = f""Log parsing failed; traceback:\n\n{err_info}""
+  logging.info(""Writing result to %s"", outfile)
+  with open(outfile, 'w') as f:
+    f.write(MSG_FORMAT.format(summary=summary))"
+17	adjudicated	disagree	"class AnEnum(enum.IntEnum):
+  A = 123
+  B = 456"
+18	adjudicated	disagree	"def required_devices(num_devices_required):
+  """"""Helper to skip benchmarks that require more devices.""""""
+  def helper1(f):
+    @functools.wraps(f)
+    def helper2(state):
+      if jax.device_count() < num_devices_required:
+        state.skip_with_error(f""requires {num_devices_required} devices"")
+        return
+      return f(state)
+    return helper2
+  return helper1"
+19	adjudicated	disagree	"def create_mesh(shape, axis_names, state):
+  size = np.prod(shape)
+  if len(jax.devices()) < size:
+    state.skip_with_error(f""Requires {size} devices"")
+    return None
+  devices = sorted(jax.devices(), key=lambda d: d.id)
+  mesh_devices = np.array(devices[:size]).reshape(shape)
+  global_mesh = jax.sharding.Mesh(mesh_devices, axis_names)
+  return global_mesh"
+20	adjudicated	4	"def is_windows():
+  return sys.platform.startswith(""win32"")"
+21	adjudicated	4	"def shell(cmd):
+  try:
+    output = subprocess.check_output(cmd)
+  except subprocess.CalledProcessError as e:
+    print(e.output)
+    raise
+  return output.decode(""UTF-8"").strip()"
+22	adjudicated	5	"def get_python_bin_path(python_bin_path_flag):
+  """"""Returns the path to the Python interpreter to use.""""""
+  path = python_bin_path_flag or sys.executable
+  return path.replace(os.sep, ""/"")"
+23	adjudicated	4	"def get_python_version(python_bin_path):
+  version_output = shell(
+    [python_bin_path, ""-c"",
+     (""import sys; print(\""{}.{}\"".format(sys.version_info[0], ""
+      ""sys.version_info[1]))"")])
+  major, minor = map(int, version_output.split("".""))
+  return major, minor"
+24	adjudicated	disagree	"def check_python_version(python_version):
+  if python_version < (3, 8):
+    print(""ERROR: JAX requires Python 3.8 or newer, found "", python_version)
+    sys.exit(-1)"
+25	adjudicated	disagree	"def get_benchmark_fn(nargs, nshards):
+  pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
+  shape = (nshards, 4)
+  args = [np.random.random(shape) for _ in range(nargs)]
+  sharded_args = pmap(lambda x: x)(args)
+  assert all(isinstance(arg, jax.Array) for arg in sharded_args)
+  def benchmark_fn():
+    for _ in range(100):
+      pmap_fn(*sharded_args)
+  return benchmark_fn"
+26	adjudicated	disagree	"def benchmark_fn():
+  for _ in range(100):
+    pmap_fn(*sharded_args)
+return benchmark_fn"
+27	adjudicated	disagree	"def get_benchmark_fn(nargs, nshards):
+  pmap_fn = pmap(lambda *args: jnp.sum(jnp.array(args)))
+  shape = (nshards, 4)
+  args = [jnp.array(np.random.random(shape)) for _ in range(nargs)]
+  assert all(isinstance(arg, jax.Array) for arg in args)
+  def benchmark_fn():
+    for _ in range(10):
+      pmap_fn(*args)
+  return benchmark_fn"
+28	adjudicated	disagree	"def main(logfile: str, outmd: str, outjson: str, name: str):
+    print(f""Extracting content of {logfile}"")
+    print(f""and writing to {outmd} and {outjson}"")"
+29	adjudicated	disagree	"class MakeCutouts(nn.Module):
+  def __init__(self, cut_size, cut_power=1.0):
+      super().__init__()"
+30	adjudicated	4	"class CLIPGuidedStableDiffusion(DiffusionPipeline):
+    """"""CLIP guided stable diffusion based on the amazing repo by @crowsonkb and @Jack000
+    - https://github.com/Jack000/glid-3-xl
+    - https://github.dev/crowsonkb/k-diffusion
+    """"""
+
+    def __init__(self, cut_size, cut_power=1.0):
+        super().__init__()
+
+    def forward(self, pixel_values, num_cutouts):
+    sideY, sideX = pixel_values.shape[2:4]
+    max_size = min(sideX, sideY)
+    min_size = min(sideX, sideY, self.cut_size)
+    cutouts = []
+    for _ in range(num_cutouts):
+        size = int(torch.rand([]) ** self.cut_power * (max_size - min_size) + min_size)
+        offsetx = torch.randint(0, sideX - size + 1, ())
+        offsety = torch.randint(0, sideY - size + 1, ())
+        cutout = pixel_values[:, :, offsety : offsety + size, offsetx : offsetx + size]
+        cutouts.append(F.adaptive_avg_pool2d(cutout, self.cut_size))
+    return torch.cat(cutouts)
+
+    def spherical_dist_loss(x, y):
+    x = F.normalize(x, dim=-1)
+    y = F.normalize(y, dim=-1)
+    return (x - y).norm(dim=-1).div(2).arcsin().pow(2).mul(2)"
+31	adjudicated	disagree	"class DDIMNoiseComparativeAnalysisPipeline(DiffusionPipeline):
+    r""""""
+    This model inherits from [`DiffusionPipeline`]. Check the superclass documentation for the generic methods the
+    library implements for all the pipelines (such as downloading or saving, running on a particular device, etc.)
+    """""""
+32	adjudicated	4	"def preprocess(image):
+    if isinstance(image, torch.Tensor):
+        return image
+    elif isinstance(image, PIL.Image.Image):
+        image = [image]"
+33	adjudicated	disagree	"def check_inputs(self, strength):
+    if strength < 0 or strength > 1:
+        raise ValueError(f""The value of strength should in [0.0, 1.0] but is {strength}"")"
+34	adjudicated	disagree	"def get_timesteps(self, num_inference_steps, strength, device):
+    # get the original timestep using init_timestep
+    init_timestep = min(int(num_inference_steps * strength), num_inference_steps)"
+35	adjudicated	disagree	"class CheckpointMergerPipeline(DiffusionPipeline):
+    """"""
+    A class that that supports merging diffusion models based on the discussion here:
+    https://github.com/huggingface/diffusers/issues/877
+
+    def __init__(self):
+        self.register_to_config()
+        super().__init__()
+
+    def _compare_model_configs(self, dict0, dict1):
+        if dict0 == dict1:
+            return True
+        else:
+            config0, meta_keys0 = self._remove_meta_keys(dict0)
+            config1, meta_keys1 = self._remove_meta_keys(dict1)
+            if config0 == config1:
+                print(f""Warning !: Mismatch in keys {meta_keys0} and {meta_keys1}."")
+                return True
+        return False
+
+    def _remove_meta_keys(self, config_dict: Dict):
+        meta_keys = []
+        temp_dict = config_dict.copy()
+        for key in config_dict.keys():
+            if key.startswith(""_""):
+                temp_dict.pop(key)
+                meta_keys.append(key)
+        return (temp_dict, meta_keys)"
+36	adjudicated	disagree	"class ImagicStableDiffusionPipeline(DiffusionPipeline):
+    r""""""
+    Pipeline for imagic image editing.
+    See paper here: https://arxiv.org/pdf/2210.09276.pdf
+    """""""
+37	adjudicated	4	"def preprocess(image):
+    w, h = image.size
+    w, h = map(lambda x: x - x % 32, (w, h))  # resize to integer multiple of 32
+    image = image.resize((w, h), resample=PIL_INTERPOLATION[""lanczos""])
+    image = np.array(image).astype(np.float32) / 255.0
+    image = image[None].transpose(0, 3, 1, 2)
+    image = torch.from_numpy(image)
+    return 2.0 * image - 1.0"
+38	adjudicated	4	"def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = ""auto""):
+    r""""""
+    Enable sliced attention computation.
+    When this option is enabled, the attention module will split the input tensor in slices, to compute attention
+    in several steps. This is useful to save some memory in exchange for a small speed decrease.
+    Args:
+        slice_size (`str` or `int`, *optional*, defaults to `""auto""`):
+            When `""auto""`, halves the input to the attention heads, so attention will be computed in two steps. If
+            a number is provided, uses as many slices as `attention_head_dim // slice_size`. In this case,
+            `attention_head_dim` must be a multiple of `slice_size`.
+    """"""
+    if slice_size == ""auto"":
+        # half the attention head size is usually a good trade-off between
+        # speed and memory
+        slice_size = self.unet.config.attention_head_dim // 2
+    self.unet.set_attention_slice(slice_size)"
+39	adjudicated	disagree	"def disable_attention_slicing(self):
+    r""""""
+    Disable sliced attention computation. If `enable_attention_slicing` was previously invoked, this method will go
+    back to computing attention in one step.
+    """"""
+    # set slice_size = `None` to disable `attention slicing`
+    self.enable_attention_slicing(None)"
+40	adjudicated	disagree	"class ComposableStableDiffusionPipeline(DiffusionPipeline):
+    r""""""
+    Pipeline for text-to-image generation using Stable Diffusion."
+41	adjudicated	4	"def __init__(
+    self,
+    vae: AutoencoderKL,
+    text_encoder: CLIPTextModel,
+    tokenizer: CLIPTokenizer,
+    unet: UNet2DConditionModel,
+    scheduler: Union[
+        DDIMScheduler,
+        PNDMScheduler,
+        LMSDiscreteScheduler,
+        EulerDiscreteScheduler,
+        EulerAncestralDiscreteScheduler,
+        DPMSolverMultistepScheduler,
+    ],
+    safety_checker: StableDiffusionSafetyChecker,
+    feature_extractor: CLIPFeatureExtractor,
+    requires_safety_checker: bool = True,
+):
+    super().__init__()"
+42	adjudicated	disagree	"def enable_vae_slicing(self):
+    r""""""
+    Enable sliced VAE decoding.
+    """""""
+43	adjudicated	4	"def disable_vae_slicing(self):
+    r""""""
+    Disable sliced VAE decoding. If `enable_vae_slicing` was previously invoked, this method will go back to
+    computing decoding in one step.
+    """"""
+    self.vae.disable_slicing()"
+44	adjudicated	4	"def enable_sequential_cpu_offload(self, gpu_id=0):
+    r""""""
+    Offloads all models to CPU using accelerate, significantly reducing memory usage. When called, unet,
+    text_encoder, vae and safety checker have their state dicts saved to CPU and then are moved to a
+    `torch.device('meta') and loaded to GPU only when their specific submodule has its `forward` method called.
+    """"""
+    if is_accelerate_available():
+        from accelerate import cpu_offload
+    else:
+        raise ImportError(""Please install accelerate via `pip install accelerate`"")"
+45	adjudicated	4	"def prepare_mask_and_masked_image(image, mask):
+    image = np.array(image.convert(""RGB""))
+    image = image[None].transpose(0, 3, 1, 2)
+    image = torch.from_numpy(image).to(dtype=torch.float32) / 127.5 - 1.0"
+46	adjudicated	4	"def check_size(image, height, width):
+    if isinstance(image, PIL.Image.Image):
+        w, h = image.size
+    elif isinstance(image, torch.Tensor):
+        *_, h, w = image.shape"
+47	adjudicated	4	"def overlay_inner_image(image, inner_image, paste_offset: Tuple[int] = (0, 0)):
+    inner_image = inner_image.convert(""RGBA"")
+    image = image.convert(""RGB"")"
+48	adjudicated	3	"class BitDiffusion(DiffusionPipeline):
+    def __init__(
+        self,
+        unet: UNet2DConditionModel,
+        scheduler: Union[DDIMScheduler, DDPMScheduler],
+        bit_scale: Optional[float] = 1.0,
+    ):
+        super().__init__()
+        self.bit_scale = bit_scale
+        self.scheduler.step = (
+            ddim_bit_scheduler_step if isinstance(scheduler, DDIMScheduler) else ddpm_bit_scheduler_step
+        )"
+49	adjudicated	4	"def decimal_to_bits(x, bits=BITS):
+    """"""expects image tensor ranging from 0 to 1, outputs bit tensor ranging from -1 to 1""""""
+    device = x.device"
+50	adjudicated	5	"def bits_to_decimal(x, bits=BITS):
+    """"""expects bits from -1 to 1, outputs image tensor from 0 to 1""""""
+    device = x.device"
+51	adjudicated	4	"def ddim_bit_scheduler_step(
+    self,
+    model_output: torch.FloatTensor,
+    timestep: int,
+    sample: torch.FloatTensor,
+    eta: float = 0.0,
+    use_clipped_model_output: bool = True,
+    generator=None,
+    return_dict: bool = True,
+) -> Union[DDIMSchedulerOutput, Tuple]:
+    """"""
+    Predict the sample at the previous timestep by reversing the SDE. Core function to propagate the diffusion
+    process from the learned model outputs (most often the predicted noise).
+    Args:
+        model_output (`torch.FloatTensor`): direct output from learned diffusion model.
+        timestep (`int`): current discrete timestep in the diffusion chain.
+        sample (`torch.FloatTensor`):
+            current instance of sample being created by diffusion process.
+        eta (`float`): weight of noise for added noise in diffusion step.
+        use_clipped_model_output (`bool`): TODO
+        generator: random number generator.
+        return_dict (`bool`): option for returning tuple rather than DDIMSchedulerOutput class
+    Returns:
+        [`~schedulers.scheduling_utils.DDIMSchedulerOutput`] or `tuple`:
+        [`~schedulers.scheduling_utils.DDIMSchedulerOutput`] if `return_dict` is True, otherwise a `tuple`. When
+        returning a tuple, the first element is the sample tensor.
+    """"""
+    if self.num_inference_steps is None:
+        raise ValueError(
+            ""Number of inference steps is 'None', you need to run 'set_timesteps' after creating the scheduler""
+        )"
+52	adjudicated	4	"def ddpm_bit_scheduler_step(
+    self,
+    model_output: torch.FloatTensor,
+    timestep: int,
+    sample: torch.FloatTensor,
+    prediction_type=""epsilon"",
+    generator=None,
+    return_dict: bool = True,
+) -> Union[DDPMSchedulerOutput, Tuple]:
+    """"""
+    Predict the sample at the previous timestep by reversing the SDE. Core function to propagate the diffusion
+    process from the learned model outputs (most often the predicted noise).
+    Args:
+        model_output (`torch.FloatTensor`): direct output from learned diffusion model.
+        timestep (`int`): current discrete timestep in the diffusion chain.
+        sample (`torch.FloatTensor`):
+            current instance of sample being created by diffusion process.
+        prediction_type (`str`, default `epsilon`):
+            indicates whether the model predicts the noise (epsilon), or the samples (`sample`).
+        generator: random number generator.
+        return_dict (`bool`): option for returning tuple rather than DDPMSchedulerOutput class
+    Returns:
+        [`~schedulers.scheduling_utils.DDPMSchedulerOutput`] or `tuple`:
+        [`~schedulers.scheduling_utils.DDPMSchedulerOutput`] if `return_dict` is True, otherwise a `tuple`. When
+        returning a tuple, the first element is the sample tensor.
+    """"""
+    t = timestep"
+53	adjudicated	4	"def set_seed(seed: int):
+    hf_set_seed(seed)"
+54	adjudicated	disagree	"class Entity:
+    """"""
+    Internal class to represent entities while converting biomedical NER corpora to a standardized format
+    (only used for pre-processing purposes!). Each entity consists of the char span it addresses in
+    the original text as well as the type of entity (e.g. Chemical, Gene, and so on).
+    """""""
+55	adjudicated	disagree	"class DpEntry(NamedTuple):
+    position_end: int
+    entity_count: int
+    entity_lengths_sum: int
+    last_entity: Optional[Entity]"
+56	adjudicated	disagree	"class ClassificationCorpus(Corpus):
+    """"""
+    A classification corpus from FastText-formatted text files.
+    """""""
+57	adjudicated	disagree	"class ClassificationDataset(FlairDataset):
+    """"""
+    Dataset for classification instantiated from a single FastText-formatted file.
+    """""""
+58	adjudicated	disagree	"class CSVClassificationCorpus(Corpus):
+    """"""
+    Classification corpus instantiated from CSV data files.
+    """""""
+59	adjudicated	disagree	"class CSVClassificationDataset(FlairDataset):
+    """"""
+    Dataset for text classification from CSV column formatted data.
+    """""""
+60	adjudicated	disagree	"def main():
+    print(""#### Versions:"")
+    print(f""##### Flair\n{flair.__version__}"")
+    print(f""##### Pytorch\n{torch.__version__}"")
+    print(f""##### Transformers\n{transformers.__version__}"")
+    print(f""#### GPU\n{torch.cuda.is_available()}"")"
+61	adjudicated	5	"class DataLoader(torch.utils.data.dataloader.DataLoader):
+    def __init__(
+        self,
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        sampler=None,
+        batch_sampler=None,
+        num_workers=None,
+        drop_last=False,
+        timeout=0,
+        worker_init_fn=None,
+    ):
+        # in certain cases, multi-CPU data loading makes no sense and slows
+        # everything down. For this reason, we detect if a dataset is in-memory:
+        # if so, num_workers is set to 0 for faster processing
+        flair_dataset = dataset
+        while True:
+            if type(flair_dataset) is Subset:
+                flair_dataset = flair_dataset.dataset
+            elif type(flair_dataset) is ConcatDataset:
+                flair_dataset = flair_dataset.datasets[0]
+            else:
+                break"
+62	adjudicated	disagree	"class FlairDatapointDataset(FlairDataset, Generic[DT]):
+    """"""
+    A simple Dataset object to wrap a List of Datapoints, for example Sentences
+    """""""
+63	adjudicated	disagree	"class SentenceDataset(FlairDatapointDataset):
+    @deprecated(version=""0.11"", reason=""The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'"")
+    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+        super().__init__(sentences)"
+64	adjudicated	disagree	"class ModelArguments:
+    model_name_or_path: str = field(
+        metadata={""help"": ""The model checkpoint for weights initialization.""},
+    )
+    layers: str = field(default=""-1"", metadata={""help"": ""Layers to be fine-tuned.""})
+    subtoken_pooling: str = field(
+        default=""first"",
+        metadata={""help"": ""Subtoken pooling strategy used for fine-tuned.""},
+    )
+    hidden_size: int = field(default=256, metadata={""help"": ""Hidden size for NER model.""})
+    use_crf: bool = field(default=False, metadata={""help"": ""Whether to use a CRF on-top or not.""})"
+65	adjudicated	disagree	"class TrainingArguments:
+    num_epochs: int = field(default=10, metadata={""help"": ""The number of training epochs.""})
+    batch_size: int = field(default=8, metadata={""help"": ""Batch size used for training.""})
+    mini_batch_chunk_size: int = field(
+        default=1,
+        metadata={""help"": ""If smaller than batch size, batches will be chunked.""},
+    )
+    learning_rate: float = field(default=5e-05, metadata={""help"": ""Learning rate""})
+    seed: int = field(default=42, metadata={""help"": ""Seed used for reproducible fine-tuning results.""})
+    device: str = field(default=""cuda:0"", metadata={""help"": ""CUDA device string.""})
+    weight_decay: float = field(default=0.0, metadata={""help"": ""Weight decay for optimizer.""})
+    embeddings_storage_mode: str = field(default=""none"", metadata={""help"": ""Defines embedding storage method.""})"
+66	adjudicated	disagree	"class FlertArguments:
+    context_size: int = field(default=0, metadata={""help"": ""Context size when using FLERT approach.""})
+    respect_document_boundaries: bool = field(
+        default=False,
+        metadata={""help"": ""Whether to respect document boundaries or not when using FLERT.""},
+    )"
+67	adjudicated	disagree	"class DataArguments:
+    dataset_name: str = field(metadata={""help"": ""Flair NER dataset name.""})
+    dataset_arguments: str = field(default="""", metadata={""help"": ""Dataset arguments for Flair NER dataset.""})
+    output_dir: str = field(
+        default=""resources/taggers/ner"",
+        metadata={""help"": ""Defines output directory for final fine-tuned model.""},
+    )"
+68	adjudicated	4	"def get_flair_corpus(data_args):
+    ner_task_mapping = {}"
+69	adjudicated	disagree	"class Dictionary:
+    """"""
+    This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
+    """""""
+70	adjudicated	disagree	"class Label:
+    """"""
+    This class represents a label. Each label has a value and optionally a confidence score. The
+    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
+    """""""
+71	adjudicated	disagree	"class DataPoint:
+    """"""
+    This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
+    must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()). Also,
+    each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
+    and the property 'label')
+    """""""
+72	adjudicated	disagree	"def setup(app: Sphinx) -> None:
+    app.add_object_type(
+        ""confval"",
+        ""confval"",
+        objname=""configuration value"",
+        indextemplate=""pair: %s; configuration value"",
+        doc_field_types=[
+            Field(""type"", label=""Type"", has_arg=False, names=(""type"",)),
+            Field(""default"", label=""Default"", has_arg=False, names=(""default"",)),
+        ],
+    )"
+73	adjudicated	4	"def make_cache(input_dir: str, sqlite: bool) -> MetadataStore:
+    if sqlite:
+        return SqliteMetadataStore(input_dir)
+    else:
+        return FilesystemMetadataStore(input_dir)"
+74	adjudicated	4	"def apply_diff(cache_dir: str, diff_file: str, sqlite: bool = False) -> None:
+    cache = make_cache(cache_dir, sqlite)
+    with open(diff_file) as f:
+        diff = json.load(f)"
+75	adjudicated	disagree	"def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(""--sqlite"", action=""store_true"", default=False, help=""Use a sqlite cache"")
+    parser.add_argument(""cache_dir"", help=""Directory for the cache"")
+    parser.add_argument(""diff"", help=""Cache diff file"")
+    args = parser.parse_args()"
+76	adjudicated	4	"class CacheData:
+    def __init__(
+        self,
+        filename: str,
+        data_json: JsonDict,
+        meta_json: JsonDict,
+        data_size: int,
+        meta_size: int,
+    ) -> None:
+        self.filename = filename
+        self.data = data_json
+        self.meta = meta_json
+        self.data_size = data_size
+        self.meta_size = meta_size"
+77	adjudicated	4	"def total_size(self) -> int:
+    return self.data_size + self.meta_size"
+78	adjudicated	4	"def extract_classes(chunks: Iterable[CacheData]) -> Iterable[JsonDict]:
+    def extract(chunks: Iterable[JsonDict]) -> Iterable[JsonDict]:
+        for chunk in chunks:
+            if isinstance(chunk, dict):
+                yield chunk
+                yield from extract(chunk.values())
+            elif isinstance(chunk, list):
+                yield from extract(chunk)"
+79	adjudicated	4	"def extract(chunks: Iterable[JsonDict]) -> Iterable[JsonDict]:
+    for chunk in chunks:
+        if isinstance(chunk, dict):
+            yield chunk
+            yield from extract(chunk.values())
+        elif isinstance(chunk, list):
+            yield from extract(chunk)"
+80	adjudicated	disagree	"class It(Iterator[str]):
+    stop = False"
+81	adjudicated	4	"class Aw(Awaitable[int]):
+    def __await__(self) -> Generator[str, Any, int]:
+        yield ""a""
+        return 1"
+82	adjudicated	4	"def plain_generator() -> Generator[str, None, int]:
+    yield ""a""
+    return 1"
+83	adjudicated	4	"async def plain_coroutine() -> int:
+    return 1"
+84	adjudicated	4	"def decorated_generator() -> Generator[str, None, int]:
+    yield ""a""
+    return 1"
+85	adjudicated	4	"def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        ""--to-sqlite"",
+        action=""store_true"",
+        default=False,
+        help=""Convert to a sqlite cache (default: convert from)"",
+    )
+    parser.add_argument(
+        ""--output_dir"",
+        action=""store"",
+        default=None,
+        help=""Output cache location (default: same as input)"",
+    )
+    parser.add_argument(""input_dir"", help=""Input directory for the cache"")
+    args = parser.parse_args()"
+86	adjudicated	4	"def pytest_configure(config):
+    mypy_source_root = os.path.dirname(os.path.abspath(__file__))
+    if os.getcwd() != mypy_source_root:
+        os.chdir(mypy_source_root)"
+87	adjudicated	3	"def pytest_addoption(parser) -> None:
+    parser.addoption(
+        ""--bench"", action=""store_true"", default=False, help=""Enable the benchmark test runs""
+    )"
+88	adjudicated	disagree	"def parse_commit_title(diff: str) -> str:
+    m = re.search(""\n    ([^ ].*)"", diff)
+    assert m is not None, ""Could not parse diff""
+    return m.group(1)"
+89	adjudicated	disagree	"def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        ""--typeshed-dir"", help=""location of typeshed"", metavar=""dir"", required=True
+    )
+    parser.add_argument(""commit"", help=""typeshed commit hash to cherry-pick"")
+    args = parser.parse_args()
+    typeshed_dir = args.typeshed_dir
+    commit = args.commit"
+90	adjudicated	4	"def setup(app):
+    app.add_css_file(""custom.css"")"
+91	adjudicated	disagree	"class PipenvGroup(DYMMixin, Group):
+    """"""Custom Group class provides formatted main help"""""""
+92	adjudicated	4	"class State:
+    def __init__(self):
+        self.index = None
+        self.verbose = False
+        self.quiet = False
+        self.pypi_mirror = None
+        self.python = None
+        self.site_packages = None
+        self.clear = False
+        self.system = False
+        self.project = Project()
+        self.installstate = InstallState()
+        self.lockoptions = LockOptions()"
+93	adjudicated	4	"class InstallState:
+    def __init__(self):
+        self.dev = False
+        self.pre = False
+        self.selective_upgrade = False
+        self.keep_outdated = False
+        self.skip_lock = False
+        self.ignore_pipfile = False
+        self.code = False
+        self.requirementstxt = None
+        self.deploy = False
+        self.packages = []
+        self.editables = []
+        self.extra_pip_args = []
+        self.categories = []"
+94	adjudicated	4	"class LockOptions:
+    def __init__(self):
+        self.dev_only = False"
+95	adjudicated	4	"def cli(
+    ctx,
+    state,
+    where=False,
+    venv=False,
+    py=False,
+    envs=False,
+    rm=False,
+    bare=False,
+    man=False,
+    support=None,
+    help=False,
+    site_packages=None,
+    **kwargs,
+):
+    from pipenv.patched.pip._vendor import rich
+    from pipenv.utils.shell import system_which"
+96	adjudicated	disagree	"def install(state, **kwargs):
+    """"""Installs provided packages and adds them to Pipfile, or (if no packages are given), installs all packages from Pipfile.""""""
+    from pipenv.routines.install import do_install
+    "
+97	adjudicated	disagree	"def upgrade(state, **kwargs):
+    from pipenv.routines.update import upgrade
+    from pipenv.utils.project import ensure_project"
+98	adjudicated	disagree	"def uninstall(ctx, state, all_dev=False, all=False, **kwargs):
+    """"""Uninstalls a provided package and removes it from Pipfile.""""""
+    from pipenv.routines.uninstall import do_uninstall"
+99	adjudicated	disagree	"def lock(ctx, state, **kwargs):
+    """"""Generates Pipfile.lock.""""""
+    from pipenv.routines.lock import do_lock
+    from pipenv.utils.project import ensure_project"
+100	adjudicated	4	"def determine_pip_install_arguments():
+    implicit_pip = True
+    implicit_setuptools = False
+    implicit_wheel = True"
+101	adjudicated	disagree	"def monkeypatch_for_cert(tmpdir):
+    """"""Patches `pip install` to provide default certificate with the lowest priority.
+    """""""
+102	adjudicated	disagree	"def cert_parse_args(self, args):
+    if not self.parser.get_default_values().cert:
+        # There are no user provided cert -- force use of bundled cert
+        self.parser.defaults[""cert""] = cert_path  # calculated above
+    return install_parse_args(self, args)"
+103	adjudicated	disagree	"def bootstrap(tmpdir):
+    monkeypatch_for_cert(tmpdir)"
+104	adjudicated	disagree	"def map(dataset: datasets.Dataset, **kwargs):
+    _ = dataset.map(**kwargs)"
+105	adjudicated	disagree	"def filter(dataset: datasets.Dataset, **kwargs):
+    _ = dataset.filter(**kwargs"
+106	adjudicated	disagree	"def benchmark_map_filter():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        features = datasets.Features({""text"": datasets.Value(""string""), ""numbers"": datasets.Value(""float32"")})
+        dataset = generate_example_dataset(
+            os.path.join(tmp_dir, ""dataset.arrow""), features, num_examples=SPEED_TEST_N_EXAMPLES
+        )"
+107	adjudicated	4	"def tokenize(examples):
+    return tokenizer(examples[""text""])"
+108	adjudicated	4	"class RandIter:
+    low: int
+    high: int
+    size: int
+    seed: int"
+109	adjudicated	disagree	"def generate_100B_dataset(num_examples: int, chunk_size: int) -> datasets.Dataset:
+    table = pa.Table.from_pydict({""col"": [0] * chunk_size})
+    table = pa.concat_tables([table] * (num_examples // chunk_size))
+    return datasets.Dataset(table, fingerprint=""table_100B"")"
+110	adjudicated	disagree	"def __post_init__(self):
+    rng = np.random.default_rng(self.seed)
+    self._sampled_values = rng.integers(low=self.low, high=self.high, size=self.size).tolist()"
+111	adjudicated	4	"def __iter__(self):
+    return iter(self._sampled_values)"
+112	adjudicated	4	"def __len__(self):
+    return self.size"
+113	adjudicated	4	"def format_json_to_md(input_json_file, output_md_file):
+    with open(input_json_file, encoding=""utf-8"") as f:
+        results = json.load(f)"
+114	adjudicated	4	"def read(dataset: datasets.Dataset, length):
+    for i in range(length):
+        _ = dataset[i]"
+115	adjudicated	4	"def read_batch(dataset: datasets.Dataset, length, batch_size):
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]"
+116	adjudicated	4	"def read_formatted(dataset: datasets.Dataset, length, type):
+    with dataset.formatted_as(type=type):
+        for i in range(length):
+            _ = dataset[i]"
+117	adjudicated	4	"def read_formatted_batch(dataset: datasets.Dataset, length, batch_size, type):
+    with dataset.formatted_as(type=type):
+        for i in range(0, length, batch_size):
+            _ = dataset[i : i + batch_size]"
+118	adjudicated	disagree	"def benchmark_iterating():
+    times = {""num examples"": SPEED_TEST_N_EXAMPLES}
+    functions = [
+        (read, {""length"": SMALL_TEST}),
+        (read, {""length"": SPEED_TEST_N_EXAMPLES}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 10}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 100}),
+        (read_batch, {""length"": SPEED_TEST_N_EXAMPLES, ""batch_size"": 1_000}),
+        (read_formatted, {""type"": ""numpy"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""pandas"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""torch"", ""length"": SMALL_TEST}),
+        (read_formatted, {""type"": ""tensorflow"", ""length"": SMALL_TEST}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 10}),
+        (read_formatted_batch, {""type"": ""numpy"", ""length"": SMALL_TEST, ""batch_size"": 1_000}),
+    ]"
+119	adjudicated	disagree	"def get_duration(func):
+    def wrapper(*args, **kwargs):
+        starttime = timeit.default_timer()
+        _ = func(*args, **kwargs)
+        delta = timeit.default_timer() - starttime
+        return delta"
+120	adjudicated	disagree	"def wrapper(*args, **kwargs):
+    starttime = timeit.default_timer()
+    _ = func(*args, **kwargs)
+    delta = timeit.default_timer() - starttime
+    return delta"
+121	adjudicated	disagree	"def generate_examples(features: dict, num_examples=100, seq_shapes=None):
+    dummy_data = []
+    seq_shapes = seq_shapes or {}
+    for i in range(num_examples):
+        example = {}
+        for col_id, (k, v) in enumerate(features.items()):
+            if isinstance(v, _ArrayXD):
+                data = np.random.rand(*v.shape).astype(v.dtype)
+            elif isinstance(v, datasets.Value):
+                if v.dtype == ""string"":
+                    data = ""The small grey turtle was surprisingly fast when challenged.""
+                else:
+                    data = np.random.randint(10, size=1).astype(v.dtype).item()
+            elif isinstance(v, datasets.Sequence):
+                while isinstance(v, datasets.Sequence):
+                    v = v.feature
+                shape = seq_shapes[k]
+                data = np.random.rand(*shape).astype(v.dtype)
+            example[k] = data"
+122	adjudicated	3	"def generate_example_dataset(dataset_path, features, num_examples=100, seq_shapes=None):
+    dummy_data = generate_examples(features, num_examples=num_examples, seq_shapes=seq_shapes)"
+123	adjudicated	3	"def write(my_features, dummy_data, tmp_dir):
+    with ArrowWriter(features=my_features, path=os.path.join(tmp_dir, ""beta.arrow"")) as writer:
+        for key, record in dummy_data:
+            example = my_features.encode_example(record)
+            writer.write(example)
+        num_examples, num_bytes = writer.finalize()"
+124	adjudicated	3	"def read_unformated(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for _ in dataset:
+        pass"
+125	adjudicated	3	"def read_formatted_as_numpy(feats, tmp_dir):
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for _ in dataset:
+        pass"
+126	adjudicated	3	"def read_batch_unformated(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]"
+127	adjudicated	3	"def read_batch_formatted_as_numpy(feats, tmp_dir):
+    batch_size = 10
+    dataset = datasets.Dataset.from_file(
+        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)
+    )
+    dataset.set_format(""numpy"")
+    for i in range(0, len(dataset), batch_size):
+        _ = dataset[i : i + batch_size]"
+128	adjudicated	disagree	"def select(dataset: datasets.Dataset):
+    _ = dataset.select(range(0, len(dataset), 2))"
+129	adjudicated	disagree	"def sort(dataset: datasets.Dataset):
+    _ = dataset.sort(""numbers"")"
+130	adjudicated	disagree	"def shuffle(dataset: datasets.Dataset):
+    _ = dataset.shuffle()"
+131	adjudicated	disagree	"def train_test_split(dataset: datasets.Dataset):
+    _ = dataset.train_test_split(0.1)"
+132	adjudicated	disagree	"def shard(dataset: datasets.Dataset, num_shards=10):
+    for shard_id in range(num_shards):
+        _ = dataset.shard(num_shards, shard_id)"
+133	adjudicated	disagree	"class RegexpChunkApp:
+    """"""
+    A graphical tool for exploring the regular expression based chunk
+    parser ``nltk.chunk.RegexpChunkParser``.
+    """""""
+134	adjudicated	5	"def normalize_grammar(self, grammar):
+    # Strip comments
+    grammar = re.sub(r""((\\.|[^#])*)(#.*)?"", r""\1"", grammar)
+    # Normalize whitespace
+    grammar = re.sub("" +"", "" "", grammar)
+    grammar = re.sub(r""\n\s+"", r""\n"", grammar)
+    grammar = grammar.strip()
+    # [xx] Hack: automatically backslash $!
+    grammar = re.sub(r""([^\\])\$"", r""\1\\$"", grammar)
+    return grammar"
+135	adjudicated	disagree	"def _init_bindings(self, top):
+    top.bind(""<Control-n>"", self._devset_next)
+    top.bind(""<Control-p>"", self._devset_prev)
+    top.bind(""<Control-t>"", self.toggle_show_trace)
+    top.bind(""<KeyPress>"", self.update)
+    top.bind(""<Control-s>"", lambda e: self.save_grammar())
+    top.bind(""<Control-o>"", lambda e: self.load_grammar())
+    self.grammarbox.bind(""<Control-t>"", self.toggle_show_trace)
+    self.grammarbox.bind(""<Control-n>"", self._devset_next)
+    self.grammarbox.bind(""<Control-p>"", self._devset_prev)"
+136	adjudicated	disagree	"def _init_fonts(self, top):
+    # TWhat's our font size (default=same as sysfont)
+    self._size = IntVar(top)
+    self._size.set(20)
+    self._font = Font(family=""helvetica"", size=-self._size.get())
+    self._smallfont = Font(
+        family=""helvetica"", size=-(int(self._size.get() * 14 // 20))
+    )"
+137	adjudicated	disagree	"class RecursiveDescentApp:
+    """"""
+    A graphical tool for exploring the recursive descent parser.  The tool
+    displays the parser's tree and the remaining text, and allows the
+    user to control the parser's operation.  In particular, the user
+    can expand subtrees on the frontier, match tokens on the frontier
+    against the text, and backtrack.  A ""step"" button simply steps
+    through the parsing process, performing the operations that
+    ``RecursiveDescentParser`` would use.
+    """"""
+
+    def __init__(self, grammar, sent, trace=0):
+        self._sent = sent
+        self._parser = SteppingRecursiveDescentParser(grammar, trace)
+
+"
+138	adjudicated	4	"def __init__(self, grammar, sent, trace=0):
+    self._sent = sent
+    self._parser = SteppingRecursiveDescentParser(grammar, trace)"
+139	adjudicated	5	"def _init_fonts(self, root):
+    # See: <http://www.astro.washington.edu/owen/ROTKFolklore.html>
+    self._sysfont = Font(font=Button()[""font""])
+    root.option_add(""*Font"", self._sysfont)"
+140	adjudicated	disagree	"def _init_bindings(self):
+    # Key bindings are a good thing.
+    self._top.bind(""<Control-q>"", self.destroy)
+    self._top.bind(""<Control-x>"", self.destroy)
+    self._top.bind(""<Escape>"", self.destroy)
+    self._top.bind(""e"", self.expand)
+    # self._top.bind('<Alt-e>', self.expand)
+    # self._top.bind('<Control-e>', self.expand)
+    self._top.bind(""m"", self.match)
+    self._top.bind(""<Alt-m>"", self.match)
+    self._top.bind(""<Control-m>"", self.match)
+    self._top.bind(""b"", self.backtrack)
+    self._top.bind(""<Alt-b>"", self.backtrack)
+    self._top.bind(""<Control-b>"", self.backtrack)
+    self._top.bind(""<Control-z>"", self.backtrack)
+    self._top.bind(""<BackSpace>"", self.backtrack)
+    self._top.bind(""a"", self.autostep)
+    # self._top.bind('<Control-a>', self.autostep)
+    self._top.bind(""<Control-space>"", self.autostep)
+    self._top.bind(""<Control-c>"", self.cancel_autostep)
+    self._top.bind(""<space>"", self.step)
+    self._top.bind(""<Delete>"", self.reset)
+    self._top.bind(""<Control-p>"", self.postscript)
+    # self._top.bind('<h>', self.help)
+    # self._top.bind('<Alt-h>', self.help)
+    self._top.bind(""<Control-h>"", self.help)
+    self._top.bind(""<F1>"", self.help)
+    # self._top.bind('<g>', self.toggle_grammar)
+    # self._top.bind('<Alt-g>', self.toggle_grammar)
+    # self._top.bind('<Control-g>', self.toggle_grammar)
+    self._top.bind(""<Control-g>"", self.edit_grammar)
+    self._top.bind(""<Control-t>"", self.edit_sentence)"
+141	adjudicated	4	"class ConcordanceSearchView:
+    _BACKGROUND_COLOUR = ""#FFF""  # white"
+142	adjudicated	4	"class ConcordanceSearchModel:
+    def __init__(self, queue):
+        self.queue = queue
+        self.CORPORA = _CORPORA
+        self.DEFAULT_CORPUS = _DEFAULT
+        self.selected_corpus = None
+        self.reset_query()
+        self.reset_results()
+        self.result_count = None
+        self.last_sent_searched = 0"
+143	adjudicated	4	"class LoadCorpus(threading.Thread):
+    def __init__(self, name, model):
+        threading.Thread.__init__(self)
+        self.model, self.name = model, name"
+144	adjudicated	4	"class SearchCorpus(threading.Thread):
+    def __init__(self, model, page, count):
+        self.model, self.count, self.page = model, count, page
+        threading.Thread.__init__(self)"
+145	adjudicated	disagree	"class Zone:
+    def __init__(self, image, initialField, initialText):
+        frm = Frame(root)
+        frm.config(background=""white"")
+        self.image = PhotoImage(format=""gif"", data=images[image.upper()])
+        self.imageDimmed = PhotoImage(format=""gif"", data=images[image])
+        self.img = Label(frm)
+        self.img.config(borderwidth=0)
+        self.img.pack(side=""left"")
+        self.fld = Text(frm, **fieldParams)
+        self.initScrollText(frm, self.fld, initialField)
+        frm = Frame(root)
+        self.txt = Text(frm, **textParams)
+        self.initScrollText(frm, self.txt, initialText)
+        for i in range(2):
+            self.txt.tag_config(colors[i], background=colors[i])
+            self.txt.tag_config(""emph"" + colors[i], foreground=emphColors[i])"
+146	adjudicated	disagree	"class FindZone(Zone):
+    def addTags(self, m):
+        color = next(self.colorCycle)
+        self.txt.tag_add(color, ""1.0+%sc"" % m.start(), ""1.0+%sc"" % m.end())
+        try:
+            self.txt.tag_add(
+                ""emph"" + color, ""1.0+%sc"" % m.start(""emph""), ""1.0+%sc"" % m.end(""emph"")
+            )
+        except:
+            pass"
+147	adjudicated	disagree	"class ReplaceZone(Zone):
+    def addTags(self, m):
+        s = sz.rex.sub(self.repl, m.group())
+        self.txt.delete(
+            ""1.0+%sc"" % (m.start() + self.diff), ""1.0+%sc"" % (m.end() + self.diff)
+        )
+        self.txt.insert(""1.0+%sc"" % (m.start() + self.diff), s, next(self.colorCycle))
+        self.diff += len(s) - (m.end() - m.start())"
+148	adjudicated	4	"def __init__(self, image, initialField, initialText):
+    frm = Frame(root)
+    frm.config(background=""white"")
+    self.image = PhotoImage(format=""gif"", data=images[image.upper()])
+    self.imageDimmed = PhotoImage(format=""gif"", data=images[image])
+    self.img = Label(frm)
+    self.img.config(borderwidth=0)
+    self.img.pack(side=""left"")
+    self.fld = Text(frm, **fieldParams)
+    self.initScrollText(frm, self.fld, initialField)
+    frm = Frame(root)
+    self.txt = Text(frm, **textParams)
+    self.initScrollText(frm, self.txt, initialText)
+    for i in range(2):
+        self.txt.tag_config(colors[i], background=colors[i])
+        self.txt.tag_config(""emph"" + colors[i], foreground=emphColors[i])"
+149	adjudicated	4	"def initScrollText(self, frm, txt, contents):
+    scl = Scrollbar(frm)
+    scl.config(command=txt.yview)
+    scl.pack(side=""right"", fill=""y"")
+    txt.pack(side=""left"", expand=True, fill=""x"")
+    txt.config(yscrollcommand=scl.set)
+    txt.insert(""1.0"", contents)
+    frm.pack(fill=""x"")
+    Frame(height=2, bd=1, relief=""ridge"").pack(fill=""x"")"
+150	adjudicated	4	"class CollocationsView:
+    _BACKGROUND_COLOUR = ""#FFF""  # white"
+151	adjudicated	4	"class CollocationsModel:
+    def __init__(self, queue):
+        self.result_count = None
+        self.selected_corpus = None
+        self.collocations = None
+        self.CORPORA = _CORPORA
+        self.DEFAULT_CORPUS = _DEFAULT
+        self.queue = queue
+        self.reset_results()"
+152	adjudicated	4	"class LoadCorpus(threading.Thread):
+    def __init__(self, name, model):
+        threading.Thread.__init__(self)
+        self.model, self.name = model, name"
+153	adjudicated	4	"def __init__(self):
+    self.queue = q.Queue()
+    self.model = CollocationsModel(self.queue)
+    self.top = Tk()
+    self._init_top(self.top)
+    self._init_menubar()
+    self._init_widgets(self.top)
+    self.load_corpus(self.model.DEFAULT_CORPUS)
+    self.after = self.top.after(POLL_INTERVAL, self._poll)"
+154	adjudicated	4	"class EdgeList(ColorizedList):
+    ARROW = SymbolWidget.SYMBOLS[""rightarrow""]"
+155	adjudicated	disagree	"class ChartMatrixView:
+    """"""
+    A view of a chart that displays the contents of the corresponding matrix.
+    """""""
+156	adjudicated	4	"class ChartResultsView:
+    def __init__(self, parent, chart, grammar, toplevel=True):
+        self._chart = chart
+        self._grammar = grammar
+        self._trees = []
+        self._y = 10
+        self._treewidgets = []
+        self._selection = None
+        self._selectbox = None"
+157	adjudicated	disagree	"class ChartView:
+    """"""
+    A component for viewing charts.  This is used by ``ChartParserApp`` to
+    allow students to interactively experiment with various chart
+    parsing techniques.  It is also used by ``Chart.draw()``.
+    """""""
+158	adjudicated	disagree	"def _fake_PIPE(*args, **kwargs):
+    raise NotImplementedError(""subprocess.PIPE is not supported."")"
+159	adjudicated	disagree	"def _fake_Popen(*args, **kwargs):
+    raise NotImplementedError(""subprocess.Popen is not supported."")"
+160	adjudicated	disagree	"def demo():
+    print(""To run the demo code for a module, type nltk.module.demo()"")"
+161	adjudicated	disagree	"def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        ""--deprecation"",
+        choices=[""all"", ""pending"", ""imminent"", ""none""],
+        default=""imminent"",
+    )
+    parser.add_argument(""--postgres"", action=""store_true"")
+    parser.add_argument(""--elasticsearch5"", action=""store_true"")
+    parser.add_argument(""--elasticsearch6"", action=""store_true"")
+    parser.add_argument(""--elasticsearch7"", action=""store_true"")
+    parser.add_argument(""--emailuser"", action=""store_true"")
+    parser.add_argument(""--disabletimezone"", action=""store_true"")
+    parser.add_argument(""--bench"", action=""store_true"")
+    return parser"
+162	adjudicated	3	"def parse_args(args=None):
+    return make_parser().parse_known_args(args)"
+163	adjudicated	disagree	"def runtests():
+    args, rest = parse_args()"
+164	adjudicated	disagree	"def pytest_addoption(parser):
+    parser.addoption(
+        ""--deprecation"",
+        choices=[""all"", ""pending"", ""imminent"", ""none""],
+        default=""pending"",
+    )
+    parser.addoption(""--postgres"", action=""store_true"")
+    parser.addoption(""--elasticsearch"", action=""store_true"")"
+165	adjudicated	4	"def pytest_configure(config):
+    deprecation = config.getoption(""deprecation"")"
+166	adjudicated	4	"def pytest_unconfigure(config):
+    from wagtail.test.settings import MEDIA_ROOT, STATIC_ROOT"
+167	adjudicated	4	"def get_language_name(locale_string):
+    try:
+        return LANGUAGE_OVERRIDES[locale_string]
+    except KeyError:
+        return Locale.parse(locale_string).english_name"
+168	adjudicated	4	"def setup(app):
+    app.add_js_file(""js/banner.js"")"
+169	adjudicated	5	"def __init__(self, environment):
+    """"""Initialize the extension with the given environment.""""""
+    super().__init__(environment)"
+170	adjudicated	5	"def _expand_path(path):
+    """"""Expand both environment variables and user home in the given path.""""""
+    path = os.path.expandvars(path)
+    path = os.path.expanduser(path)
+    return path"
+171	adjudicated	disagree	"def merge_configs(default, overwrite):
+    """"""Recursively update a dict with the key/value pair of another.
+
+    def get_config(config_path):
+    """"""Retrieve the config from the specified path, returning a config dict.""""""
+    if not os.path.exists(config_path):
+        raise ConfigDoesNotExistException(f'Config file {config_path} does not exist.')"
+172	adjudicated	disagree	"def get_config(config_path):
+    """"""Retrieve the config from the specified path, returning a config dict.""""""
+    if not os.path.exists(config_path):
+        raise ConfigDoesNotExistException(f'Config file {config_path} does not exist.')"
+173	adjudicated	disagree	"class ConfigDoesNotExistException(CookiecutterException):
+    """"""
+    Exception for missing config file.
+    """""""
+174	adjudicated	disagree	"def version_msg():
+    """"""Return the Cookiecutter version, location and Python powering it.""""""
+    python_version = sys.version
+    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return f""Cookiecutter {__version__} from {location} (Python {python_version})"""
+175	adjudicated	disagree	"def validate_extra_context(ctx, param, value):
+    """"""Validate extra context.""""""
+    for string in value:
+        if '=' not in string:
+            raise click.BadParameter(
+                f""EXTRA_CONTEXT should contain items of the form key=value; ""
+                f""'{string}' doesn't match that form""
+            )"
+176	adjudicated	disagree	"def list_installed_templates(default_config, passed_config_file):
+    """"""List installed (locally cloned) templates. Use cookiecutter --list-installed.""""""
+    config = get_user_config(passed_config_file, default_config)
+    cookiecutter_folder = config.get('cookiecutters_dir')
+    if not os.path.exists(cookiecutter_folder):
+        click.echo(
+            f""Error: Cannot list installed templates. ""
+            f""Folder does not exist: {cookiecutter_folder}""
+        )
+        sys.exit(-1)"
+177	adjudicated	disagree	"def main(
+    template,
+    extra_context,
+    no_input,
+    checkout,
+    verbose,
+    replay,
+    overwrite_if_exists,
+    output_dir,
+    config_file,
+    default_config,
+    debug_file,
+    directory,
+    skip_if_file_exists,
+    accept_hooks,
+    replay_file,
+    list_installed,
+    keep_project_on_failure,
+):
+    """"""Create a project from a Cookiecutter project template (TEMPLATE)."
+178	adjudicated	4	"def load_response(url: str, filename: str) -> HtmlResponse:
+    input_path = Path(__file__).parent / ""_tests"" / filename
+    return HtmlResponse(url, body=input_path.read_bytes())"
+179	adjudicated	4	"def setup(namespace):
+    namespace[""load_response""] = load_response"
+180	adjudicated	4	"class settingslist_node(nodes.General, nodes.Element):
+    pass"
+181	adjudicated	4	"class SettingsListDirective(Directive):
+    def run(self):
+        return [settingslist_node("""")]"
+182	adjudicated	5	"def is_setting_index(node):
+    if node.tagname == ""index"" and node[""entries""]:
+        # index entries for setting directives look like:
+        # [('pair', 'SETTING_NAME; setting', 'std:setting-SETTING_NAME', '')]
+        entry_type, info, refid = node[""entries""][0][:3]
+        return entry_type == ""pair"" and info.endswith(""; setting"")
+    return False"
+183	adjudicated	5	"def get_setting_target(node):
+    # target nodes are placed next to the node in the doc tree
+    return node.parent[node.parent.index(node) + 1]"
+184	adjudicated	4	"def setup(app):
+    app.connect(""autodoc-skip-member"", maybe_skip_member)"
+185	adjudicated	disagree	"def maybe_skip_member(app, what, name, obj, skip, options):
+    if not skip:
+        # autodocs was generating a text ""alias of"" for the following members
+        # https://github.com/sphinx-doc/sphinx/issues/4422
+        return name in {""default_item_class"", ""default_selector_class""}
+    return skip"
+186	adjudicated	5	"def main():
+    # Used for remembering the file (and its contents)
+    # so we don't have to open the same file again.
+    _filename = None
+    _contents = None"
+187	adjudicated	4	"class QPSSpider(Spider):
+    name = ""qps""
+    benchurl = ""http://localhost:8880/"""
+188	adjudicated	disagree	"def __init__(self, *a, **kw):
+    super().__init__(*a, **kw)
+    if self.qps is not None:
+        self.qps = float(self.qps)
+        self.download_delay = 1 / self.qps
+    elif self.download_delay is not None:
+        self.download_delay = float(self.download_delay)"
+189	adjudicated	4	"def start_requests(self):
+    url = self.benchurl
+    if self.latency is not None:
+        url += f""?latency={self.latency}"""
+190	adjudicated	4	"def parse(self, response):
+    pass"
+191	adjudicated	4	"def _py_files(folder):
+    return (str(p) for p in Path(folder).rglob(""*.py""))"
+192	adjudicated	5	"def chdir(tmpdir):
+    """"""Change to pytest-provided temporary directory""""""
+    tmpdir.chdir()"
+193	adjudicated	4	"def pytest_addoption(parser):
+    parser.addoption(
+        ""--reactor"",
+        default=""default"",
+        choices=[""default"", ""asyncio""],
+    )"
+194	adjudicated	4	"class Root(Resource):
+    def __init__(self):
+        Resource.__init__(self)
+        self.concurrent = 0
+        self.tail = deque(maxlen=100)
+        self._reset_stats()"
+195	adjudicated	4	"def __init__(self):
+    Resource.__init__(self)
+    self.concurrent = 0
+    self.tail = deque(maxlen=100)
+    self._reset_stats()"
+196	adjudicated	4	"def _reset_stats(self):
+    self.tail.clear()
+    self.start = self.lastmark = self.lasttime = time()"
+197	adjudicated	4	"def getChild(self, request, name):
+    return self"
+198	adjudicated	4	"def render(self, request):
+    now = time()
+    delta = now - self.lasttime"
+199	adjudicated	disagree	"def test_dtw(N: int, M: int):
+    steps = np.concatenate([np.zeros(N - 1), np.ones(M - 1)])
+    np.random.shuffle(steps)
+    x = np.random.random((N, M)).astype(np.float32)"
+200	adjudicated	disagree	"def test_dtw_cuda_equivalence(N: int, M: int):
+    x_numpy = np.random.randn(N, M).astype(np.float32)
+    x_cuda = torch.from_numpy(x_numpy).cuda()"
+201	adjudicated	4	"def test_median_filter(shape):
+    x = torch.randn(*shape)"
+202	adjudicated	4	"def test_median_filter_equivalence(shape):
+    x = torch.randn(*shape)"
+203	adjudicated	4	"def test_number_normalizer(std):
+    assert std(""two"") == ""2""
+    assert std(""thirty one"") == ""31""
+    assert std(""five twenty four"") == ""524""
+    assert std(""nineteen ninety nine"") == ""1999""
+    assert std(""twenty nineteen"") == ""2019"""
+204	adjudicated	4	"def test_spelling_normalizer():
+    std = EnglishSpellingNormalizer()"
+205	adjudicated	4	"def test_text_normalizer():
+    std = EnglishTextNormalizer()
+    assert std(""Let's"") == ""let us""
+    assert std(""he's like"") == ""he is like""
+    assert std(""she's been like"") == ""she has been like""
+    assert std(""10km"") == ""10 km""
+    assert std(""10mm"") == ""10 mm""
+    assert std(""RC232"") == ""rc 232"""
+206	adjudicated	4	"def test_audio():
+    audio_path = os.path.join(os.path.dirname(__file__), ""jfk.flac"")
+    audio = load_audio(audio_path)
+    assert audio.ndim == 1
+    assert SAMPLE_RATE * 10 < audio.shape[0] < SAMPLE_RATE * 12
+    assert 0 < audio.std() < 1"
+207	adjudicated	4	"def pytest_configure(config):
+    config.addinivalue_line(""markers"", ""requires_cuda"")"
+208	adjudicated	4	"def random():
+    rand.seed(42)
+    numpy.random.seed(42)"
+209	adjudicated	4	"def test_transcribe(model_name: str):
+    device = ""cuda"" if torch.cuda.is_available() else ""cpu""
+    model = whisper.load_model(model_name).to(device)
+    audio_path = os.path.join(os.path.dirname(__file__), ""jfk.flac"")"
+210	adjudicated	4	"def test_tokenizer():
+    gpt2_tokenizer = get_tokenizer(multilingual=False)
+    multilingual_tokenizer = get_tokenizer(multilingual=True)"
+211	adjudicated	4	"def test_split_on_unicode():
+    multilingual_tokenizer = get_tokenizer(multilingual=True)"
+212	adjudicated	4	"def _download(url: str, root: str, in_memory: bool) -> Union[bytes, str]:
+    os.makedirs(root, exist_ok=True)"
+213	adjudicated	5	"def available_models() -> List[str]:
+    """"""Returns the names of available models""""""
+    return list(_MODELS.keys())"
+214	adjudicated	5	"def load_model(
+    name: str,
+    device: Optional[Union[str, torch.device]] = None,
+    download_root: str = None,
+    in_memory: bool = False,
+) -> Whisper:
+    """"""
+    Load a Whisper ASR model"
+215	adjudicated	4	"class _Undefined:
+    def __repr__(self) -> str:
+        return 'see-below'"
+216	adjudicated	disagree	"class Snowflake(Protocol):
+    """"""An ABC that details the common operations on a Discord model.
+    """""""
+217	adjudicated	disagree	"class User(Snowflake, Protocol):
+    """"""An ABC that details the common operations on a Discord user.
+    """""""
+218	adjudicated	disagree	"class PrivateChannel:
+    """"""An ABC that details the common operations on a private Discord channel.
+    """""""
+219	adjudicated	4	"class _Overwrites:
+    __slots__ = ('id', 'allow', 'deny', 'type')"
+220	adjudicated	4	"class VersionInfo(NamedTuple):
+    major: int
+    minor: int
+    micro: int
+    releaselevel: Literal[""alpha"", ""beta"", ""candidate"", ""final""]
+    serial: int"
+221	adjudicated	disagree	"class Bot(commands.{base}):
+    def __init__(self, intents: discord.Intents, **kwargs):
+        super().__init__(command_prefix=commands.when_mentioned_or('{prefix}'), intents=intents, **kwargs)"
+222	adjudicated	disagree	"def show_version() -> None:
+    entries = []"
+223	adjudicated	disagree	"def core(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.version:
+        show_version()
+    else:
+        parser.print_help()"
+224	adjudicated	disagree	"class Parameter:
+    """"""A class that contains the parameter information of a :class:`Command` callback.
+    """""""
+225	adjudicated	disagree	"class ContextMenu:
+    """"""A class that implements a context menu application command.
+    """""""
+226	adjudicated	disagree	"class BaseActivity:
+    """"""The base activity that all user-settable activities inherit from.
+    A user-settable activity is one that can be used in :meth:`Client.change_presence`.
+    """""""
+227	adjudicated	disagree	"class Activity(BaseActivity):
+    """"""Represents an activity in Discord.
+    """""""
+228	adjudicated	disagree	"class Game(BaseActivity):
+    """"""A slimmed down version of :class:`Activity` that represents a Discord game.
+    """""""
+229	adjudicated	disagree	"class Streaming(BaseActivity):
+    """"""A slimmed down version of :class:`Activity` that represents a Discord streaming status.
+    """""""
+230	adjudicated	disagree	"class Spotify:
+    """"""Represents a Spotify listening activity from Discord. This is a special case of
+    :class:`Activity` that makes it easier to work with the Spotify integration.
+    """""""
+231	adjudicated	disagree	"class Cooldown:
+    """"""Represents a cooldown for a command.
+    """""""
+232	adjudicated	4	"def __init__(self, rate: float, per: float) -> None:
+    self.rate: int = int(rate)
+    self.per: float = float(per)
+    self._window: float = 0.0
+    self._tokens: int = self.rate
+    self._last: float = 0.0"
+233	adjudicated	disagree	"def get_tokens(self, current: Optional[float] = None) -> int:
+    """"""Returns the number of available tokens before rate limiting is applied.
+    """""""
+234	adjudicated	disagree	"def get_retry_after(self, current: Optional[float] = None) -> float:
+    """"""Returns the time in seconds until the cooldown will be reset.
+    """""""
+235	adjudicated	disagree	"def update_rate_limit(self, current: Optional[float] = None, *, tokens: int = 1) -> Optional[float]:
+    """"""Updates the cooldown rate limit.
+    """""""
+236	adjudicated	4	"def close_api_gracefully(apis):
+    try:
+        for api in apis.values():
+            process = api['process']
+            childs = get_child_pids(process.pid)
+            for p in childs:
+                try:
+                    os.kill(p, signal.SIGTERM)
+                except Exception:
+                    p.kill()
+            sys.stdout.flush()
+            process.terminate()
+            process.join()
+            sys.stdout.flush()
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except psutil.NoSuchProcess:
+        pass"
+237	adjudicated	disagree	"async def wait_api_start(api_name, pid, port):
+    timeout = 60
+    start_time = time.time()
+    started = is_pid_listen_port(pid, port)
+    while (time.time() - start_time) < timeout and started is False:
+        await asyncio.sleep(0.5)
+        started = is_pid_listen_port(pid, port)
+    return api_name, port, started"
+238	adjudicated	disagree	"async def wait_apis_start():
+    futures = [
+        wait_api_start(api_name, api_data['process'].pid, api_data['port'])
+        for api_name, api_data in apis.items() if 'port' in api_data
+    ]
+    for i, future in enumerate(asyncio.as_completed(futures)):
+        api_name, port, started = await future
+        if started:
+            print(f""{api_name} API: started on {port}"")
+        else:
+            log.logger.error(f""ERROR: {api_name} API cant start on {port}"")"
+239	adjudicated	4	"def index():
+    return ""MindsDB Hanler Discovery"", 200"
+240	adjudicated	disagree	"def register():
+    try:
+        params = request.json
+        host = params.get(""host"")
+        port = params.get(""port"")
+        _type = params.get(""type"")
+        Cache[(host, port)] = _type
+        return ""OK"", 200
+    except Exception as e:
+        return str(e), 500"
+241	adjudicated	4	"def discover():
+    res = {}
+    try:
+        for k in Cache:
+            _type = Cache[k]
+            rec = {""host"": k[0], ""port"": k[1]}
+            if _type not in res:
+                res[_type] = [rec]
+            else:
+                res[_type].append(rec)
+    except Exception as e:
+        return {""error"": str(e)}, 500
+    return res, 200"
+242	adjudicated	disagree	"class QuietSimpleHTTPServer(SimpleHTTPRequestHandler):
+    def log_message(self, *args, **kwargs):
+        pass"
+243	adjudicated	4	"class Context:
+    benchmarks: ClassVar[List[BaseRunner]] = []
+    stack: ExitStack = field(default_factory=ExitStack)
+    runner: pyperf.Runner = field(default_factory=pyperf.Runner)"
+244	adjudicated	disagree	"class BaseRunner:
+    """"""
+    An individual benchmark case. By default it has the category
+    (e.g like startup or download) and a name.
+    """""""
+245	adjudicated	disagree	"class CommandRunner(BaseRunner):
+    """"""
+    Run a single command, and benchmark it.
+    """""""
+246	adjudicated	4	"def build_binaries() -> Iterator[Tuple[str, Path]]:
+    for target_script, extra_args in TARGET_SCRIPTS.items():
+        subprocess.check_call(
+            [
+                'pyinstaller',
+                '--onefile',
+                '--noupx',
+                '-p',
+                HTTPIE_DIR,
+                '--additional-hooks-dir',
+                HOOKS_DIR,
+                *extra_args,
+                target_script,
+            ]
+        )"
+247	adjudicated	disagree	"def build_packages(http_binary: Path, httpie_binary: Path) -> None:
+    import httpie"
+248	adjudicated	4	"def main():
+    binaries = dict(build_binaries())
+    build_packages(binaries['http_cli'], binaries['httpie_cli'])"
+249	adjudicated	5	"class FinishedForNow(Exception):
+    """"""Raised when remaining GitHub rate limit is zero.""""""
+
+    def main(previous_release: str, current_release: str) -> int:
+    since = release_date(previous_release)
+    until = release_date(current_release)"
+250	adjudicated	label-na	"def find_committers(since: str, until: str) -> FullNames:
+    url = f'{REPO_URL}/commits'
+    page = 1
+    per_page = 100
+    params = {
+        'since': since,
+        'until': until,
+        'per_page': per_page,
+    }
+    committers: FullNames = set()"
+251	adjudicated	label-na	"def find_reporters(since: str, until: str) -> GitHubLogins:
+    url = f'{API_URL}/search/issues'
+    page = 1
+    per_page = 100
+    params = {
+        'q': f'repo:{REPO}/{OWNER} is:issue closed:{since}..{until}',
+        'per_page': per_page,
+    }
+    reporters: GitHubLogins = set()"
+252	adjudicated	label-na	"def merge_all_the_people(release: str, contributors: People, committers: FullNames, reporters: GitHubLogins) -> None:
+    """"""
+    >>> contributors = {'Alice': new_person(github='alice', twitter='alice')}
+    >>> merge_all_the_people('2.6.0', contributors, {}, {})
+    >>> contributors
+    {'Alice': {'committed': [], 'reported': [], 'github': 'alice', 'twitter': 'alice'}}
+    """""""
+253	adjudicated	label-na	"def hook(hook_api):
+    for pkg in [
+        'pip',
+        'setuptools',
+        'distutils',
+        'pkg_resources'
+    ]:
+        datas, binaries, hiddenimports = collect_all(pkg)
+        hook_api.add_datas(datas)
+        hook_api.add_binaries(binaries)
+        hook_api.add_imports(*hiddenimports)"
+254	adjudicated	label-na	"def generate_documentation() -> str:
+    database = load_database()
+    structure = build_docs_structure(database)
+    template = Template(source=TPL_FILE.read_text(encoding='utf-8'))
+    output = template.render(structure=structure)
+    output = clean_template_output(output)
+    return output"
+255	adjudicated	label-na	"def save_doc_file(content: str) -> None:
+    current_doc = load_doc_file()
+    marker_start = current_doc.find(MARKER_START) + len(MARKER_START)
+    assert marker_start > 0, 'cannot find the start marker'
+    marker_end = current_doc.find(MARKER_END, marker_start)
+    assert marker_start < marker_end, f'{marker_end=} < {marker_start=}'
+    updated_doc = (
+        current_doc[:marker_start]
+        + '\n\n'
+        + content
+        + '\n\n'
+        + current_doc[marker_end:]
+    )
+    if current_doc != updated_doc:
+        DOC_FILE.write_text(updated_doc, encoding='utf-8')"
+256	adjudicated	label-na	"def build_docs_structure(database: Database):
+    tools = database[KEY_TOOLS]
+    assert len(tools) == len({tool['title'] for tool in tools.values()}), 'tool titles need to be unique'
+    tree = database[KEY_DOC_STRUCTURE]
+    structure = []
+    for platform, tools_ids in tree.items():
+        assert platform.isalnum(), f'{platform=} must be alphanumeric for generated links to work'
+        platform_tools = [tools[tool_id] for tool_id in tools_ids]
+        structure.append((platform, platform_tools))
+    return structure
+"
+257	adjudicated	label-na	"def clean_template_output(output):
+    output = '\n'.join(line.strip() for line in output.strip().splitlines())
+    output = re.sub('\n{3,}', '\n\n', output)
+    return output"
+258	adjudicated	label-na	"def load_database() -> Database:
+    return yaml.safe_load(DB_FILE.read_text(encoding='utf-8'))"
+259	adjudicated	label-na	"def benchmark(ane):
+  tin = ANETensor(512*0x20)
+  tout = ANETensor(512*0x20)
+  dat = open(""../ops/gemm.hwx"", ""rb"").read()
+  for k,v in ane.debug(dat[0x4000:0x4300], 16).items():
+    print(k,v)
+  comp = ane.compile(dat)"
+260	adjudicated	label-na	"def get_macho(fn):
+  # mod to make the header okay
+  # MH_CIGAM_64 is good
+  dat = open(fn, ""rb"").read()
+  dat = b""\xcf\xfa\xed\xfe""+dat[4:]
+  from tempfile import NamedTemporaryFile
+  with NamedTemporaryFile(delete=False) as f:
+    f.write(dat)
+    f.close()
+  return MachO.MachO(f.name)"
+261	adjudicated	label-na	"def compare(x, y):
+  ss = []
+  ln = []
+  ln2 = []"
+262	adjudicated	label-na	"def fj(x):
+  ss = []
+  for i in range(0, 0x10, 4):
+    ss.append(' '.join(x[i:i+4]))
+  return '  '.join(ss)"
+263	adjudicated	label-na	"class ANETensor:
+  def __init__(self, *shape):
+    self.shape = shape
+    self.dtype = np.float16
+    self.sz = int(np.prod(shape))
+    assert(self.sz <= 0x4000)
+    self.tt = libane.ANE_TensorCreate(self.sz, 1)
+    assert(self.tt is not None)"
+264	adjudicated	label-na	"class ANE:
+  def __init__(self):
+    init_libane()
+    libane.ANE_Open()"
+265	adjudicated	label-na	"def init_libane():
+  global libane, aneregs
+  libane = cdll.LoadLibrary(os.path.join(basedir, ""libane.dylib""))"
+266	adjudicated	label-na	"def __init__(self, *shape):
+  self.shape = shape
+  self.dtype = np.float16
+  self.sz = int(np.prod(shape))
+  assert(self.sz <= 0x4000)
+  self.tt = libane.ANE_TensorCreate(self.sz, 1)
+  assert(self.tt is not None)"
+267	adjudicated	label-na	"def data(self):
+  data = libane.ANE_TensorData(self.tt)
+  assert(data is not None)
+  #print(hex(addressof(data.contents)))
+  buf = np.ctypeslib.as_array(data, shape=(self.sz,))
+  ret = np.frombuffer(buf, dtype=self.dtype)
+  #print(ret.data)
+  return ret"
+268	adjudicated	label-na	"class vm_region_submap_short_info_data_64(ctypes.Structure):
+  _pack_ = 1
+  _fields_ = [
+      (""protection"", ctypes.c_uint32),
+      (""max_protection"", ctypes.c_uint32),
+      (""inheritance"", ctypes.c_uint32),
+      (""offset"", ctypes.c_ulonglong),
+      (""user_tag"", ctypes.c_uint32),
+      (""ref_count"", ctypes.c_uint32),
+      (""shadow_depth"", ctypes.c_uint16),
+      (""external_pager"", ctypes.c_byte),
+      (""share_mode"", ctypes.c_byte),
+      (""is_submap"", ctypes.c_uint32),
+      (""behavior"", ctypes.c_uint32),
+      (""object_id"", ctypes.c_uint32),
+      (""user_wired_count"", ctypes.c_uint32),
+  ]
+submap_info_size = ctypes.sizeof(vm_region_submap_short_info_data_64) // 4"
+269	adjudicated	label-na	"def get_pid(name):
+  try:
+    output = check_output([""pgrep"", name])
+    return int(output)
+  except:
+    return None"
+270	adjudicated	label-na	"class Challenge(jose.TypedJSONObjectWithFields):
+    # _fields_to_partial_json
+    """"""ACME challenge.""""""
+    TYPES: Dict[str, Type['Challenge']] = {}"
+271	adjudicated	label-na	"class ChallengeResponse(jose.TypedJSONObjectWithFields):
+    # _fields_to_partial_json
+    """"""ACME challenge response.""""""
+    TYPES: Dict[str, Type['ChallengeResponse']] = {}"
+272	adjudicated	label-na	"class UnrecognizedChallenge(Challenge):
+    """"""Unrecognized challenge."""""""
+273	adjudicated	label-na	"class _TokenChallenge(Challenge):
+    """"""Challenge with token."""""""
+274	adjudicated	label-na	"class KeyAuthorizationChallengeResponse(ChallengeResponse):
+    """"""Response to Challenges based on Key Authorization.
+    """""""
+275	adjudicated	label-na	"class Fixed(jose.Field):
+    """"""Fixed field."""""""
+276	adjudicated	label-na	"class RFC3339Field(jose.Field):
+    """"""RFC3339 field encoder/decoder.""""""
+
+    def __init__(self, json_name: str, value: Any) -> None:
+    self.value = value
+    super().__init__(
+        json_name=json_name, default=value, omitempty=False)"
+277	adjudicated	label-na	"def decode(self, value: Any) -> Any:
+    if value != self.value:
+        raise jose.DeserializationError('Expected {0!r}'.format(self.value))
+    return self.value"
+278	adjudicated	label-na	"def encode(self, value: Any) -> Any:
+    if value != self.value:
+        logger.warning(
+            'Overriding fixed field (%s) with %r', self.json_name, value)
+    return value"
+279	adjudicated	label-na	"class _DefaultCertSelection:
+    def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
+        self.certs = certs"
+280	adjudicated	label-na	"class SSLSocket:  # pylint: disable=too-few-public-methods
+    """"""SSL wrapper for sockets."""""""
+281	adjudicated	label-na	"class FakeConnection:
+    """"""Fake OpenSSL.SSL.Connection.""""""
+
+    def __init__(self, certs: Mapping[bytes, Tuple[crypto.PKey, crypto.X509]]):
+        self.certs = certs
+
+    def __call__(self, connection: SSL.Connection) -> Optional[Tuple[crypto.PKey, crypto.X509]]:
+        server_name = connection.get_servername()
+        if server_name:
+            return self.certs.get(server_name, None)
+        return None # pragma: no cover"
+282	adjudicated	label-na	"class Error(Exception):
+    """"""Generic ACME error."""""""
+283	adjudicated	label-na	"class DependencyError(Error):
+    """"""Dependency error"""""""
+284	adjudicated	label-na	"class SchemaValidationError(jose_errors.DeserializationError):
+    """"""JSON schema ACME object validation error."""""""
+285	adjudicated	label-na	"class ClientError(Error):
+    """"""Network error."""""""
+286	adjudicated	label-na	"class UnexpectedUpdate(ClientError):
+    """"""Unexpected update error."""""""
+287	adjudicated	label-na	"class _Constant(jose.JSONDeSerializable, Hashable):
+    """"""ACME constant.""""""
+    __slots__ = ('name',)
+    POSSIBLE_NAMES: Dict[str, '_Constant'] = NotImplemented"
+288	adjudicated	label-na	"class IdentifierType(_Constant):
+    """"""ACME identifier type.""""""
+    POSSIBLE_NAMES: Dict[str, _Constant] = {}"
+289	adjudicated	label-na	"class Identifier(jose.JSONObjectWithFields):
+    """"""ACME identifier."""""""
+290	adjudicated	label-na	"class Error(jose.JSONObjectWithFields, errors.Error):
+    """"""ACME error."""""""
+291	adjudicated	label-na	"class Status(_Constant):
+    """"""ACME ""status"" field.""""""
+    POSSIBLE_NAMES: Dict[str, _Constant] = {}"
+292	adjudicated	label-na	"class Header(jose.Header):
+    """"""ACME-specific JOSE Header. Implements nonce, kid, and url.
+    """"""
+    nonce: Optional[bytes] = jose.field('nonce', omitempty=True, encoder=jose.encode_b64jose)
+    kid: Optional[str] = jose.field('kid', omitempty=True)
+    url: Optional[str] = jose.field('url', omitempty=True)"
+293	adjudicated	label-na	"class Signature(jose.Signature):
+    """"""ACME-specific Signature. Uses ACME-specific Header for customer fields.""""""
+    __slots__ = jose.Signature._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access,no-member"
+294	adjudicated	label-na	"class JWS(jose.JWS):
+    """"""ACME-specific JWS. Includes none, url, and kid in protected header.""""""
+    signature_cls = Signature
+    __slots__ = jose.JWS._orig_slots  # type: ignore[attr-defined]  # pylint: disable=protected-access"
+295	adjudicated	label-na	"def nonce(value: str) -> bytes:  # type: ignore[misc]  # pylint: disable=no-self-argument,missing-function-docstring
+    try:
+        return jose.decode_b64jose(value)
+    except jose.DeserializationError as error:
+        # TODO: custom error
+        raise jose.DeserializationError(""Invalid nonce: {0}"".format(error))"
+296	adjudicated	label-na	"def sign(cls, payload: bytes, key: jose.JWK, alg: jose.JWASignature, nonce: Optional[bytes],
+         url: Optional[str] = None, kid: Optional[str] = None) -> jose.JWS:
+    # Per ACME spec, jwk and kid are mutually exclusive, so only include a
+    # jwk field if kid is not provided.
+    include_jwk = kid is None
+    return super().sign(payload, key=key, alg=alg,
+                        protect=frozenset(['nonce', 'url', 'kid', 'jwk', 'alg']),
+                        nonce=nonce, url=url, kid=kid,
+                        include_jwk=include_jwk)"
+297	adjudicated	label-na	"class ClientV2:
+    """"""ACME client for a v2 API."""""""
+298	adjudicated	label-na	"class ClientNetwork:
+    """"""Wrapper around requests that signs POSTs for authentication.
+    """""""
+299	adjudicated	label-na	"def __init__(self, directory: messages.Directory, net: 'ClientNetwork') -> None:
+    """"""Initialize."""""""
+300	adjudicated	label-na	"def new_account(self, new_account: messages.NewRegistration) -> messages.RegistrationResource:
+    """"""Register."""""""
+301	adjudicated	label-na	"def query_registration(self, regr: messages.RegistrationResource
+                       ) -> messages.RegistrationResource:
+    """"""Query server about registration."""""""
+302	adjudicated	label-na	"def get_random_crop_coords(height: int, width: int, crop_height: int, crop_width: int, h_start: float, w_start: float):
+    # h_start is [0, 1) and should map to [0, (height - crop_height)]  (note inclusive)
+    # This is conceptually equivalent to mapping onto `range(0, (height - crop_height + 1))`
+    # See: https://github.com/albumentations-team/albumentations/pull/1080
+    y1 = int((height - crop_height + 1) * h_start)
+    y2 = y1 + crop_height
+    x1 = int((width - crop_width + 1) * w_start)
+    x2 = x1 + crop_width
+    return x1, y1, x2, y2"
+303	adjudicated	label-na	"def random_crop(img: np.ndarray, crop_height: int, crop_width: int, h_start: float, w_start: float):
+    height, width = img.shape[:2]
+    if height < crop_height or width < crop_width:
+        raise ValueError(
+            ""Requested crop size ({crop_height}, {crop_width}) is ""
+            ""larger than the image size ({height}, {width})"".format(
+                crop_height=crop_height, crop_width=crop_width, height=height, width=width
+            )
+        )
+    x1, y1, x2, y2 = get_random_crop_coords(height, width, crop_height, crop_width, h_start, w_start)
+    img = img[y1:y2, x1:x2]
+    return img"
+304	adjudicated	label-na	"def crop_bbox_by_coords(
+    bbox: BoxInternalType,
+    crop_coords: Tuple[int, int, int, int],
+    crop_height: int,
+    crop_width: int,
+    rows: int,
+    cols: int,
+):
+    """"""Crop a bounding box using the provided coordinates of bottom-left and top-right corners in pixels and the
+    required height and width of the crop."""""""
+305	adjudicated	label-na	"def bbox_random_crop(
+    bbox: BoxInternalType, crop_height: int, crop_width: int, h_start: float, w_start: float, rows: int, cols: int
+):
+    crop_coords = get_random_crop_coords(rows, cols, crop_height, crop_width, h_start, w_start)
+    return crop_bbox_by_coords(bbox, crop_coords, crop_height, crop_width, rows, cols)"
+306	adjudicated	label-na	"def crop_keypoint_by_coords(
+    keypoint: KeypointInternalType, crop_coords: Tuple[int, int, int, int]
+):  # skipcq: PYL-W0613
+    """"""Crop a keypoint using the provided coordinates of bottom-left and top-right corners in pixels and the
+    required height and width of the crop."
+307	adjudicated	label-na	"class Blur(ImageOnlyTransform):
+    """"""Blur the input image using a random-sized kernel.
+    """""""
+308	adjudicated	label-na	"class MotionBlur(Blur):
+    """"""Apply motion blur to the input image using a random-sized kernel.
+    """""""
+309	adjudicated	label-na	"class MedianBlur(Blur):
+    """"""Blur the input image using a median filter with a random aperture linear size.
+    """""""
+310	adjudicated	label-na	"class GaussianBlur(ImageOnlyTransform):
+    """"""Blur the input image using a Gaussian filter with a random kernel size.
+    """""""
+311	adjudicated	label-na	"class GlassBlur(Blur):
+    """"""Apply glass noise to the input image."""""""
+312	adjudicated	label-na	"class Command:
+    def __init__(self, argv: Optional[str] = None) -> None:
+        self.argv = argv or sys.argv[:]
+        self.prog_name = Path(self.argv[0]).name"
+313	adjudicated	label-na	"def print_provider(
+    doc: Documentor,
+    provider: BaseProvider,
+    formatters: Dict[str, T],
+    excludes: Optional[List[str]] = None,
+    output: Optional[TextIO] = None,
+) -> None:
+    if output is None:
+        output = sys.stdout
+    if excludes is None:
+        excludes = []"
+314	adjudicated	label-na	"def print_doc(
+    provider_or_field: Optional[str] = None,
+    args: Optional[List[T]] = None,
+    lang: str = DEFAULT_LOCALE,
+    output: Optional[Union[TextIO, TextIOWrapper]] = None,
+    seed: Optional[float] = None,
+    includes: Optional[List[str]] = None,
+) -> None:
+    if args is None:
+        args = []
+    if output is None:
+        output = sys.stdout
+    fake = Faker(locale=lang, includes=includes)
+    fake.seed_instance(seed)"
+315	adjudicated	label-na	"def __init__(self, argv: Optional[str] = None) -> None:
+    self.argv = argv or sys.argv[:]
+    self.prog_name = Path(self.argv[0]).name"
+316	adjudicated	label-na	"def _session_faker(request):
+    """"""Fixture that stores the session level ``Faker`` instance."
+317	adjudicated	label-na	"def faker(request):
+    """"""Fixture that returns a seeded and suitable ``Faker`` instance.""""""
+    if ""faker_locale"" in request.fixturenames:
+        locale = request.getfixturevalue(""faker_locale"")
+        fake = Faker(locale=locale)
+    else:
+        fake = request.getfixturevalue(""_session_faker"")"
+318	adjudicated	label-na	"def timer(func):
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        tic = time.perf_counter()
+        await func(*args, **kwargs)
+        toc = time.perf_counter()
+        return f""{toc - tic:.4f}"""
+319	adjudicated	label-na	"async def wrapper(*args, **kwargs):
+    tic = time.perf_counter()
+    await func(*args, **kwargs)
+    toc = time.perf_counter()
+    return f""{toc - tic:.4f}"""
+320	adjudicated	label-na	"async def set_str(client, gather, data):
+    if gather:
+        for _ in range(count // 100):
+            await asyncio.gather(
+                *(
+                    asyncio.create_task(client.set(f""bench:str_{i}"", data))
+                    for i in range(100)
+                )
+            )
+    else:
+        for i in range(count):
+            await client.set(f""bench:str_{i}"", data)"
+321	adjudicated	label-na	"async def set_int(client, gather, data):
+    if gather:
+        for _ in range(count // 100):
+            await asyncio.gather(
+                *(
+                    asyncio.create_task(client.set(f""bench:int_{i}"", data))
+                    for i in range(100)
+                )
+            )
+    else:
+        for i in range(count):
+            await client.set(f""bench:int_{i}"", data)"
+322	adjudicated	label-na	"async def get_str(client, gather):
+    if gather:
+        for _ in range(count // 100):
+            await asyncio.gather(
+                *(asyncio.create_task(client.get(f""bench:str_{i}"")) for i in range(100))
+            )
+    else:
+        for i in range(count):
+            await client.get(f""bench:str_{i}"")"
+323	adjudicated	label-na	"class Benchmark:
+    ARGUMENTS = ()
+
+    def __init__(self):
+        self._client = None
+
+    def get_client(self, **kwargs):
+        # eventually make this more robust and take optional args from
+        # argparse
+        if self._client is None or kwargs:
+            defaults = {""db"": 9}
+            defaults.update(kwargs)
+            pool = redis.ConnectionPool(**kwargs)
+            self._client = redis.Redis(connection_pool=pool)
+        return self._client
+
+     def setup(self, **kwargs):
+        pass
+
+    def run(self, **kwargs):
+        pass"
+324	adjudicated	label-na	"def __init__(self):
+    self._client = None"
+325	adjudicated	label-na	"def get_client(self, **kwargs):
+    # eventually make this more robust and take optional args from
+    # argparse
+    if self._client is None or kwargs:
+        defaults = {""db"": 9}
+        defaults.update(kwargs)
+        pool = redis.ConnectionPool(**kwargs)
+        self._client = redis.Redis(connection_pool=pool)
+    return self._client"
+326	adjudicated	label-na	"def setup(self, **kwargs):
+    pass"
+327	adjudicated	label-na	"def run(self, **kwargs):
+    pass"
+328	adjudicated	label-na	"class StringJoiningConnection(Connection):
+    def send_packed_command(self, command, check_health=True):
+        ""Send an already packed command to the Redis server""
+        if not self._sock:
+            self.connect()
+        try:
+            self._sock.sendall(command)
+        except OSError as e:
+            self.disconnect()
+            if len(e.args) == 1:
+                _errno, errmsg = ""UNKNOWN"", e.args[0]
+            else:
+                _errno, errmsg = e.args
+            raise ConnectionError(f""Error {_errno} while writing to socket. {errmsg}."")
+        except Exception:
+            self.disconnect()
+            raise"
+329	adjudicated	label-na	"class ListJoiningConnection(Connection):
+    def send_packed_command(self, command, check_health=True):
+        if not self._sock:
+            self.connect()
+        try:
+            if isinstance(command, str):
+                command = [command]
+            for item in command:
+                self._sock.sendall(item)
+        except OSError as e:
+            self.disconnect()
+            if len(e.args) == 1:
+                _errno, errmsg = ""UNKNOWN"", e.args[0]
+            else:
+                _errno, errmsg = e.args
+            raise ConnectionError(f""Error {_errno} while writing to socket. {errmsg}."")
+        except Exception:
+            self.disconnect()
+            raise"
+330	adjudicated	label-na	"def pack_command(self, *args):
+    ""Pack a series of arguments into a value Redis command""
+    args_output = SYM_EMPTY.join(
+        [
+            SYM_EMPTY.join(
+                (SYM_DOLLAR, str(len(k)).encode(), SYM_CRLF, k, SYM_CRLF)
+            )
+            for k in map(self.encoder.encode, args)
+        ]
+    )
+    output = SYM_EMPTY.join(
+        (SYM_STAR, str(len(args)).encode(), SYM_CRLF, args_output)
+    )
+    return output"
+331	adjudicated	label-na	"def timer(func):
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        tic = time.perf_counter()
+        await func(*args, **kwargs)
+        toc = time.perf_counter()
+        return f""{toc - tic:.4f}"""
+332	adjudicated	label-na	"async def wrapper(*args, **kwargs):
+    tic = time.perf_counter()
+    await func(*args, **kwargs)
+    toc = time.perf_counter()
+    return f""{toc - tic:.4f}"""
+333	adjudicated	label-na	"async def warmup(client):
+    await asyncio.gather(
+        *(asyncio.create_task(client.exists(f""bench:warmup_{i}"")) for i in range(100))
+    )"
+334	adjudicated	label-na	"async def run(client):
+    data_str = ""a"" * size
+    data_int = int(""1"" * size)"
+335	adjudicated	label-na	"async def main(loop):
+    arc = aredis.StrictRedisCluster(
+        host=host,
+        port=port,
+        password=password,
+        max_connections=2**31,
+        max_connections_per_node=2**31,
+        readonly=False,
+        reinitialize_steps=count,
+        skip_full_coverage_check=True,
+        decode_responses=False,
+        max_idle_time=count,
+        idle_check_interval=count,
+    )
+    print(f""{loop} {await warmup(arc)} aredis"")
+    print(await run(arc))
+    arc.connection_pool.disconnect()"
+336	adjudicated	label-na	"def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument(
+        ""-n"", type=int, help=""Total number of requests (default 100000)"", default=100000
+    )
+    parser.add_argument(
+        ""-P"",
+        type=int,
+        help=(""Pipeline <numreq> requests. Default 1 (no pipeline).""),
+        default=1,
+    )
+    parser.add_argument(
+        ""-s"",
+        type=int,
+        help=""Data size of SET/GET value in bytes (default 2)"",
+        default=2,
+    )"
+337	adjudicated	label-na	"def run():
+    args = parse_args()
+    r = redis.Redis()
+    r.flushall()
+    set_str(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    set_int(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    get_str(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    get_int(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    incr(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    lpush(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    lrange_300(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    lpop(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)
+    hmset(conn=r, num=args.n, pipeline_size=args.P, data_size=args.s)"
+338	adjudicated	label-na	"def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.monotonic()
+        ret = func(*args, **kwargs)
+        duration = time.monotonic() - start
+        if ""num"" in kwargs:
+            count = kwargs[""num""]
+        else:
+            count = args[1]
+        print(f""{func.__name__} - {count} Requests"")
+        print(f""Duration  = {duration}"")
+        print(f""Rate = {count/duration}"")
+        print()
+        return ret"
+339	adjudicated	label-na	"def wrapper(*args, **kwargs):
+    start = time.monotonic()
+    ret = func(*args, **kwargs)
+    duration = time.monotonic() - start
+    if ""num"" in kwargs:
+        count = kwargs[""num""]
+    else:
+        count = args[1]
+    print(f""{func.__name__} - {count} Requests"")
+    print(f""Duration  = {duration}"")
+    print(f""Rate = {count/duration}"")
+    print()
+    return ret"
+340	adjudicated	label-na	"def set_str(conn, num, pipeline_size, data_size):
+    if pipeline_size > 1:
+        conn = conn.pipeline()"
+341	adjudicated	label-na	"def setup(self, value_size, read_size, parser):
+    r = self.get_client(parser_class=parser, socket_read_size=read_size)
+    r.set(""benchmark"", ""a"" * value_size)"
+342	adjudicated	label-na	"def run(self, value_size, read_size, parser):
+    r = self.get_client()
+    r.get(""benchmark"")"
+343	adjudicated	label-na	"def to_int(value):
+    value = ''.join((x for x in value if x.isdigit()))
+    try:
+        return int(value)
+    except Exception:
+        return 0"
+344	adjudicated	label-na	"def to_tuple(version):
+    return tuple(to_int(x) for x in version.split('.'))"
+345	adjudicated	label-na	"def main():
+    project = sys.argv[1]
+    json = requests.get('https://pypi.org/pypi/%s/json' % project).json()
+    for version in sorted(json['releases'], key=to_tuple):
+        print(version)
+        wheel_packages = [
+            p for p in json['releases'][version]
+            if p['packagetype'] == 'bdist_wheel'
+        ]
+        for p in wheel_packages:
+            print('    %(python_version)s %(filename)s' % p)"
+346	adjudicated	label-na	"def _notebook_run(path):
+    """"""Execute a notebook via nbconvert and collect output.
+       :returns (parsed nb object, execution errors)
+    """"""
+    kernel_name = 'python%d' % sys.version_info[0]
+    this_file_directory = os.path.dirname(__file__)
+    errors = []
+    with tempfile.NamedTemporaryFile(suffix="".ipynb"", mode='wt') as fout:
+        with smart_open(path, 'rb') as f:
+            nb = nbformat.read(f, as_version=4)
+            nb.metadata.get('kernelspec', {})['name'] = kernel_name
+            ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10)"
+347	adjudicated	label-na	"def test_notebooks():
+    for notebook in glob(""*.ipynb""):
+        if "" "" in notebook:
+            continue
+        print(""Testing {}"".format(notebook))
+        nb, errors = _notebook_run(notebook)
+        assert errors == []"
+348	adjudicated	label-na	"class MyCorpus:
+    def __iter__(self):
+        for line in open('https://radimrehurek.com/mycorpus.txt'):
+            # assume there's one document per line, tokens separated by whitespace
+            yield dictionary.doc2bow(line.lower().split())"
+349	adjudicated	label-na	"def __iter__(self):
+    for line in open('https://radimrehurek.com/mycorpus.txt'):
+        # assume there's one document per line, tokens separated by whitespace
+        yield dictionary.doc2bow(line.lower().split())"
+350	adjudicated	label-na	"class BaseAdapter:
+    """"""The Base Transport Adapter"""""""
+351	adjudicated	label-na	"class HTTPAdapter(BaseAdapter):
+    """"""The built-in HTTP Adapter for urllib3.
+    """""""
+352	adjudicated	label-na	"def request(method, url, **kwargs):
+    """"""Constructs and sends a :class:`Request <Request>`.
+    """""""
+353	adjudicated	label-na	"def get(url, params=None, **kwargs):
+    r""""""Sends a GET request.
+    """"""
+"
+354	adjudicated	label-na	"def options(url, **kwargs):
+    r""""""Sends an OPTIONS request.
+    """""""
+355	adjudicated	label-na	"def head(url, **kwargs):
+    r""""""Sends a HEAD request.
+    """""""
+356	adjudicated	label-na	"def post(url, data=None, json=None, **kwargs):
+    r""""""Sends a POST request.
+    """""""
+357	adjudicated	label-na	"class FlaskyStyle(Style):
+    background_color = ""#f8f8f8""
+    default_style = """""
+358	adjudicated	label-na	"class AuthBase:
+    """"""Base class that all auth implementations derive from"""""""
+359	adjudicated	label-na	"class HTTPBasicAuth(AuthBase):
+    """"""Attaches HTTP Basic Authentication to the given Request object."""""""
+360	adjudicated	label-na	"class HTTPProxyAuth(HTTPBasicAuth):
+    """"""Attaches HTTP Proxy Authentication to a given Request object."""""""
+361	adjudicated	label-na	"class HTTPDigestAuth(AuthBase):
+    """"""Attaches HTTP Digest Authentication to the given Request object."""""""
+362	adjudicated	label-na	"def to_native_string(string, encoding=""ascii""):
+    """"""Given a string object, regardless of type, returns a representation of
+    that string in the native string type, encoding and decoding where
+    necessary. This assumes ASCII unless told otherwise.
+    """"""
+    if isinstance(string, builtin_str):
+        out = string
+    else:
+        out = string.decode(encoding)"
+363	adjudicated	label-na	"def unicode_is_ascii(u_string):
+    """"""Determine if unicode string only contains ASCII characters.
+    """""""
+364	adjudicated	label-na	"def check_compatibility(urllib3_version, chardet_version, charset_normalizer_version):
+    urllib3_version = urllib3_version.split(""."")
+    assert urllib3_version != [""dev""]  # Verify urllib3 isn't installed from git."
+365	adjudicated	label-na	"def _check_cryptography(cryptography_version):
+    # cryptography < 1.3.4
+    try:
+        cryptography_version = list(map(int, cryptography_version.split(""."")))
+    except ValueError:
+        return"
+366	adjudicated	label-na	class CompletionRefresher(object):
+367	adjudicated	label-na	"def __init__(self):
+    self._completer_thread = None
+    self._restart_refresh = threading.Event()"
+368	adjudicated	label-na	"def refresh(self, executor, callbacks, completer_options=None):
+    """"""Creates a SQLCompleter object and populates it with the relevant
+    completion suggestions in a background thread.
+    """""""
+369	adjudicated	label-na	"def is_refreshing(self):
+    return self._completer_thread and self._completer_thread.is_alive()"
+370	adjudicated	label-na	"def _bg_refresh(self, sqlexecute, callbacks, completer_options):
+    completer = SQLCompleter(**completer_options)"
+371	adjudicated	label-na	"class OutputStyle(PygmentsStyle):
+    default_style = """"
+    styles = style"
+372	adjudicated	label-na	"def parse_pygments_style(token_name, style_object, style_dict):
+    """"""Parse token type and style string.
+    """""""
+373	adjudicated	label-na	"def mycli_bindings(mycli):
+    """"""Custom key bindings for mycli.""""""
+    kb = KeyBindings()"
+374	adjudicated	label-na	"def _(event):
+    """"""Enable/Disable SmartCompletion Mode.""""""
+    _logger.debug('Detected F2 key.')
+    mycli.completer.smart_completion = not mycli.completer.smart_completion"
+375	adjudicated	label-na	"def _(event):
+    """"""Enable/Disable Multiline Mode.""""""
+    _logger.debug('Detected F3 key.')
+    mycli.multi_line = not mycli.multi_line"
+376	adjudicated	label-na	"def _(event):
+    """"""Toggle between Vi and Emacs mode.""""""
+    _logger.debug('Detected F4 key.')
+    if mycli.key_bindings == ""vi"":
+        event.app.editing_mode = EditingMode.EMACS
+        mycli.key_bindings = ""emacs""
+    else:
+        event.app.editing_mode = EditingMode.VI
+        mycli.key_bindings = ""vi"""
+377	adjudicated	label-na	"def _(event):
+    """"""Force autocompletion at cursor.""""""
+    _logger.debug('Detected <Tab> key.')
+    b = event.app.current_buffer
+    if b.complete_state:
+        b.complete_next()
+    else:
+        b.start_completion(select_first=True)"
+378	adjudicated	label-na	"def log(logger, level, message):
+    """"""Logs message to stderr if logging isn't initialized."""""""
+379	adjudicated	label-na	"def read_config_file(f, list_values=True):
+    """"""Read a config file.
+    """""""
+380	adjudicated	label-na	"def get_included_configs(config_file: Union[str, TextIOWrapper]) -> list:
+    """"""Get a list of configuration files that are included into config_path
+    with !includedir directive.
+    """""""
+381	adjudicated	label-na	"def read_config_files(files, list_values=True):
+    """"""Read and merge a list of config files."""""""
+382	adjudicated	label-na	"def create_default_config(list_values=True):
+    import mycli
+    default_config_file = resources.open_text(mycli, 'myclirc')
+    return read_config_file(default_config_file, list_values=list_values)"
+383	adjudicated	label-na	"def cli_is_multiline(mycli):
+    @Condition
+    def cond():
+        doc = get_app().layout.get_buffer_by_name(DEFAULT_BUFFER).document"
+384	adjudicated	label-na	"def cond():
+    doc = get_app().layout.get_buffer_by_name(DEFAULT_BUFFER).document"
+385	adjudicated	label-na	"def _multiline_exception(text):
+    orig = text
+    text = text.strip()"
+386	adjudicated	label-na	"def create_toolbar_tokens_func(mycli, show_fish_help):
+    """"""Return a function that generates the toolbar tokens.""""""
+    def get_toolbar_tokens():
+        result = []
+        result.append(('class:bottom-toolbar', ' '))"
+387	adjudicated	label-na	"def get_toolbar_tokens():
+    result = []
+    result.append(('class:bottom-toolbar', ' '))"
+388	adjudicated	label-na	"def _get_vi_mode():
+    """"""Get the current vi mode for display.""""""
+    return {
+        InputMode.INSERT: 'I',
+        InputMode.NAVIGATION: 'N',
+        InputMode.REPLACE: 'R',
+        InputMode.REPLACE_SINGLE: 'R',
+        InputMode.INSERT_MULTIPLE: 'M',
+    }[get_app().vi_state.input_mode]"
+389	adjudicated	label-na	"class CountInstances(Subcommand):
+    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+        description = """"""Count the number of training instances in an experiment config file.""""""
+        subparser = parser.add_parser(self.name, description=description, help=description)
+        subparser.add_argument(""param_path"", type=str, help=""path to an experiment config file"")"
+390	adjudicated	label-na	"def count_instances_from_args(args: argparse.Namespace):
+    from allennlp.training.util import data_loaders_from_params"
+391	adjudicated	label-na	"class CheckList(Subcommand):
+    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:"
+392	adjudicated	label-na	"class _CheckListManager:
+    def __init__(
+        self,
+        task_suite: TaskSuite,
+        predictor: Predictor,
+        capabilities: Optional[List[str]] = None,
+        max_examples: Optional[int] = None,
+        output_file: Optional[str] = None,
+        print_summary_args: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        self._task_suite = task_suite
+        self._predictor = predictor
+        self._capabilities = capabilities
+        self._max_examples = max_examples
+        self._output_file = None if output_file is None else open(output_file, ""w"")
+        self._print_summary_args = print_summary_args or {}"
+393	adjudicated	label-na	"def _get_predictor(args: argparse.Namespace) -> Predictor:
+    check_for_gpu(args.cuda_device)
+    archive = load_archive(
+        args.archive_file,
+        cuda_device=args.cuda_device,
+    )"
+394	adjudicated	label-na	"def _get_task_suite(args: argparse.Namespace) -> TaskSuite:
+    available_tasks = TaskSuite.list_available()
+    if args.task in available_tasks:
+        suite_name = args.task
+    else:
+        raise ConfigurationError(
+            f""'{args.task}' is not a recognized task suite. ""
+            f""Available tasks are: {available_tasks}.""
+        )"
+395	adjudicated	label-na	"class BuildVocab(Subcommand):
+    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+        description = """"""Build a vocabulary from an experiment config file.""""""
+        subparser = parser.add_parser(self.name, description=description, help=description)"
+396	adjudicated	label-na	"def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+    description = """"""Build a vocabulary from an experiment config file.""""""
+    subparser = parser.add_parser(self.name, description=description, help=description)"
+397	adjudicated	label-na	"def build_vocab_from_args(args: argparse.Namespace):
+    if not args.output_path.endswith("".tar.gz""):
+        raise ValueError(""param 'output_path' should end with '.tar.gz'"")"
+398	adjudicated	label-na	"def _transformers_log_filter(record):
+    if record.msg.startswith(""PyTorch version""):
+        return False
+    return True"
+399	adjudicated	label-na	"def run():
+    from allennlp.commands import main  # noqa
+    from allennlp.common.util import install_sigterm_handler"
+400	adjudicated	label-na	"class ArgumentParserWithDefaults(argparse.ArgumentParser):
+    """"""
+    Custom argument parser that will display the default value for an argument
+    in the help message.
+    """""""
+401	adjudicated	label-na	"def _is_empty_default(default: Any) -> bool:
+    if default is None:
+        return True
+    if isinstance(default, (str, list, tuple, set)):
+        return not bool(default)
+    return False"
+402	adjudicated	label-na	"def add_argument(self, *args, **kwargs):
+    # Add default value to the help message when the default is meaningful.
+    default = kwargs.get(""default"")
+    if kwargs.get(
+        ""action""
+    ) not in self._action_defaults_to_ignore and not self._is_empty_default(default):
+        description = kwargs.get(""help"", """")
+        kwargs[""help""] = f""{description} (default = {default})""
+    super().add_argument(*args, **kwargs)"
+403	adjudicated	label-na	"def parse_args(prog: Optional[str] = None) -> Tuple[argparse.ArgumentParser, argparse.Namespace]:
+    """"""
+    Creates the argument parser for the main program and uses it to parse the args.
+    """"""
+    parser = ArgumentParserWithDefaults(description=""Run AllenNLP"", prog=prog)
+    parser.add_argument(""--version"", action=""version"", version=f""%(prog)s {__version__}"")"
+404	adjudicated	label-na	"def add_subcommands():
+    for subcommand_name in sorted(Subcommand.list_available()):
+        if subcommand_name in subcommands:
+            continue
+        subcommands.add(subcommand_name)
+        subcommand_class = Subcommand.by_name(subcommand_name)
+        subcommand = subcommand_class()
+        subparser = subcommand.add_subparser(subparsers)
+        if subcommand_class.requires_plugins:
+            subparser.add_argument(
+                ""--include-package"",
+                type=str,
+                action=""append"",
+                default=[],
+                    help=""additional packages to include"",
+        )"
+405	adjudicated	label-na	"class CachedPath(Subcommand):
+    requires_plugins: bool = False"
+406	adjudicated	label-na	"def add_subparser(self,
+                  parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+    description = """"""Cache remote files to the AllenNLP cache.""""""
+    subparser = parser.add_parser(
+        self.name,
+        description=description,
+        help=description,
+    )
+    subparser.set_defaults(func=_cached_path)
+    subparser.add_argument(
+        ""resources"",
+        type=str,
+        help=""""""The URLs or paths to the resources.
+        If using the --inspect or --remove flag, this can also contain glob patterns."""""",
+        nargs=""*"",
+    )
+    subparser.add_argument(
+        ""-d"",
+        ""--cache-dir"",
+        type=str,
+        help=""""""Use a custom cache directory."""""",
+        default=CACHE_DIRECTORY,
+    )
+    subparser.add_argument(
+        ""-x"",
+        ""--extract-archive"",
+        action=""store_true"",
+        help=""""""Automatically extract zip or tar.gz archive files."""""",
+    )
+    subparser.add_argument(
+        ""-f"",
+        ""--force-extract"",
+        action=""store_true"",
+        help=""""""Extract archives regardless of whether or not they already exist."""""",
+    )
+    subparser.add_argument(
+        ""--inspect"",
+        action=""store_true"",
+        help=""""""Print some useful information about the cache."""""",
+    )
+    subparser.add_argument(
+        ""--remove"",
+        action=""store_true"",
+        help=""""""Remove any cache entries matching the given resource patterns."""""",
+    )
+    return subparser"
+407	adjudicated	label-na	"def _cached_path(args: argparse.Namespace):
+    logger.info(""Cache directory: %s"", args.cache_dir)
+    if args.inspect:
+        if args.extract_archive or args.force_extract or args.remove:
+            raise RuntimeError(
+                ""cached-path cannot accept --extract-archive, --force-extract, or --remove ""
+                ""options when --inspect flag is used.""
+            )
+        inspect_cache(patterns=args.resources, cache_dir=args.cache_dir)
+    elif args.remove:
+        from allennlp.common.util import format_size"
+408	adjudicated	label-na	"class CheckList(Subcommand):  # type: ignore
+    def add_subparser(self, parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+        description = """"""Dummy command because checklist is not installed.""""""
+        subparser = parser.add_parser(
+            self.name,
+            description=description,
+            help=""Run a trained model through a checklist suite."",
+        )
+        subparser.set_defaults(func=_dummy_output)
+        return subparser"
+409	adjudicated	label-na	"def _dummy_output(args: argparse.Namespace):
+   logger.info(
+        ""The checklist integration of allennlp is optional; if you're using conda, ""
+        ""it can be installed with `conda install allennlp-checklist`, ""
+        ""otherwise use `pip install allennlp[checklist]`.""
+    )"
+410	adjudicated	label-na	"def add_subparser(self,
+                  parser: argparse._SubParsersAction) -> argparse.ArgumentParser:
+    description = """"""Dummy command because checklist is not installed.""""""
+    subparser = parser.add_parser(
+        self.name,
+        description=description,
+        help=""Run a trained model through a checklist suite."",
+    )
+    subparser.set_defaults(func=_dummy_output)
+    return subparser"
+411	adjudicated	label-na	"def pgcli_bindings(pgcli):
+    """"""Custom key bindings for pgcli.""""""
+    kb = KeyBindings()"
+412	adjudicated	label-na	"def _(event):
+    """"""Enable/Disable SmartCompletion Mode.""""""
+    _logger.debug(""Detected F2 key."")
+    pgcli.completer.smart_completion = not pgcli.completer.smart_completion"
+413	adjudicated	label-na	"def _(event):
+    """"""Enable/Disable Multiline Mode.""""""
+    _logger.debug(""Detected F3 key."")
+    pgcli.multi_line = not pgcli.multi_line"
+414	adjudicated	label-na	"def _(event):
+    """"""Toggle between Vi and Emacs mode.""""""
+    _logger.debug(""Detected F4 key."")
+    pgcli.vi_mode = not pgcli.vi_mode
+    event.app.editing_mode = EditingMode.VI if pgcli.vi_mode else EditingMode.EMACS"
+415	adjudicated	label-na	"def _(event):
+    """"""Toggle between Vi and Emacs mode.""""""
+    _logger.debug(""Detected F5 key."")
+    pgcli.explain_mode = not pgcli.explain_mode"
+416	adjudicated	label-na	"def keyring_initialize(keyring_enabled, *, logger):
+    """"""Initialize keyring only if explicitly enabled""""""
+    global keyring
+    """""""
+417	adjudicated	label-na	"def keyring_get_password(key):
+    """"""Attempt to get password from keyring""""""
+    # Find password from store
+    passwd = """"
+    try:
+        passwd = keyring.get_password(""pgcli"", key) or """"
+    except Exception as e:
+        click.secho(
+            keyring_error_message.format(
+                ""Load your password from keyring returned:"", str(e)
+            ),
+            err=True,
+            fg=""red"",
+        )
+    return passwd"
+418	adjudicated	label-na	"def keyring_set_password(key, passwd):
+    try:
+        keyring.set_password(""pgcli"", key, passwd)
+    except Exception as e:
+        click.secho(
+            keyring_error_message.format(""Set password in keyring returned:"", str(e)),
+            err=True,
+            fg=""red"",
+        )"
+419	adjudicated	label-na	"def config_location():
+    if ""XDG_CONFIG_HOME"" in os.environ:
+        return ""%s/pgcli/"" % expanduser(os.environ[""XDG_CONFIG_HOME""])
+    elif platform.system() == ""Windows"":
+        return os.getenv(""USERPROFILE"") + ""\\AppData\\Local\\dbcli\\pgcli\\""
+    else:
+        return expanduser(""~/.config/pgcli/"")"
+420	adjudicated	label-na	"def load_config(usr_cfg, def_cfg=None):
+    # avoid config merges when possible. For writing, we need an umerged config instance.
+    # see https://github.com/dbcli/pgcli/issues/1240 and https://github.com/DiffSK/configobj/issues/171
+    if def_cfg:
+        cfg = ConfigObj()
+        cfg.merge(ConfigObj(def_cfg, interpolation=False))
+        cfg.merge(ConfigObj(expanduser(usr_cfg), interpolation=False, encoding=""utf-8""))
+    else:
+        cfg = ConfigObj(expanduser(usr_cfg), interpolation=False, encoding=""utf-8"")
+    cfg.filename = expanduser(usr_cfg)
+    return cfg"
+421	adjudicated	label-na	"def ensure_dir_exists(path):
+    parent_dir = expanduser(dirname(path))
+    os.makedirs(parent_dir, exist_ok=True)"
+422	adjudicated	label-na	"def write_default_config(source, destination, overwrite=False):
+    destination = expanduser(destination)
+    if not overwrite and exists(destination):
+        return"
+423	adjudicated	label-na	"def upgrade_config(config, def_config):
+    cfg = load_config(config, def_config)
+    cfg.write()"
+424	adjudicated	label-na	"class ExplainOutputFormatter:
+    def __init__(self, max_width):
+        self.max_width = max_width"
+425	adjudicated	label-na	"def __init__(self, max_width):
+    self.max_width = max_width"
+426	adjudicated	label-na	"def format_output(self, cur, headers, **output_kwargs):
+    # explain query results should always contain 1 row each
+    [(data,)] = list(cur)
+    explain_list = json.loads(data)
+    visualizer = Visualizer(self.max_width)
+    for explain in explain_list:
+        visualizer.load(explain)
+        yield visualizer.get_list()"
+427	adjudicated	label-na	"def load_ipython_extension(ipython):
+    """"""This is called via the ipython command '%load_ext pgcli.magic'"""""""
+428	adjudicated	label-na	"def pgcli_line_magic(line):
+    _logger.debug(""pgcli magic called: %r"", line)
+    parsed = sql.parse.parse(line, {})
+    # ""get"" was renamed to ""set"" in ipython-sql:
+    # https://github.com/catherinedevlin/ipython-sql/commit/f4283c65aaf68f961e84019e8b939e4a3c501d43
+    if hasattr(sql.connection.Connection, ""get""):
+        conn = sql.connection.Connection.get(parsed[""connection""])
+    else:
+        try:
+            conn = sql.connection.Connection.set(parsed[""connection""])
+        # a new positional argument was added to Connection.set in version 0.4.0 of ipython-sql
+        except TypeError:
+            conn = sql.connection.Connection.set(parsed[""connection""], False)"
+429	adjudicated	label-na	"class CompletionRefresher:
+    refreshers = OrderedDict()"
+430	adjudicated	label-na	"def __init__(self):
+    self._completer_thread = None
+    self._restart_refresh = threading.Event()"
+431	adjudicated	label-na	"def refresh(self, executor, special, callbacks, history=None, settings=None):
+    """"""
+    Creates a PGCompleter object and populates it with the relevant
+    completion suggestions in a background thread.
+    """""""
+432	adjudicated	label-na	"def is_refreshing(self):
+    return self._completer_thread and self._completer_thread.is_alive()"
+433	adjudicated	label-na	"def _bg_refresh(self, pgexecute, special, callbacks, history=None, settings=None):
+    settings = settings or {}
+    completer = PGCompleter(
+        smart_completion=True, pgspecial=special, settings=settings
+    )"
+434	adjudicated	label-na	"class CustomOutputChecker(OutputChecker):
+    def check_output(self, want, got, optionflags):
+        if IGNORE_RESULT & optionflags:
+            return True
+        return OutputChecker.check_output(self, want, got, optionflags)"
+435	adjudicated	label-na	"def pytest_configure(config):
+    config.addinivalue_line(
+        ""markers"", ""is_pt_tf_cross_test: mark test to run only when PT and TF interactions are tested""
+    )
+    config.addinivalue_line(
+        ""markers"", ""is_pt_flax_cross_test: mark test to run only when PT and FLAX interactions are tested""
+    )
+    config.addinivalue_line(
+        ""markers"", ""is_pipeline_test: mark test to run only when pipelines are tested""
+    )
+    config.addinivalue_line(""markers"", ""is_staging_test: mark test to run only in the staging environment"")"
+436	adjudicated	label-na	"def pytest_addoption(parser):
+    from transformers.testing_utils import pytest_addoption_shared"
+437	adjudicated	label-na	"def pytest_terminal_summary(terminalreporter):
+    from transformers.testing_utils import pytest_terminal_summary_main"
+438	adjudicated	label-na	"def pytest_sessionfinish(session, exitstatus):
+    # If no tests are collected, pytest exists with code 5, which makes the CI fail.
+    if exitstatus == 5:
+        session.exitstatus = 0"
+439	adjudicated	label-na	"class CircleCIJob:
+    name: str
+    additional_env: Dict[str, Any] = None
+    cache_name: str = None
+    cache_version: str = ""0.6""
+    docker_image: List[Dict[str, str]] = None
+    install_steps: List[str] = None
+    marker: Optional[str] = None
+    parallelism: Optional[int] = 1
+    pytest_num_workers: int = 8
+    pytest_options: Dict[str, Any] = None
+    resource_class: Optional[str] = ""xlarge""
+    tests_to_run: Optional[List[str]] = None
+    working_directory: str = ""~/transformers"""
+440	adjudicated	label-na	"def __post_init__(self):
+    # Deal with defaults for mutable attributes.
+    if self.additional_env is None:
+        self.additional_env = {}
+    if self.cache_name is None:
+        self.cache_name = self.name
+    if self.docker_image is None:
+        # Let's avoid changing the default list and make a copy.
+        self.docker_image = copy.deepcopy(DEFAULT_DOCKER_IMAGE)
+    if self.install_steps is None:
+        self.install_steps = []
+    if self.pytest_options is None:
+        self.pytest_options = {}
+    if isinstance(self.tests_to_run, str):
+        self.tests_to_run = [self.tests_to_run]
+    if self.parallelism is None:
+        self.parallelism = 1"
+441	adjudicated	label-na	"def to_dict(self):
+    env = COMMON_ENV_VARIABLES.copy()
+    env.update(self.additional_env)
+    job = {
+        ""working_directory"": self.working_directory,
+        ""docker"": self.docker_image,
+        ""environment"": env,
+    }
+    if self.resource_class is not None:
+        job[""resource_class""] = self.resource_class
+    if self.parallelism is not None:
+        job[""parallelism""] = self.parallelism
+    steps = [
+        ""checkout"",
+        {""attach_workspace"": {""at"": ""~/transformers/test_preparation""}},
+        {
+            ""restore_cache"": {
+                ""keys"": [
+                    f""v{self.cache_version}-{self.cache_name}-"" + '{{ checksum ""setup.py"" }}',
+                    f""v{self.cache_version}-{self.cache_name}-"",
+                ]
+            }
+        },
+    ]
+    steps.extend([{""run"": l} for l in self.install_steps])
+    steps.append(
+        {
+            ""save_cache"": {
+                ""key"": f""v{self.cache_version}-{self.cache_name}-"" + '{{ checksum ""setup.py"" }}',
+                ""paths"": [""~/.cache/pip""],
+            }
+        }
+    )
+    steps.append({""run"": {""name"": ""Show installed libraries and their versions"",
+                          ""command"": ""pip freeze | tee installed.txt""}})
+    steps.append({""store_artifacts"": {""path"": ""~/transformers/installed.txt""}})"
+442	adjudicated	label-na	"def job_name(self):
+    return self.name if ""examples"" in self.name else f""tests_{self.name}"""
+443	adjudicated	label-na	"def create_circleci_config(folder=None):
+    if folder is None:
+        folder = os.getcwd()
+    # Used in CircleCIJob.to_dict() to expand the test list (for using parallelism)
+    os.environ[""test_preparation_dir""] = folder
+    jobs = []
+    all_test_file = os.path.join(folder, ""test_list.txt"")
+    if os.path.exists(all_test_file):
+        with open(all_test_file) as f:
+            all_test_list = f.read()
+    else:
+        all_test_list = []
+    if len(all_test_list) > 0:
+        jobs.extend(PIPELINE_TESTS)"
+444	adjudicated	label-na	"def hello(name: str = ""world""):
+    prefect.get_run_logger().info(f""Hello {name}!"")"
+445	adjudicated	label-na	"async def apply_deployment_20(deployment):
+    async with prefect.get_client() as client:
+        flow_id = await client.create_flow_from_name(deployment.flow_name)
+        return await client.create_deployment(
+            flow_id=flow_id,
+            name=deployment.name,
+            path=deployment.path,
+            entrypoint=deployment.entrypoint,
+        )"
+446	adjudicated	label-na	"async def create_flow_run(deployment_id):
+    async with prefect.get_client() as client:
+        return await client.create_flow_run_from_deployment(
+            deployment_id, parameters={""name"": ""integration tests""}
+        )"
+447	adjudicated	label-na	"async def read_flow_run(flow_run_id):
+    async with prefect.get_client() as client:
+        return await client.read_flow_run(flow_run_id)"
+448	adjudicated	label-na	"def main():
+    # Create deployment
+    if Version(prefect.__version__) < Version(""2.1.0""):
+        deployment = Deployment(
+            name=""test-deployment"",
+            flow_name=hello.name,
+            parameter_openapi_schema=parameter_schema(hello),
+            path=str(pathlib.Path(__file__).parent),
+            entrypoint=f""{__file__}:hello"",
+        )
+        deployment_id = anyio.run(apply_deployment_20, deployment)
+    else:
+        deployment = Deployment.build_from_flow(flow=hello, name=""test-deployment"")
+        deployment_id = deployment.apply()"
+449	adjudicated	label-na	"def hello(name: str = ""world""):
+    prefect.get_run_logger().info(f""Hello {name}!"")"
+450	adjudicated	label-na	"async def apply_deployment(deployment):
+    async with prefect.get_client() as client:
+        flow_id = await client.create_flow_from_name(deployment.flow_name)
+        await client.create_deployment(flow_id=flow_id, name=deployment.name)"
+451	adjudicated	label-na	"def noop_function():
+    pass"
+452	adjudicated	label-na	"def bench_task_decorator(benchmark: BenchmarkFixture):
+    benchmark(task, noop_function)"
+453	adjudicated	label-na	"def bench_task_call(benchmark: BenchmarkFixture):
+    noop_task = task(noop_function)"
+454	adjudicated	label-na	"def benchmark_flow():
+    benchmark(noop_task)"
+455	adjudicated	label-na	"def bench_task_submit(benchmark: BenchmarkFixture, num_task_runs: int):
+    noop_task = task(noop_function)"
+456	adjudicated	label-na	"def reset_object_registry():
+    """"""
+    Ensures each test has a clean object registry.
+    """"""
+    from prefect.context import PrefectObjectRegistry"
+457	adjudicated	label-na	"def noop_function():
+    pass"
+458	adjudicated	label-na	"async def anoop_function():
+    pass"
+459	adjudicated	label-na	"def bench_flow_decorator(benchmark: BenchmarkFixture):
+    benchmark(flow, noop_function)"
+460	adjudicated	label-na	"def bench_flow_call(benchmark: BenchmarkFixture, options):
+    noop_flow = flow(**options)(noop_function)
+    benchmark(noop_flow)"
+461	adjudicated	label-na	"def bench_flow_with_submitted_tasks(benchmark: BenchmarkFixture, num_tasks: int):
+    test_task = task(noop_function)"
+462	adjudicated	label-na	"def convert(mxnet_name, torch_name):
+    # download and load the pre-trained model
+    net = gluoncv.model_zoo.get_model(mxnet_name, pretrained=True)"
+463	adjudicated	label-na	"def map_mx_to_torch_model(mx_name):
+    torch_name = mx_name.lower()
+    if torch_name.startswith('se_'):
+        torch_name = torch_name.replace('se_', 'se')
+    elif torch_name.startswith('senet_'):
+        torch_name = torch_name.replace('senet_', 'senet')
+    elif torch_name.startswith('inceptionv3'):
+        torch_name = torch_name.replace('inceptionv3', 'inception_v3')
+    torch_name = 'gluon_' + torch_name
+    return torch_name"
+464	adjudicated	label-na	"def main():
+    args = parser.parse_args()"
+465	adjudicated	label-na	"def convert_nest(checkpoint_path, arch):
+    """"""
+    Expects path to checkpoint which is a dir containing 4 files like in each of these folders
+        - https://console.cloud.google.com/storage/browser/gresearch/nest-checkpoints
+    `arch` is needed to
+    Returns a state dict that can be used with `torch.nn.Module.load_state_dict`
+    Hint: Follow timm.models.nest.Nest.__init__ and
+    https://github.com/google-research/nested-transformer/blob/main/models/nest_net.py
+    """"""
+    assert arch in ['nest_base', 'nest_small', 'nest_tiny'], ""Your `arch` is not supported"""
+466	adjudicated	label-na	"class BenchmarkRunner:
+    def __init__(
+            self,
+            model_name,
+            detail=False,
+            device='cuda',
+            torchscript=False,
+            torchcompile=None,
+            aot_autograd=False,
+            precision='float32',
+            fuser='',
+            num_warm_iter=10,
+            num_bench_iter=50,
+            use_train_size=False,
+            **kwargs
+    ):
+        self.model_name = model_name
+        self.detail = detail
+        self.device = device
+        self.amp_dtype, self.model_dtype, self.data_dtype = resolve_precision(precision)
+        self.channels_last = kwargs.pop('channels_last', False)
+        if self.amp_dtype is not None:
+            self.amp_autocast = partial(torch.cuda.amp.autocast, dtype=self.amp_dtype)
+        else:
+            self.amp_autocast = suppress"
+467	adjudicated	label-na	class InferenceBenchmarkRunner(BenchmarkRunner):
+468	adjudicated	label-na	class TrainBenchmarkRunner(BenchmarkRunner):
+469	adjudicated	label-na	class ProfileRunner(BenchmarkRunner):
+470	adjudicated	label-na	"def timestamp(sync=False):
+    return time.perf_counter()"
+471	adjudicated	label-na	"def cmd_from_args(args) -> Tuple[Union[Callable, str], List[str]]:
+    # If ``args`` not passed, defaults to ``sys.argv[:1]``
+    with_python = not args.no_python
+    cmd: Union[Callable, str]
+    cmd_args = []
+    if with_python:
+        cmd = os.getenv(""PYTHON_EXEC"", sys.executable)
+        cmd_args.append(""-u"")
+        if args.module:
+            cmd_args.append(""-m"")
+        cmd_args.append(args.script)
+    else:
+        if args.module:
+            raise ValueError(
+                ""Don't use both the '--no_python' flag""
+                "" and the '--module' flag at the same time.""
+            )
+        cmd = args.script
+    cmd_args.extend(args.script_args)"
+472	adjudicated	label-na	"def main():
+    args = parser.parse_args()
+    cmd, cmd_args = cmd_from_args(args)"
+473	adjudicated	label-na	"def write_results(results_file, results):
+    with open(results_file, mode='w') as cf:
+        dw = csv.DictWriter(cf, fieldnames=results[0].keys())
+        dw.writeheader()
+        for r in results:
+            dw.writerow(r)
+        cf.flush()"
+474	adjudicated	label-na	"def checkpoint_metric(checkpoint_path):
+    if not checkpoint_path or not os.path.isfile(checkpoint_path):
+        return {}
+    print(""=> Extracting metric from checkpoint '{}'"".format(checkpoint_path))
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    metric = None
+    if 'metric' in checkpoint:
+        metric = checkpoint['metric']
+    elif 'metrics' in checkpoint and 'metric_name' in checkpoint:
+        metrics = checkpoint['metrics']
+        print(metrics)
+        metric = metrics[checkpoint['metric_name']]
+    return metric"
+475	adjudicated	label-na	"def main():
+    args = parser.parse_args()
+    # by default use the EMA weights (if present)
+    args.use_ema = not args.no_use_ema
+    # by default sort by checkpoint metric (if present) and avg top n checkpoints
+    args.sort = not args.no_sort"
+476	adjudicated	label-na	"def generate_readmes(templates_path: Path, dest_path: Path):
+    """"""Add the code snippet template to the readmes""""""
+    readme_templates_path = templates_path / ""models""
+    code_template_path = templates_path / ""code_snippets.md"""
+477	adjudicated	label-na	"def main():
+    parser = argparse.ArgumentParser(description=""Model index generation config"")
+    parser.add_argument(
+        ""-t"",
+        ""--templates"",
+        default=Path(__file__).parent / "".templates"",
+        type=str,
+        help=""Location of the markdown templates"",
+    )
+    parser.add_argument(
+        ""-d"",
+        ""--dest"",
+        default=Path(__file__).parent / ""models"",
+        type=str,
+        help=""Destination folder that contains the generated model-index files."",
+    )
+    args = parser.parse_args()
+    templates_path = Path(args.templates)
+    dest_readmes_path = Path(args.dest)"
+478	adjudicated	label-na	"def main():
+    args = parser.parse_args()"
+479	adjudicated	label-na	"def clean_checkpoint(
+        checkpoint,
+        output,
+        use_ema=True,
+        no_hash=False,
+        clean_aux_bn=False,
+        safe_serialization: bool=False,
+):
+    # Load an existing checkpoint to CPU, strip everything but the state_dict and re-save
+    if checkpoint and os.path.isfile(checkpoint):
+        print(""=> Loading checkpoint '{}'"".format(checkpoint))
+        state_dict = load_state_dict(checkpoint, use_ema=use_ema)
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            if clean_aux_bn and 'aux_bn' in k:
+                # If all aux_bn keys are removed, the SplitBN layers will end up as normal and
+                # load with the unmodified model using BatchNorm2d.
+                continue
+            name = k[7:] if k.startswith('module.') else k
+            new_state_dict[name] = v
+        print(""=> Loaded state_dict from '{}'"".format(checkpoint))"
+480	adjudicated	label-na	"def pytest_addoption(parser):
+    parser.addoption(""--runslow"", action=""store_true"", help=""run slow tests"")"
+481	adjudicated	label-na	"def pytest_runtest_setup(item):
+    if ""slow"" in item.keywords and not item.config.getoption(""--runslow""):
+        pytest.skip(""need --runslow option to run"")"
+482	adjudicated	label-na	"def pytest_collection_modifyitems(config, items):
+    for item in items:
+        if ""skip_with_pyarrow_strings"" in item.keywords:
+            item.add_marker(skip_with_pyarrow_strings)
+        if ""xfail_with_pyarrow_strings"" in item.keywords:
+            item.add_marker(xfail_with_pyarrow_strings)"
+483	adjudicated	label-na	"def shuffle_method(request):
+    with dask.config.set({""dataframe.shuffle.method"": request.param}):
+        yield request.param"
+484	adjudicated	label-na	"class NumpyBackendEntrypoint(ArrayBackendEntrypoint):
+    @classmethod
+    def to_backend_dispatch(cls):
+        return to_numpy_dispatch"
+485	adjudicated	label-na	"def percentile(a, q, method=""linear""):
+    return _percentile(a, q, method)"
+486	adjudicated	label-na	"def _concatenate(arrays, axis=0):
+    out = np.ma.concatenate(arrays, axis=axis)
+    fill_values = [i.fill_value for i in arrays if hasattr(i, ""fill_value"")]
+    if any(isinstance(f, np.ndarray) for f in fill_values):
+        raise ValueError(
+            ""Dask doesn't support masked array's with non-scalar `fill_value`s""
+        )
+    if fill_values:
+        # If all the fill_values are the same copy over the fill value
+        fill_values = np.unique(fill_values)
+        if len(fill_values) == 1:
+            out.fill_value = fill_values[0]
+    return out
+"
+487	adjudicated	label-na	"def _tensordot(a, b, axes=2):
+    # Much of this is stolen from numpy/core/numeric.py::tensordot
+    # Please see license at https://github.com/numpy/numpy/blob/master/LICENSE.txt
+    try:
+        iter(axes)
+    except TypeError:
+        axes_a = list(range(-axes, 0))
+        axes_b = list(range(0, axes))
+    else:
+        axes_a, axes_b = axes
+    try:
+        na = len(axes_a)
+        axes_a = list(axes_a)
+    except TypeError:
+        axes_a = [axes_a]
+        na = 1
+    try:
+        nb = len(axes_b)
+        axes_b = list(axes_b)
+    except TypeError:
+        axes_b = [axes_b]
+        nb = 1"
+488	adjudicated	label-na	"def keepdims_wrapper(a_callable):
+    """"""
+    A wrapper for functions that don't provide keepdims to ensure that they do.
+    """""""
+489	adjudicated	label-na	"def keepdims_wrapped_callable(x, axis=None, keepdims=None, *args, **kwargs):
+    r = a_callable(x, *args, axis=axis, **kwargs)"
+490	adjudicated	label-na	"def coarsen(reduction, x, axes, trim_excess=False, **kwargs):
+    """"""Coarsen array by applying reduction to fixed size neighborhoods
+    """""""
+491	adjudicated	label-na	"def trim(x, axes=None):
+    """"""Trim boundaries off of array
+    """""""
+492	adjudicated	label-na	"def topk(a, k, axis, keepdims):
+    """"""Chunk and combine function of topk
+    """""""
+493	adjudicated	label-na	"def blockwise(
+    func,
+    out_ind,
+    *args,
+    name=None,
+    token=None,
+    dtype=None,
+    adjust_chunks=None,
+    new_axes=None,
+    align_arrays=True,
+    concatenate=None,
+    meta=None,
+    **kwargs,
+):
+    """"""Tensor operation: Generalized inner and outer products
+        >>> def sequence_dot(a_blocks, b_blocks):
+    ...     result = 0
+    ...     for a, b in zip(a_blocks, b_blocks):
+    ...         result += a.dot(b)
+    ...     return result
+    >>> def f(a):
+    ...     return a[:, None] * np.ones((1, 5))
+    >>> def double(x):
+    ...     return np.concatenate([x, x])
+    """"""
+
+"
+494	adjudicated	label-na	"def main():
+    run_cli()"
+495	adjudicated	label-na	"class VersioneerConfig:
+    """"""Container for Versioneer configuration parameters."""""""
+496	adjudicated	label-na	"class NotThisMethod(Exception):
+    """"""Exception raised if a method is not valid for the current scenario."""""""
+497	adjudicated	label-na	"def get_keywords():
+    """"""Get the keywords needed to look up the version information.""""""
+    # these strings will be replaced by git during git-archive.
+    # setup.py/versioneer.py will grep for the variable names, so they must
+    # each be defined on a line of their own. _version.py will just call
+    # get_keywords().
+    git_refnames = ""$Format:%d$""
+    git_full = ""$Format:%H$""
+    keywords = {""refnames"": git_refnames, ""full"": git_full}
+    return keywords"
+498	adjudicated	label-na	"def get_config():
+    """"""Create, populate and return the VersioneerConfig() object.""""""
+    # these strings are filled in when 'setup.py versioneer' creates
+    # _version.py
+    cfg = VersioneerConfig()
+    cfg.VCS = ""git""
+    cfg.style = ""pep440""
+    cfg.tag_prefix = """"
+    cfg.parentdir_prefix = ""dask-""
+    cfg.versionfile_source = ""dask/_version.py""
+    cfg.verbose = False
+    return cfg"
+499	adjudicated	label-na	"def register_vcs_handler(vcs, method):  # decorator
+    """"""Decorator to mark a method as the handler for a particular VCS."""""""
