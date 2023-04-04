@@ -1,4 +1,4 @@
-250	label-na	azhang	"def find_committers(since: str, until: str) -> FullNames:
+250	label-na	azhang-temp	"def find_committers(since: str, until: str) -> FullNames:
     url = f'{REPO_URL}/commits'
     page = 1
     per_page = 100
