@@ -5,6 +5,10 @@ name = "pypi"
 
 [packages]
 pandas = "*"
+jupyter = "*"
+sklearn = "==0.0.post4"
+scipy = "*"
+scikit-learn = "*"
 
 [dev-packages]
 python-dotenv = "*"

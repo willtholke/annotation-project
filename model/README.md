@@ -1,3 +1,0 @@
-# The Model
-
-In progress...

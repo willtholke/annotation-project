@@ -1,0 +1,182 @@
+\usepackage{booktabs}
+\usepackage[utf8]{inputenc}
+\newcommand{\sectionbreak}{\clearpage}
+\usepackage{amsmath,amsfonts,amsthm,mathrsfs,xspace,graphicx}
+\usepackage{tocloft}
+\usepackage{tikz}
+\usepackage{setspace}
+
+% Bibliography styling
+\usepackage{etoolbox} 
+\usepackage{url}
+
+% Packages for generating filler text
+\usepackage{lipsum}
+\usepackage{blindtext} 
+\usepackage{mwe}
+
+\usepackage[linktocpage, colorlinks, bookmarks=true, citecolor=blue, urlcolor=black]{hyperref}
+\usepackage{endnotes}
+\usepackage{color}
+\usepackage{float}
+\usepackage{xcolor}
+\definecolor{since}{rgb}{0.5,0.5,0.5}
+\definecolor{newred}{HTML}{ED2024}
+\definecolor{newgreen}{HTML}{109A48}
+\definecolor{newblue}{HTML}{535DAA}
+\definecolor{neworange}{HTML}{F79420}
+\usepackage{mdframed}
+\usepackage{bbm}
+\usepackage{suffix} \usepackage{times}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{amssymb,latexsym}
+\usepackage[capitalize]{cleveref}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{multirow}
+
+\usepackage[section]{placeins}
+\usepackage[affil-it]{authblk}
+
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+
+\usepackage[margin=1in]{geometry}
+
+\usepackage{endnotes}
+\usepackage{amssymb,latexsym}
+\usepackage{enumitem}
+\setlist{itemsep=0mm}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{soul}
+
+\usepackage{thmtools}
+\usepackage{thm-restate}
+
+\usepackage{mathtools, physics}
+\usepackage{complexity}
+
+\newclass{\QPCP}{QPCP}
+\newclass{\QCPCP}{QCPCP}
+\newclass{\QCMAcomp}{QCMA-complete}
+\newclass{\sharpP}{\#P}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{verbatim}
+
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}%[section] %uncomment to include section numbers in the numbering
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem*{proposition*}{Proposition}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem*{fact*}{Fact}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem*{conjecture*}{Conjecture}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem*{definition*}{Definition}
+\newtheorem{problem}{Problem}
+\newtheorem{question}{Question}
+\newtheorem{protocol}{Protocol}
+\newtheorem{observation}[theorem]{Observation}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem*{remark*}{Remark}
+\newtheorem*{example}{Example}
+\newtheorem*{note}{Note}
+
+
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\FF}{\ensuremath{\mathbb{F}}}
+\newcommand{\KK}{\ensuremath{\mathbb{K}}}
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\newcommand{\ZZ}{\ensuremath{\mathbb{Z}}}
+
+\newcommand{\mcA}{\ensuremath{\mathcal{A}}}
+\newcommand{\mcB}{\ensuremath{\mathcal{B}}}
+\newcommand{\mcC}{\ensuremath{\mathcal{C}}}
+\newcommand{\mcG}{\ensuremath{\mathcal{G}}}
+\newcommand{\mcO}{\ensuremath{\mathcal{O}}}
+\newcommand{\mcP}{\ensuremath{\mathcal{P}}}
+\newcommand{\mcS}{\ensuremath{\mathcal{S}}}
+\newcommand{\mcT}{\ensuremath{\mathcal{T}}}
+
+\DeclareMathOperator\im{im}
+\DeclareMathOperator\CSS{CSS}
+\DeclareMathOperator\N{N}
+\DeclareMathOperator\stab{Stab}
+\DeclareMathOperator\unitary{U}
+\DeclareMathOperator\evenodd{par}
+\DeclareMathOperator\Span{Span}
+\newcommand{\ham}{\mathcal{H}}
+
+\newcommand{\destab}{\ensuremath{e^{-i\frac{\pi}{8}Y}}}
+\newcommand{\destabn}{\ensuremath{(\destab)\n}}
+\newcommand{\destabdagger}{\ensuremath{e^{i\frac{\pi}{8}Y}}}
+\newcommand{\destabdaggern}{\ensuremath{(\destabdagger)\n}}
+
+\newcommand{\Hn}{\ensuremath{\ham^{(n)}}}
+\newcommand{\dHn}{\ensuremath{\Tilde{\ham}^{(n)}}}
+\newcommand{\Hzero}{\ensuremath{\ham_0^{(n)}}}
+\newcommand{\dHzero}{\ensuremath{\Tilde{\ham}_0^{(n)}}}
+\newcommand{\ketzero}{\ensuremath{\ket{0}^{\otimes n}}}
+\newcommand{\brazero}{\ensuremath{\bra{0}^{\otimes n}}}
+\newcommand{\n}{\ensuremath{^{\otimes n}}}
+
+\newcommand{\local}{\ensuremath{C}}
+
+\newcommand{\NLXS}{\text{NL$X$S} }
+
+% \newcommand{\wt}{\ensuremath{\text{wt}}}
+\DeclareMathOperator\wt{wt}
+
+% \newcommand{\had}{\ensuremath{\text{\normalfont H}}}
+\DeclareMathOperator\had{H}
+% \newcommand{\eye}{\ensuremath{\mathbb{I}}}
+\DeclareMathOperator\eye{\mathbb{I}}
+% \newcommand{\phase}{\ensuremath{\text{P}}}
+\DeclareMathOperator\phase{P}
+% \newcommand{\T}{\ensuremath{\text{T}}}
+\DeclareMathOperator\T{T}
+% \newcommand{\CNOT}{\ensuremath{\text{CNOT}}}
+\DeclareMathOperator\CNOT{CNOT}
+
+
+\usepackage{accents}
+\newcommand{\uhat}{\underaccent{\check}}
+
+
+\newcommand{\tnorm}[1]{\norm{#1}_1}
+\newcommand{\highlightname}[3]{%
+  {\textcolor{#3}{\footnotesize{\bf (#1:} {#2}{\bf ) }}}}
+
+
+\newcommand\restr[2]{{% we make the whole thing an ordinary symbol
+  \left.\kern-\nulldelimiterspace % automatically resize the bar with \right
+  #1 % the function
+  % pretend it's a little taller at normal size
+  \right|_{#2} % this is the delimiter
+  }}
+  
+  

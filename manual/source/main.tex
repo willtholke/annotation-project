@@ -1,0 +1,261 @@
+\documentclass[11pt]{article}
+
+%%% BEGIN STYLING %%%
+\input{macro}
+\onehalfspacing
+%%%% END STYLING %%%%
+
+%%% BEGIN TITLE SETUP %%%
+\title{Project Annotation Manual}
+
+\author{%
+  \begin{minipage}[t]{0.3\textwidth}
+    \centering
+    William Tholke \\
+    \href{mailto:willtholke@berkeley.edu}{\textbf{willtholke@berkeley.edu}}
+  \end{minipage}%
+  \hfill%
+  \begin{minipage}[t]{0.3\textwidth}
+    \centering
+    Andrew Zhang \\
+    \href{mailto:zhang.andrew@berkeley.edu}{\textbf{zhang.andrew@berkeley.edu}}
+  \end{minipage}%
+  \hfill%
+  \begin{minipage}[t]{0.3\textwidth}
+    \centering
+    Alex Truong \\
+    \href{mailto:altruong@berkeley.edu}{\textbf{altruong@berkeley.edu}}
+  \end{minipage}%
+}
+
+\affil[]{School of Information, University of California, Berkeley\footnote{Affiliated with Info 159, Natural Langauge Processing, Spring 2023}}
+\date{\today}
+%%%% END TITLE SETUP %%%%
+
+\begin{document}
+
+%%%% BEGIN TITLE PAGE %%%%
+\maketitle
+
+\input{header/header}
+
+\begin{abstract}
+
+This annotation manual provides a structured approach for assessing the readability of Python code snippets based on a scoring system. We give an overview of the Python programming language and a description of the data collection process, which involves extracting code snippets from popular Python repositories on GitHub. Moreover, we introduce five main readability features that fall under the following categories: code length and repetition, inline comments and docstrings, naming conventions and case, whitespace, and miscellaneous items.
+
+\end{abstract}
+
+\vspace{1em}
+\tableofcontents
+%%%% END TITLE PAGE %%%%
+
+%%%% BEGIN INTRO %%%%
+\section{Introduction}
+
+This task involves assigning a readability score to snippets of code written in the Python programming language, with the score ranging from 1 to 5 (inclusive) on a scale representing low to high readability.
+%%%%% END INTRO %%%%%
+
+%%%% BEGIN PYTHON OVERVIEW %%%%
+\subsection{Python Overview}
+
+Python is a high-level, dynamically typed programming langauage with a large standard library, and is often recognized for its general-purpose use cases. As of July 2022, Python is the fourth most used programming language among developers worldwide, preceded only by languages used for web development and database queries, JavaScript/HTML/CSS and SQL, respectively \cite{most_used_langs}. This makes it a great candidate for readability evaluation.
+
+It is recommended that the reader possess a fundamental grasp of the Python programming language. If necessary, please refer to the \href{https://docs.python.org/3.11/}{\color{blue}Python 3.11.2 documentation} for additional information and clarification. % Color override needed due to hyperref package settings
+At the time of writing, the most recent release of the language is Python 3.11.2, but the reader may reference documentation from as early as Python 3.6.0. 
+
+The data only include snippets with code written in Python 3.6.0 and greater, since release 3.6.0 (2016) introduced string literals, which are encoded as a feature of readability. Note that major additions to the language beyond release 3.6.0, such as data classes and the walrus operator ($:=$) from release 3.8.0 (2019), are not encoded as features of readability.
+
+We have encoded various requirements of the PEP-8 Guidelines \cite{pep8_doc} as features, which were created with the philosophy that ``code is read more often than it is written" in mind.
+%%%%% END PYTHON OVERVIEW %%%%%
+
+%%%% BEGIN DATA OVERVIEW %%%%
+\subsection{Data Collection and Structure}
+
+The data collection process is handled 
+by a script that extracts and exports code snippets from popular Python repositories on GitHub to formatted \texttt{tsv} and \texttt{txt} files. To access the source code for this process, please refer to the \texttt{data-collection/} directory in our \href{https://github.com/willtholke/annotation-project/tree/main/data-collection}{\color{blue}GitHub repository}. If the repository is private, please contact the authors to request access. The script does the following:
+
+\vspace{-2.5mm}
+
+\begin{enumerate}[label=\alph*.]
+    \item Uses the \href{https://docs.github.com/en/rest?apiVersion=2022-11-28}{\color{blue}GitHub API} to fetch repositories based on user input (minimum number of stars and forks) and prompts the user on whether it should
+    
+    \vspace{-2.5mm}
+    
+    \begin{enumerate}[label=\roman*.]
+        \item Use data from previous API request(s), stored in \texttt{data-collection/raw-data/}, or
+        \item Make a new API request to collect the data
+    \end{enumerate}
+
+    \vspace{-2.5mm}
+    
+    \item Traverses recursively through each repository up until either running out of data or reaching the user-defined upper bound for the total number of files to consider, executing the following:
+
+    \vspace{-2.5mm}
+    
+    \begin{enumerate}[label=\roman*.]
+        \item Searches for the \texttt{setup.py} file in the root directory and, if present, analyzes it using the \texttt{ast} module to determine the version of Python used in the project. If the version is not 3.6.0 or greater, it will no longer consider the repository for data collection.
+        \item If versioned correctly, the program will search for and store all Python files present in the repository until either reaching the user-defined upper bound for the number of files to consider in each repository or hitting the API rate limit.
+        \item If the rate limit is hit, the program will wait 60 seconds and then attempt to continue searching for Python files.
+    \end{enumerate}
+
+    \vspace{-2.5mm}
+
+    \item Traverses through each Python file in each of the cleaned repositories and extracts code snippets by identifying groups of lines of code as either a ``Class" or ``Function," capturing each of their respective signatures and bodies together as a categorized snippet.
+
+    \item Exports the collected data to \texttt{data-collection/cleaned-data/} and structures it in files with a unique 4-character identifier in their name:
+
+    \vspace{-2.5mm}
+    
+    \begin{enumerate}[label=\roman*.]
+        \item \texttt{adjudicated-full-[\#\#\#\#].tsv}: the data with columns ``UID," ``Category," and ``Snippet," where ``UID" has values with the format \texttt{<Github username>|<repository name>| \\ <file name>|<repository-specific snippet ID>.}
+        \item \texttt{adjudicated-[\#\#\#\#].tsv}: the data with no column labels, but with the data in each respective column as \ \textbf{1)} a range of IDs increasing from 0 to 499 by row \ \textbf{2)} the text "adjudicated" in each row \ \textbf{3)} the placeholder for a label, "label-na" \ \textbf{4)} and the code snippet. 
+    \end{enumerate}
+
+    \vspace{-2.5mm}
+
+    \item Prompts the user to review \texttt{adjudicated-[\#\#\#\#].tsv} and remove any unhelpful data manually, producing a formatted \texttt{txt} file when the user indicates that they are finished.
+\end{enumerate}
+
+Examples of exported data can be found in  \texttt{data-collection/cleaned-data/}.
+%%%%% END DATA OVERVIEW %%%%%
+
+%%%% BEGIN ACKNOWLEDGEMENTS %%%%
+\subsection{Acknowledgements}
+We would like to express our gratitude to David 
+Bamman\footnote{\href{mailto:dbamman@berkeley.edu}{\textbf{dbamman@berkeley.edu}}} for his invaluable guidance and support throughout the duration of this project.
+
+The data used in this project was sourced from open-source Python projects publicly available on GitHub. The data is neither private nor under copyright, and can be freely shared with others. The code associated with this paper is licensed under the MIT License.
+% Include the LICENSE file in the root directory of the repository that includes program code
+%%%%% END ACKNOWLEDGEMENTS %%%%%
+
+\newpage
+
+%%%% BEGIN FEATURES %%%%
+\section{Readability Features}
+
+\subsection{Code Length and Repetition}
+
+\begin{itemize}
+
+    \item Individual lines should have a max length of 79 characters \cite{pep8_max_line_length}.
+
+    \item Docstrings and in-line comments should have a max length of 72 characters from the left-margin, specifically if the docstring spans multiple lines each line may only have a max length of 72 characters (see \autoref{sec:whitespace}) \cite{pep8_max_line_length}.
+    
+\end{itemize}
+
+\subsection{Inline Comments and Docstrings}
+
+\begin{itemize}
+
+    \item At least one of the following should be present, describing the purpose of the function or class in the snippet:
+
+    \vspace{-2.5mm}
+    
+    \begin{itemize}[label=\textopenbullet]
+
+        \item docstring \cite{pep257_docstring_convention}
+        \item in-line comment(s) \cite{pep8_inline_comments}
+        \item descriptive assert statements
+        \item error handling
+        
+    \end{itemize}
+    
+\end{itemize}
+
+\subsection{Naming Conventions and Case }
+
+\begin{itemize}
+
+    \item Variables, if present, should be in snake\_case\footnote{Note that private functions or classes are indicated with an underscore before any alphabetical characters (for example, \texttt{\_class\_name}) and satisfy snake\_case convention.}.
+
+    \item At least one of the following should be true:
+
+    \vspace{-2.5mm}
+    
+    \begin{itemize}[label=\textopenbullet]
+
+        \item the class name is in CamelCase
+        \item the function name is in snake\_case.
+        
+    \end{itemize}
+
+    \vspace{-2.5mm}
+   
+    \item Function or class parameters, if present, should be self-explanatory. For example, parameter names \texttt{x}, \texttt{y}, \texttt{temp}, and \texttt{param} are not self-explanatory, whereas \texttt{file\_path}, \texttt{user\_id}, and \texttt{is\_enabled} are clearly self-descriptive.
+
+\end{itemize}
+
+
+\subsection{Whitespace}\label{sec:whitespace}
+
+\begin{itemize}
+
+    \item There should be consistency between tabs and spaces for indentation, meaning that the snippet should not contain both tabs and spaces.
+
+    \item Blank lines should be used, sparingly, to indicate logical sections. Blank lines should be omitted between a bunch of related one-liners \cite{pep8_blank_lines}.
+    
+\end{itemize}
+
+\subsection{Miscellaneous}
+
+\begin{itemize}
+
+    \item There should not be extremely dense code blocks or extraneous lines of code or in-line comments.
+
+    \item There should not be residual to-do statements or lines of non-functional code that were commented out.
+    
+    \item There should not be comparison of boolean values to True or False using \texttt{==} \cite{pep8_recommendations}.
+
+\end{itemize}
+
+\newpage
+
+\section{Readability Scoring System}
+
+There are five subsections and each subsection contains individual features. A snippet satisfies a subsection if all of the features are met. If any of the features are missed, the subsection is not satisfied. Give the Python snippet one point for each subsection it satisfies, up to a total of 5 points, and replace label-na with the number, from 1 to 5.
+%%%%% END FEATURES %%%%%
+
+%%%% BEGIN ANNOTATION PROCESS %%%%
+\section{Annotation Process}
+
+\subsection{Annotation Workflow}
+
+After downloading the .tsv file, open up VSCode and install the extension "Edit csv". Now open up the .tsv file, then on the top right corner there will be an "edit csv" button. Click that, and it will open a tab which has a nicely-formatted table of the snippet number, annotator, your score for the readability of the snippet (**you will edit this column**), and the Python snippet. Now, you will go through the 250 snippets and assign a readability score to each one, based on the readability features and the scoring system detailed in section 3. A quick way to move through entering in scores is to type in a number and hit enter, which moves your cursor to same column in the row below.
+
+\subsection{Exporting Annotations}
+
+Use \href{https://github.com/willtholke/annotation-project/blob/main/data-collection/conversions.py}{the conversions.py file} to convert \texttt{txt} file data with raw unannotated data back to a \texttt{tsv} to  easily edit it, and then convert that new \texttt{tsv} back to a \texttt{txt} file. 
+%%%%% END ANNOTATION PROCESS %%%%%
+
+\newpage
+
+%%%% BEGIN REFERENCES %%%%
+\section{References}
+
+% Remove the default "References" title
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+
+\begin{raggedright}
+
+\bibliographystyle{plainurl}
+\bibliography{ref}
+
+\end{raggedright}
+%%%%% END REFERENCES %%%%%
+
+\end{document}
+
+%%%% BEGIN USEFUL DEF & EQ TEMPLATES %%%%
+% \begin{definition*}[$something$]
+%     \lipsum[1][1-2]
+% \end{definition*}
+
+% Something shows that: 
+% \begin{equation*}
+%     1+1=2
+% \end{equation*}
+
+% \begin{theorem}[Theorem name]
+%     \lipsum[1][1-2]
+% \end{theorem}
+%%%%% END USEFUL DEF & EQ TEMPLATES %%%%%
