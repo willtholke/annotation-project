@@ -28,7 +28,7 @@
 340	adjudicated	4	def set_str(conn, num, pipeline_size, data_size):<newline>    if pipeline_size > 1:<newline>        conn = conn.pipeline()
 188	adjudicated	4	def __init__(self, *a, **kw):<newline>    super().__init__(*a, **kw)<newline>    if self.qps is not None:<newline>        self.qps = float(self.qps)<newline>        self.download_delay = 1 / self.qps<newline>    elif self.download_delay is not None:<newline>        self.download_delay = float(self.download_delay)
 124	adjudicated	3	"def read_unformated(feats, tmp_dir):<newline>    dataset = datasets.Dataset.from_file(<newline>        filename=os.path.join(tmp_dir, ""beta.arrow""), info=datasets.DatasetInfo(features=feats)<newline>    )<newline>    for _ in dataset:<newline>        pass"
-63	adjudicated	2	"class SentenceDataset(FlairDatapointDataset):<newline>    @deprecated(version=""0.11"", reason=""The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'"")<newline>    def __init__(self, sentences: Union[Sentence, List[Sentence]]):<newline>        super().__init__(sentences)"
+63	adjudicated	1	"class SentenceDataset(FlairDatapointDataset):<newline>    @deprecated(version=""0.11"", reason=""The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'"")<newline>    def __init__(self, sentences: Union[Sentence, List[Sentence]]):<newline>        super().__init__(sentences)"
 198	adjudicated	4	def render(self, request):<newline>    now = time()<newline>    delta = now - self.lasttime
 154	adjudicated	4	"class EdgeList(ColorizedList):<newline>    ARROW = SymbolWidget.SYMBOLS[""rightarrow""]"
 350	adjudicated	5	"class BaseAdapter:<newline>    """"""The Base Transport Adapter"""""""

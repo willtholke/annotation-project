@@ -96,5 +96,5 @@
 436	adjudicated	4	def pytest_addoption(parser):<newline>    from transformers.testing_utils import pytest_addoption_shared
 373	adjudicated	5	"def mycli_bindings(mycli):<newline>    """"""Custom key bindings for mycli.""""""<newline>    kb = KeyBindings()"
 6	adjudicated	4	def wrapper(state, test_case=test_case):<newline>  return func(state, **test_case)
-136	adjudicated	3	"def _init_fonts(self, top):<newline>    # TWhat's our font size (default=same as sysfont)<newline>    self._size = IntVar(top)<newline>    self._size.set(20)<newline>    self._font = Font(family=""helvetica"", size=-self._size.get())<newline>    self._smallfont = Font(<newline>        family=""helvetica"", size=-(int(self._size.get() * 14 // 20))<newline>    )"
+136	adjudicated	1	"def _init_fonts(self, top):<newline>    # TWhat's our font size (default=same as sysfont)<newline>    self._size = IntVar(top)<newline>    self._size.set(20)<newline>    self._font = Font(family=""helvetica"", size=-self._size.get())<newline>    self._smallfont = Font(<newline>        family=""helvetica"", size=-(int(self._size.get() * 14 // 20))<newline>    )"
 141	adjudicated	4	"class ConcordanceSearchView:<newline>    _BACKGROUND_COLOUR = ""#FFF""  # white"

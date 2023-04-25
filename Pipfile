@@ -9,6 +9,8 @@ jupyter = "*"
 sklearn = "==0.0.post4"
 scipy = "*"
 scikit-learn = "*"
+transformers = "*"
+torch = "*"
 
 [dev-packages]
 python-dotenv = "*"
