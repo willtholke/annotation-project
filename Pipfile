@@ -11,6 +11,7 @@ scipy = "*"
 scikit-learn = "*"
 transformers = "*"
 torch = "*"
+seaborn = "*"
 
 [dev-packages]
 python-dotenv = "*"
