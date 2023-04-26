@@ -1,7 +1,7 @@
-# Annotation Project
+# pyclassify
 
-See `/data-collection` for the data collection process.
+See [/data-collection](./data-collection) for the data collection process.
 
-See `/annotation-manual` for the annotation manual .tex files and pdf.
+See [/manual](./manual) for the annotation manual source files and pdf.
 
-See `/model` for the implementation of the model.
+See [/classifier](./classifier) for an implementation of the ordinal classifier and the data sets used for classification
